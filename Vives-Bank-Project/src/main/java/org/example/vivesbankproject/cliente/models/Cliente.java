@@ -1,8 +1,7 @@
 package org.example.vivesbankproject.cliente.models;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,38 +21,47 @@ import java.util.UUID;
 @Table(name = "CLIENTES")
 @NoArgsConstructor
 @AllArgsConstructor
-public class Cliente extends User {
+public class Cliente {
     @Id
-    private UUID id;
+    @Builder.Default
+    private UUID id = UUID.randomUUID();
 
     @Column(nullable = false, unique = true)
-    @NotBlank
+    @NotBlank(message = "El DNI no puede estar vacío")
+    @Pattern(regexp = "^\\d{8}[A-Za-z]$", message = "El DNI debe tener 8 números seguidos de una letra")
     private String dni;
 
-    @NotBlank(message = "nombre no puede estar vacío")
     @Column(nullable = false)
+    @NotBlank(message = "El nombre no puede estar vacío")
     private String nombre;
 
     @Column(nullable = false)
-    @NotBlank(message = "apellidos no puede estar vacío")
+    @NotBlank(message = "Los apellidos no pueden estar vacío")
     private String apellidos;
 
     @Column(unique = true, nullable = false)
-    @Email(regexp = ".*@.*\\..*", message = "Email debe ser válido")
-    @NotBlank(message = "Email no puede estar vacío")
+    @Email(regexp = ".*@.*\\..*", message = "El email debe ser válido")
+    @NotBlank(message = "El email no puede estar vacío")
     private String email;
 
     @Column(unique = true, nullable = false)
+    @Pattern(regexp = "^\\d{9}$", message = "El teléfono debe tener 9 números")
+    @NotBlank(message = "El teléfono no puede estar vacío")
     private String telefono;
 
     @Column(name = "FOTO_PERFIL")
     private String fotoPerfil;
 
-    @Column(name = "FOTO_DNI")
+    @Column(name = "FOTO_DNI", nullable = false)
     private String fotoDni;
 
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "cuentas")
     private List<Cuenta> cuentas;
+
+    @OneToOne(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @CreationTimestamp
     @Column(updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
@@ -61,7 +69,7 @@ public class Cliente extends User {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @UpdateTimestamp
-    @Column(updatable = true, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
 }

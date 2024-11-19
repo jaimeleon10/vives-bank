@@ -9,6 +9,7 @@ import org.example.vivesbankproject.cliente.dto.ClienteResponse;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.service.ClienteService;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
+import org.example.vivesbankproject.utils.PaginationLinksUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
