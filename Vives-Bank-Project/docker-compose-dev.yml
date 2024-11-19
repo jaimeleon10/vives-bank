@@ -1,22 +1,64 @@
 services:
-  postgres_dev:
-    image: postgres
+  postgres-db-dev:
+    container_name: banco-db-postgres
+    image: postgres:12-alpine
+    restart: always
+    env_file: .env
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=my_dev_db
+      POSTGRES_USER: ${DATABASE_USER_POSTGRES}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD_POSTGRES}
+      POSTGRES_DB: ${POSTGRES_DATABASE_DEV}
     ports:
-      - 5432:5432
+      - ${POSTGRES_PORT}:5432
+    #volumes:
+     # - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - banco-network
 
 
-  mongo:
+  mongo-db-dev:
+    container_name: banco-db-mongo
     image: mongo
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${DATABASE_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${DATABASE_PASSWORD}
+      MONGO_INITDB_ROOT_USERNAME: ${DATABASE_USER_MONGO}
+      MONGO_INITDB_ROOT_PASSWORD: ${DATABASE_PASSWORD_MONGO}
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
-    volumes:
-      - ./database/pedidos.js:/docker-entrypoint-initdb.d/pedidos.js
     ports:
       - ${MONGO_PORT}:27017
+    networks:
+      - banco-network
+
+
+  adminer:
+    container_name: adminer
+    image: adminer:latest
+    restart: always
+    env_file: .env
+    ports:
+      - 8080:8080
+    depends_on:
+      - postgres-db-dev
+    networks:
+      - banco-network
+
+  # Mongo Express para conectarse a la base de datos
+  mongo-express-db:
+    container_name: mongo-express
+    image: mongo-express:latest
+    restart: always
+    env_file: .env
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${DATABASE_USER_MONGO}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${DATABASE_PASSWORD_MONGO}
+      ME_CONFIG_MONGODB_SERVER: mongo-db-dev
+    depends_on:
+      - mongo-db-dev
+    networks:
+      - banco-network
+
+networks:
+  banco-network:
+    driver: bridge
