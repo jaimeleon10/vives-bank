@@ -35,3 +35,9 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# Ignorar .gradle
+.gradle/
+
+# Ignorar build
+build/

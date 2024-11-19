@@ -16,13 +16,14 @@ import java.util.UUID;
 
 @Data
 @Builder
-@Entity
-@Table(name = "USUARIOS")
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "USUARIOS")
 public class User {
     @Id
-    private UUID id;
+    @Builder.Default
+    private UUID id = UUID.randomUUID();
 
     @Column(unique = true, nullable = false)
     @NotBlank(message = "Username no puede estar vacío")
@@ -32,7 +33,6 @@ public class User {
     @Length(min = 5, message = "Password debe tener al menos 5 caracteres")
     @Column(nullable = false)
     private String password;
-
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
@@ -44,7 +44,7 @@ public class User {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @UpdateTimestamp
-    @Column(updatable = true, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
 }
