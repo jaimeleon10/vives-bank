@@ -1,10 +1,10 @@
 package org.example.vivesbankproject.cuenta.services;
 
-import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cuenta.exceptions.CuentaNotFound;
 import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
+import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.models.Tipo;
@@ -16,9 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -27,7 +25,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 @ExtendWith(MockitoExtension.class)
 class CuentaServiceImplTest {
@@ -43,6 +40,7 @@ class CuentaServiceImplTest {
     private Cuenta cuentaTest;
     private Cliente clienteTest;
     private Tarjeta tarjetaTest;
+    private TipoCuenta tipoCuentaTest;
 
     @BeforeEach
     void setUp() {
@@ -67,39 +65,50 @@ class CuentaServiceImplTest {
         tarjetaTest.setLimiteMensual(500.0);
         tarjetaTest.setTipoTarjeta(TipoTarjeta.builder().nombre(Tipo.valueOf("DEBITO")).build());
 
+        tipoCuentaTest = new TipoCuenta();
+        tipoCuentaTest.setNombre("normal");
+        tipoCuentaTest.setInteres(2.0);
+
         cuentaTest = new Cuenta();
         cuentaTest.setId(UUID.fromString("12d45756-3895-49b2-90d3-c4a12d5ee081"));
         cuentaTest.setIban("ES9120804243448487618583");
         cuentaTest.setSaldo(1000.0);
         cuentaTest.setCliente(clienteTest);
+        cuentaTest.setTipoCuenta(tipoCuentaTest);
         cuentaTest.setTarjeta(tarjetaTest);
         cuentaTest.setIsDeleted(false);
     }
 
     @Test
     void getAll() {
-        List<Cuenta> cuentas = List.of(new Cuenta(), new Cuenta());
-        Page<Cuenta> expectedPage = new PageImpl<>(cuentas);
-        Pageable pageable = PageRequest.of(0, 10);
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("nombre").ascending());
 
-        when(cuentaRepository.findAll(pageable)).thenReturn(expectedPage);
+        Page<Cuenta> cuentaPage = new PageImpl<>(List.of(cuentaTest), pageable, 1);
 
-        Page<Cuenta> result = cuentaService.getAll(pageable);
+        when(cuentaRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(cuentaPage);
+
+        var result = cuentaService.getAll(Optional.of(cuentaTest.getIban()), Optional.of(cuentaTest.getSaldo()), Optional.of(cuentaTest.getCliente()), Optional.of(cuentaTest.getTarjeta()), Optional.of(cuentaTest.getTipoCuenta()), pageable);
 
         assertAll(
-                () -> assertEquals(expectedPage, result),
-                () -> assertEquals(expectedPage.getContent(), result.getContent()),
-                () -> assertEquals(expectedPage.getTotalElements(), result.getTotalElements())
+                () -> assertNotNull(result),
+                () -> assertEquals(1, result.getContent().size()),
+                () -> assertTrue(result.getContent().contains(cuentaTest)),
+                () -> assertEquals("ES9120804243448487618583", result.getContent().getFirst().getIban()),
+                () -> assertEquals(1000.0, result.getContent().getFirst().getSaldo()),
+                () -> assertEquals(clienteTest, result.getContent().getFirst().getCliente()),
+                () -> assertEquals(tipoCuentaTest, result.getContent().getFirst().getTipoCuenta()),
+                () -> assertEquals(tarjetaTest, result.getContent().getFirst().getTarjeta()),
+                () -> assertFalse(result.getContent().getFirst().getIsDeleted())
         );
 
-        verify(cuentaRepository, times(1)).findAll(pageable);
+        verify(cuentaRepository, times(1)).findAll(any(Specification.class), eq(pageable));
     }
 
     @Test
     void getById() {
         UUID idCuenta = cuentaTest.getId();
-        Cuenta expectedCuenta = new Cuenta();
-        when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.of(expectedCuenta));
+        Optional<Cuenta> expectedCuenta = Optional.of(new Cuenta());
+        when(cuentaRepository.findById(idCuenta)).thenReturn(expectedCuenta);
 
         Optional<Cuenta> resultCuenta = cuentaService.getById(idCuenta);
 
@@ -110,8 +119,8 @@ class CuentaServiceImplTest {
 
     @Test
     void getByIdNotFound() {
-        UUID idCuenta = UUID.randomUUID();
-        when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.empty());
+        UUID idCuenta = UUID.fromString("4182d617-ec89-4fbc-be95-85e461778700");
+        when(cuentaRepository.findById(UUID.fromString("4182d617-ec89-4fbc-be95-85e461778700"))).thenReturn(Optional.empty());
 
         assertThrows(CuentaNotFound.class, () -> cuentaService.getById(idCuenta));
 
@@ -120,50 +129,100 @@ class CuentaServiceImplTest {
 
     @Test
     void save() {
+        Cliente cliente = new Cliente();
+        cliente.setId(UUID.fromString("68aa261a-56d7-4e5f-a7b9-1b6e7b3a04a4"));
+        cliente.setDni("44889646V");
+        cliente.setNombre("Jesus");
+        cliente.setApellidos("Jimenez");
+        cliente.setEmail("jesus.jimenez@gmail.com");
+        cliente.setTelefono("623479558");
+        cliente.setFotoPerfil("https://via.placeholder.com/150");
+        cliente.setFotoDni("https://via.placeholder.com/150");
+
+        Tarjeta tarjeta = new Tarjeta();
+        tarjeta.setId(UUID.fromString("7b498e86-5197-4e05-9361-3da894b62353"));
+        tarjeta.setNumeroTarjeta("4009156782194826");
+        tarjeta.setFechaCaducidad(LocalDate.parse("2025-12-31"));
+        tarjeta.setCvv(987);
+        tarjeta.setPin("0987");
+        tarjeta.setLimiteDiario(100.0);
+        tarjeta.setLimiteSemanal(200.0);
+        tarjeta.setLimiteMensual(500.0);
+
+        TipoCuenta tipoCuenta = new TipoCuenta();
+        tipoCuenta.setNombre("normal");
+        tipoCuenta.setInteres(2.0);
+
+        Cuenta cuenta = new Cuenta();
+        cuenta.setId(UUID.fromString("6c257ab6-e588-4cef-a479-c2f8fcd7379a"));
+        cuenta.setIban("ES0901869615019736267715");
+        cuenta.setSaldo(1000.0);
+        cuenta.setCliente(cliente);
+        cuenta.setTipoCuenta(tipoCuenta);
+        cuenta.setTarjeta(tarjeta);
+        cuenta.setIsDeleted(false);
+
+        when(cuentaRepository.save(cuenta)).thenReturn(cuenta);
+
+        var result = cuentaService.save(cuenta);
+
+        assertAll(
+                () -> assertEquals(cuenta.getId(), result.getId()),
+                () -> assertEquals(cuenta.getIban(), result.getIban()),
+                () -> assertEquals(cuenta.getSaldo(), result.getSaldo()),
+                () -> assertEquals(cuenta.getCliente(), result.getCliente()),
+                () -> assertEquals(cuenta.getTipoCuenta(), result.getTipoCuenta()),
+                () -> assertEquals(cuenta.getTarjeta(), result.getTarjeta()),
+                () -> assertFalse(result.getIsDeleted())
+        );
+
+        verify(cuentaRepository, times(1)).save(cuenta);
     }
 
     @Test
     void update() {
         Cliente cliente = new Cliente();
         cliente.setId(UUID.fromString("d7293a53-c441-4cda-aea2-230cbcf7ec27"));
-        cliente.setDni("76742083F");
-        cliente.setNombre("Juan");
-        cliente.setApellidos("Pérez");
-        cliente.setEmail("juan.perez@gmail.com");
-        cliente.setTelefono("678349823");
+        cliente.setDni("46911981P");
+        cliente.setNombre("Pepe");
+        cliente.setApellidos("Gómez");
+        cliente.setEmail("pepe.gomez@gmail.com");
+        cliente.setTelefono("601938475");
         cliente.setFotoPerfil("https://via.placeholder.com/150");
         cliente.setFotoDni("https://via.placeholder.com/150");
 
         Tarjeta tarjeta = new Tarjeta();
         tarjeta.setId(UUID.fromString("921f6b86-695d-4361-8905-365d97691024"));
-        tarjeta.setNumeroTarjeta("4242424242424242");
+        tarjeta.setNumeroTarjeta("4009156782194826");
         tarjeta.setFechaCaducidad(LocalDate.parse("2025-12-31"));
-        tarjeta.setCvv(123);
-        tarjeta.setPin("1234");
+        tarjeta.setCvv(456);
+        tarjeta.setPin("4567");
         tarjeta.setLimiteDiario(100.0);
         tarjeta.setLimiteSemanal(200.0);
         tarjeta.setLimiteMensual(500.0);
         tarjeta.setTipoTarjeta(TipoTarjeta.builder().nombre(Tipo.valueOf("DEBITO")).build());
 
+        tipoCuentaTest = new TipoCuenta();
+        tipoCuentaTest.setNombre("ahorro");
+        tipoCuentaTest.setInteres(3.0);
+
         Cuenta cuenta = new Cuenta();
-        cuenta.setId(UUID.fromString("12d45756-3895-49b2-90d3-c4a12d5ee081"));
-        cuenta.setIban("ES9120804243448487618583");
+        cuenta.setId(UUID.fromString("6c257ab6-e588-4cef-a479-c2f8fcd7379a"));
+        cuenta.setIban("ES7302413102733585086708");
         cuenta.setSaldo(1000.0);
-        cuenta.setCliente(clienteTest);
-        cuenta.setTarjeta(tarjetaTest);
+        cuenta.setCliente(cliente);
+        cuenta.setTarjeta(tarjeta);
         cuenta.setIsDeleted(false);
 
         UUID idCuenta = cuenta.getId();
 
-        when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.of(pedidoToUpdate));
-        when(cuentaRepository.save(any(Cuenta.class))).thenReturn(pedidoToUpdate);
+        when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.of(cuenta));
+        when(cuentaRepository.save(any(Cuenta.class))).thenReturn(cuenta);
 
         Cuenta resultPedido = cuentaService.update(idCuenta, cuenta);
 
         assertAll(
-                () -> assertEquals(pedidoToUpdate, resultPedido),
-                () -> assertEquals(pedidoToUpdate.getLineaPedido(), resultPedido.getLineaPedido()),
-                () -> assertEquals(pedidoToUpdate.getLineaPedido().size(), resultPedido.size())
+                () -> assertEquals(cuenta, resultPedido)
         );
 
         verify(cuentaRepository).findById(idCuenta);
@@ -171,6 +230,38 @@ class CuentaServiceImplTest {
     }
 
     @Test
-    void deleteById() {
+    void updateNotFound() {
+        UUID idCuenta = UUID.fromString("4182d617-ec89-4fbc-be95-85e461778700");
+        Cuenta cuenta = new Cuenta();
+        when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.empty());
+
+        assertThrows(CuentaNotFound.class, () -> cuentaService.update(idCuenta, cuenta));
+
+        verify(cuentaRepository).findById(idCuenta);
+        verify(cuentaRepository, never()).save(any(Cuenta.class));
+    }
+
+    @Test
+    void delete() {
+        UUID idCuenta = UUID.randomUUID();
+        Cuenta cuentaToDelete = new Cuenta();
+        
+        when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.of(cuentaToDelete));
+
+        cuentaService.delete(idCuenta);
+
+        verify(cuentaRepository, times(1)).findById(idCuenta);
+        verify(cuentaMapper, times(1)).toCuentaUpdate(cuentaToDelete);
+    }
+
+    @Test
+    void deleteNotFound() {
+        UUID idCuenta = cuentaTest.getId();
+        when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.empty());
+
+        assertThrows(CuentaNotFound.class, () -> cuentaService.delete(idCuenta));
+
+        verify(cuentaRepository).findById(idCuenta);
+        verify(cuentaRepository, times(0)).deleteById(idCuenta);
     }
 }
