@@ -1,6 +1,9 @@
 package org.example.vivesbankproject.cuenta.services;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.vivesbankproject.cuenta.dto.CuentaRequest;
+import org.example.vivesbankproject.cuenta.exceptions.CuentaNotFound;
+import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +20,12 @@ import java.util.UUID;
 @Slf4j
 public class CuentaServiceImpl implements CuentaService{
     private final CuentaRepository cuentaRepository;
+    private final CuentaMapper cuentaMapper;
 
     @Autowired
-    public CuentaServiceImpl(CuentaRepository cuentaRepository) {
+    public CuentaServiceImpl(CuentaRepository cuentaRepository, CuentaMapper cuentaMapper) {
         this.cuentaRepository = cuentaRepository;
+        this.cuentaMapper = cuentaMapper;
     }
 
     @Override
@@ -46,7 +51,7 @@ public class CuentaServiceImpl implements CuentaService{
     @Override
     public Cuenta update(UUID id, Cuenta cuenta) {
         log.info("Actualizando cuenta con id " + id + "...");
-        var cuentaToUpdate = cuentaRepository.findById(id);
+        var cuentaToUpdate = cuentaRepository.findById(id).orElseThrow(() -> new CuentaNotFound(id));
         cuentaToUpdate.setUpdatedAt(LocalDateTime.now());
         return cuentaRepository.save(cuentaToUpdate);
     }
@@ -54,7 +59,7 @@ public class CuentaServiceImpl implements CuentaService{
     @Override
     public Cuenta deleteById(UUID id) {
         log.info("Eliminando cuenta con id " + id + "...");
-        var cuentaToDelete = cuentaRepository.findById(id);
-        return cuentaRepository.save(cuentaToDelete);
+        var cuentaToDelete = cuentaRepository.findById(id).orElseThrow(() -> new CuentaNotFound(id));
+        return cuentaRepository.save(cuentaMapper.toCuentaUpdate(cuentaToDelete));
     }
 }

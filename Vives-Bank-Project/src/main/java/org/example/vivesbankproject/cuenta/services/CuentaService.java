@@ -1,5 +1,6 @@
 package org.example.vivesbankproject.cuenta.services;
 
+import org.example.vivesbankproject.cuenta.dto.CuentaRequest;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
