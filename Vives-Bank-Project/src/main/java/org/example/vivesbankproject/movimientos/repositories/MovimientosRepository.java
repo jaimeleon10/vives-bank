@@ -5,6 +5,10 @@ import org.example.vivesbankproject.movimientos.models.Movimientos;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+import java.util.UUID;
+
 @Repository
 public interface MovimientosRepository extends MongoRepository<Movimientos, ObjectId> {
+    Optional<Movimientos> findMovimientosByClienteId(UUID clienteId);
 }

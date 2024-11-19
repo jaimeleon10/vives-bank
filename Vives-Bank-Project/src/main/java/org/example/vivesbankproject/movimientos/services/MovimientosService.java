@@ -7,17 +7,21 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public interface MovimientosService {
-    Page<Movimientos> findAll(Optional<Cliente> cliente, Pageable pageable);
+    Page<Movimientos> getAll(Optional<Cliente> cliente, Pageable pageable);
 
-    Movimientos findById(ObjectId idPedido);
+    Movimientos getById(ObjectId idPedido);
 
-    Page<Movimientos> findByIdUsuario(Long idUsuario, Pageable pageable);
+    Movimientos getByIdCliente(UUID idCliente);
 
     Movimientos save(Movimientos pedido);
 
+    Movimientos update(ObjectId idPedido, Movimientos pedido);
+
     void delete(ObjectId idPedido);
 
-    Movimientos update(ObjectId idPedido, Movimientos pedido);
+    void softDelete(ObjectId idPedido);
+
 }

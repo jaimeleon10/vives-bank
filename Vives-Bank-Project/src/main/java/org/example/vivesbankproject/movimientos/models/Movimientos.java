@@ -16,6 +16,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Document("movimientos")
 @TypeAlias("Movimiento")
@@ -29,7 +30,7 @@ public class Movimientos {
     private ObjectId id = new ObjectId();
 
     @NotBlank(message = "El id del usuario no puede ser nulo")
-    private Long idUsuario;
+    private UUID idUsuario;
 
     @NotBlank(message = "El cliente no puede estar vacio")
     private Cliente cliente;

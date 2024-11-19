@@ -95,6 +95,7 @@ public class MovimientosServiceImpl implements MovimientosService {
     }
 
     @Override
+    @C
     public Movimientos update(ObjectId idMovimiento, Movimientos Movimiento) {
         log.info("Actualizando Movimiento: {} con {}", idMovimiento, Movimiento);
         var savedMovimient = movimientosRepository.findById(idMovimiento);

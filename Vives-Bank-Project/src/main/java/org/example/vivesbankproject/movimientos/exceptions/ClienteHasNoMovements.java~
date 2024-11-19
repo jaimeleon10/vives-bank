@@ -1,0 +1,9 @@
+package org.example.vivesbankproject.movimientos.exceptions;
+
+import java.util.UUID;
+
+public class ClienteHasNoMovements extends MovimientosException{
+    public ClienteHasNoMovements(UUID clienteId) {
+        super("El cliente con Id" + clienteId + " no tiene movimientos");
+    }
+}
