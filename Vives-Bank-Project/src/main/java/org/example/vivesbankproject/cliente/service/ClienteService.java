@@ -1,3 +1,4 @@
+/*
 package org.example.vivesbankproject.cliente.service;
 
 import org.example.vivesbankproject.cliente.dto.ClienteInfoResponse;
@@ -21,3 +22,4 @@ public interface ClienteService {
 
     void deleteById(UUID id);
 }
+*/
