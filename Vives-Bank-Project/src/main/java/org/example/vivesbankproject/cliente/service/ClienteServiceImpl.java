@@ -1,3 +1,4 @@
+/*
 package org.example.vivesbankproject.cliente.service;
 
 import jakarta.transaction.Transactional;
@@ -59,7 +60,8 @@ public class ClienteServiceImpl implements ClienteService {
         return clienteRepository.findAll(criterio, pageable).map(clienteMapper::toClienteResponse);
     }
 
-    /*@Override
+    */
+/*@Override
     public ClienteInfoResponse findById(UUID id) {
         log.info("Buscando cliente por id: {}", id);
 
@@ -105,5 +107,6 @@ public class ClienteServiceImpl implements ClienteService {
             log.info("Borrado físico de cliente por id: {}", id);
            clienteRepository.delete(cliente);
         }
-    }*/
-}
+    }*//*
+
+}*/
