@@ -21,4 +21,5 @@ public class CuentaResponse {
     private Cliente cliente;
     private TipoCuenta tipoCuenta;
     private Tarjeta tarjeta;
+    private Boolean isDeleted;
 }
