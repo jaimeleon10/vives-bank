@@ -31,4 +31,6 @@ public class CuentaRequest {
 
     @NotBlank(message = "El campo tarjeta no puede estar vacio")
     private Tarjeta tarjeta;
+
+    private Boolean isDeleted;
 }

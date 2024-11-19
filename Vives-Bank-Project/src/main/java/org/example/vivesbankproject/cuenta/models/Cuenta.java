@@ -50,4 +50,7 @@ public class Cuenta {
     @Column(updatable = true, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @Column(nullable = false)
+    private Boolean isDeleted = false;
 }
