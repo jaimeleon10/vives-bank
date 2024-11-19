@@ -16,12 +16,13 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TipoTarjeta {
+
     @Id
     private UUID id;
 
     @Column(nullable = false, unique = true)
     @NotBlank(message = "El nombre del tipo de tarjeta no puede estar vacío")
-    private String nombre;
+    private Tipo nombre;
 
     @CreationTimestamp
     @Column(updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
