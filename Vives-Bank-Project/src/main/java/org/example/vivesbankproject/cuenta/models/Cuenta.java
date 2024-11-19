@@ -8,7 +8,6 @@ import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -23,13 +22,13 @@ public class Cuenta {
     private UUID id;
 
     @Column(nullable = false, unique = true)
-    @NotBlank(message = "El número de cuenta (IBAN) no puede estar vacío")
+    @NotBlank(message = "El numero de cuenta (IBAN) no puede estar vacio")
     private String iban;
 
     @Column(nullable = false)
-    @Digits(integer = 15, fraction = 2, message = "El saldo debe ser un número válido con hasta dos decimales")
+    @Digits(integer = 8, fraction = 2, message = "El saldo debe ser un numero valido con hasta dos decimales")
     @PositiveOrZero(message = "El saldo no puede ser negativo")
-    private BigDecimal saldo;
+    private Double saldo;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "cliente_id", nullable = false, referencedColumnName = "id")
@@ -52,5 +51,3 @@ public class Cuenta {
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
 }
-
-
