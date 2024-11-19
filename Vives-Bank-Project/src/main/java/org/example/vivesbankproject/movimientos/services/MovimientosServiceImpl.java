@@ -3,7 +3,6 @@ package org.example.vivesbankproject.movimientos.services;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cliente.models.Cliente;
-import org.example.vivesbankproject.cliente.service.ClienteService;
 import org.example.vivesbankproject.movimientos.exceptions.ClienteHasNoMovements;
 import org.example.vivesbankproject.movimientos.exceptions.MovimientoNotFound;
 import org.example.vivesbankproject.movimientos.models.Movimientos;
@@ -14,18 +13,11 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import java.util.List;
-import java.util.Optional;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,13 +27,13 @@ import java.util.UUID;
 @CacheConfig(cacheNames = {"Movimientos"})
 public class MovimientosServiceImpl implements MovimientosService {
 
-    private final ClienteService clienteService;
+   // private final ClienteService clienteService;
     private final MovimientosRepository movimientosRepository;
     private final MongoTemplate mongoTemplate;
 
     @Autowired
-    public MovimientosServiceImpl(ClienteService clienteService, MovimientosRepository movimientosRepository, MongoTemplate mongoTemplate) {
-        this.clienteService = clienteService;
+    public MovimientosServiceImpl( MovimientosRepository movimientosRepository, MongoTemplate mongoTemplate) {
+        //this.clienteService = clienteService;
         this.movimientosRepository = movimientosRepository;
         this.mongoTemplate = mongoTemplate;
     }
