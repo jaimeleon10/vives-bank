@@ -1,3 +1,4 @@
+/*
 package org.example.vivesbankproject.cliente.controllers;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -152,4 +153,4 @@ public class ClienteRestController {
         });
         return errors;
     }
-}
+}*/
