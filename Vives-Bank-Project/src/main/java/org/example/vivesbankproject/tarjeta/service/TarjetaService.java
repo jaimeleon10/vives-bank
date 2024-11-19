@@ -4,25 +4,26 @@ import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.models.Tipo;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public interface TarjetaService {
 
-    @Cacheable(value = "tiposTarjeta", key = "#nombre")
-    TipoTarjeta getTipoTarjetaByNombre(Tipo nombre);
+    Page<Tarjeta> getAll(Pageable pageable);
 
-    Tarjeta create(Tarjeta tarjeta);
+    Optional<Tarjeta> getById(UUID id);
 
-    @Cacheable(value = "tarjetas", key = "#id")
-    Tarjeta getById(UUID id);
+    Tarjeta save(Tarjeta tarjeta);
 
     Tarjeta update(UUID id, Tarjeta tarjetaActualizada);
 
-    List<Tarjeta> getAll();
+    Tarjeta deleteById(UUID id);
 
-    void delete(UUID id);
+    TipoTarjeta getTipoTarjetaByNombre(Tipo nombre);
 }
