@@ -1,5 +1,0 @@
-package org.example.vivesbankproject.movimientos.models;
-
-public class IngresoDeNomina extends Transacciones{
-    private String iban_Destino;
-}

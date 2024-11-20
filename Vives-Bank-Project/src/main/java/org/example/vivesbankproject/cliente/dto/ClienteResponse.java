@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 
 import java.time.LocalDateTime;
@@ -25,6 +26,8 @@ public class ClienteResponse {
     private String fotoDni;
 
     private List<Cuenta> cuentas;
+
+    private ObjectId idMovimientos;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

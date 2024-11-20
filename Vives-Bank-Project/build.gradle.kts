@@ -64,6 +64,9 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
+    // testear MongoDB
+    testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo")
+
 }
 
 tasks.withType<Test> {
