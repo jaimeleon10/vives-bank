@@ -13,6 +13,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -51,17 +52,21 @@ public class Cliente {
     private String telefono;
 
     @Column(name = "FOTO_PERFIL")
+    @NotBlank(message = "La foto de perfil no puede estar vacía")
     private String fotoPerfil;
 
     @Column(name = "FOTO_DNI", nullable = false)
+    @NotBlank(message = "La foto del DNI no puede estar vacía")
     private String fotoDni;
 
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "cuentas")
-    private List<Cuenta> cuentas;
+    @Builder.Default
+    private List<Cuenta> cuentas = new ArrayList<>();
 
     @OneToOne(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "user_id")
+    @NotNull(message = "El usuario no puede ser un campo nulo")
     private User user;
 
     private ObjectId idMovimientos;
