@@ -2,20 +2,22 @@ package org.example.vivesbankproject.cuenta.services;
 
 import jakarta.persistence.criteria.Join;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.cliente.models.Cliente;
+import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
+import org.example.vivesbankproject.cuenta.dto.CuentaRequest;
+import org.example.vivesbankproject.cuenta.dto.CuentaResponse;
+import org.example.vivesbankproject.cuenta.exceptions.CuentaExists;
 import org.example.vivesbankproject.cuenta.exceptions.CuentaNotFound;
 import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
-import org.example.vivesbankproject.tarjeta.models.Tarjeta;
-import org.example.vivesbankproject.tarjeta.models.Tipo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,70 +35,71 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
     @Override
-    public Page<Cuenta> getAll(Optional<String> iban, Optional<Double> saldo, Optional<Cliente> cliente, Optional<Tarjeta> tarjeta, Optional<TipoCuenta> tipoCuenta, Pageable pageable) {
-        log.info("Obteniendo todas las cuentas...");
+    public Page<Cuenta> getAll(Optional<String> iban, Optional<BigDecimal> saldoMax, Optional<BigDecimal> saldoMin, Optional<String> tipoCuenta, Pageable pageable) {
+        log.info("Obteniendo todas las cuentas");
 
         Specification<Cuenta> specIbanCuenta = (root, query, criteriaBuilder) ->
-                iban.map(m -> criteriaBuilder.like(criteriaBuilder.lower(root.get("iban")), "%" + m.toLowerCase() + "%"))
-                        .orElseGet(() -> criteriaBuilder.conjunction());
+                iban.map(i -> criteriaBuilder.like(criteriaBuilder.lower(root.get("iban")), "%" + i.toLowerCase() + "%"))
+                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
-        Specification<Cuenta> specSaldoCuenta = (root, query, criteriaBuilder) ->
-                saldo.map(m -> criteriaBuilder.lessThanOrEqualTo(root.get("saldo"), m))
-                        .orElseGet(() -> criteriaBuilder.conjunction());
+        Specification<Cuenta> specSaldoMaxCuenta = (root, query, criteriaBuilder) ->
+                saldoMax.map(s -> criteriaBuilder.lessThanOrEqualTo(root.get("saldo"), s))
+                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
-        Specification<Cuenta> specClienteCuenta = (root, query, criteriaBuilder) ->
-                cliente.map(id -> {
-                    Join<Cuenta, Cliente> clienteJoin = root.join("cliente");
-                    return criteriaBuilder.equal(clienteJoin.get("id"), id);
-                }).orElseGet(criteriaBuilder::conjunction);
+        Specification<Cuenta> specSaldoMinCuenta = (root, query, criteriaBuilder) ->
+                saldoMin.map(s -> criteriaBuilder.greaterThanOrEqualTo(root.get("saldo"), s))
+                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
-        Specification<Cuenta> specTipoCuenta = (root, query, criteriaBuilder) ->
-                tipoCuenta.map(tc -> {
+        Specification<Cuenta> specTipoCuentaFunko = (root, query, criteriaBuilder) ->
+                tipoCuenta.map(t -> {
                     Join<Cuenta, TipoCuenta> tipoCuentaJoin = root.join("tipoCuenta");
-                    return criteriaBuilder.like(criteriaBuilder.lower(tipoCuentaJoin.get("nombre")), "%" + tc.getNombre().toUpperCase() + "%");
-                }).orElseGet(() -> criteriaBuilder.conjunction());
-
-        Specification<Cuenta> specTarjetaCuenta = (root, query, criteriaBuilder) ->
-                tarjeta.map(t -> {
-                    Join<Cuenta, Tarjeta> tarjetaJoin = root.join("tarjeta");
-                    return criteriaBuilder.like(criteriaBuilder.lower(tarjetaJoin.get("nombre")), "%" + t.getNumeroTarjeta() + "%");
-                }).orElseGet(() -> criteriaBuilder.conjunction());
+                    return criteriaBuilder.like(criteriaBuilder.lower(tipoCuentaJoin.get("nombre")), "%" + t.toLowerCase() + "%");
+                }).orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
         Specification<Cuenta> criterio = Specification.where(specIbanCuenta)
-                .and(specSaldoCuenta)
-                .and(specClienteCuenta)
-                .and(specTipoCuenta)
-                .and(specTarjetaCuenta);
+                .and(specSaldoMaxCuenta)
+                .and(specSaldoMinCuenta)
+                .and(specTipoCuentaFunko);
 
         return cuentaRepository.findAll(criterio, pageable);
     }
 
     @Override
-    public Optional<Cuenta> getById(UUID id) {
-        log.info("Obteniendo la cuenta con id " + id + "...");
-        return Optional.of(cuentaRepository.findById(id).orElseThrow(() -> new CuentaNotFound(id)));
+    public CuentaResponse getById(UUID id) {
+        log.info("Obteniendo la cuenta con id: {}", id);
+        var cuenta = cuentaRepository.findById(id).orElseThrow(() -> new CuentaNotFound(id));
+        return cuentaMapper.toCuentaResponse(cuenta);
     }
 
     @Override
-    public Cuenta save(Cuenta cuenta) {
-        log.info("Guardando cuenta: " + cuenta + "...");
-        cuenta.setCreatedAt(LocalDateTime.now());
-        cuenta.setUpdatedAt(LocalDateTime.now());
-        return cuentaRepository.save(cuenta);
+    public CuentaResponse save(CuentaRequest cuentaRequest) {
+        log.info("Guardando cuenta: {}", cuentaRequest);
+        if (cuentaRepository.findByIban(cuentaRequest.getIban()).isPresent()) {
+            throw new CuentaExists(cuentaRequest.getIban());
+        }
+        var cuenta = cuentaRepository.save(cuentaMapper.toCuenta(cuentaRequest));
+        return cuentaMapper.toCuentaResponse(cuenta);
     }
 
     @Override
-    public Cuenta update(UUID id, Cuenta cuenta) {
-        log.info("Actualizando cuenta con id " + id + "...");
-        var cuentaToUpdate = cuentaRepository.findById(id).orElseThrow(() -> new CuentaNotFound(id));
-        cuentaToUpdate.setUpdatedAt(LocalDateTime.now());
-        return cuentaRepository.save(cuentaToUpdate);
+    public CuentaResponse update(UUID id, CuentaRequest cuentaRequest) {
+        log.info("Actualizando cuenta con id {}", id);
+        if (cuentaRepository.findById(id).isPresent()) {
+            throw new CuentaNotFound(id);
+        }
+        if (cuentaRepository.findByIban(cuentaRequest.getIban()).isPresent()) {
+            throw new CuentaExists(cuentaRequest.getIban());
+        }
+        var cuenta = cuentaRepository.save(cuentaMapper.toCuenta(cuentaRequest));
+        return cuentaMapper.toCuentaResponse(cuenta);
     }
 
     @Override
-    public Cuenta delete(UUID id) {
-        log.info("Eliminando cuenta con id " + id + "...");
-        var cuentaToDelete = cuentaRepository.findById(id).orElseThrow(() -> new CuentaNotFound(id));
-        return cuentaRepository.save(cuentaMapper.toCuentaUpdate(cuentaToDelete));
+    public void delete(UUID id) {
+        log.info("Eliminando cuenta con id {}", id);
+        if (cuentaRepository.findById(id).isPresent()) {
+            throw new CuentaNotFound(id);
+        }
+        cuentaRepository.deleteById(id);
     }
 }
