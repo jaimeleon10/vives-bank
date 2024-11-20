@@ -5,9 +5,10 @@ import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.models.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 import java.util.Optional;
-import java.util.UUID;
 
+@Service
 public interface UserService {
 
     Page<UserResponse> getAll(Optional<String> username, Optional<Role> rol, Pageable pageable);

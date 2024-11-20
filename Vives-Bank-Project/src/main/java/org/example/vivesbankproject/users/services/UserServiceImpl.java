@@ -9,13 +9,17 @@ import org.example.vivesbankproject.users.mappers.UserMapper;
 import org.example.vivesbankproject.users.models.Role;
 import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.users.repositories.UserRepository;
+import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Service
+@CacheConfig(cacheNames = {"usuarios"})
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
