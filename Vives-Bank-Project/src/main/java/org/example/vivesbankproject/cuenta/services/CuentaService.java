@@ -1,6 +1,7 @@
 package org.example.vivesbankproject.cuenta.services;
 
 import org.example.vivesbankproject.cuenta.dto.CuentaRequest;
+import org.example.vivesbankproject.cuenta.dto.CuentaRequestUpdate;
 import org.example.vivesbankproject.cuenta.dto.CuentaResponse;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.springframework.data.domain.Page;
@@ -19,7 +20,7 @@ public interface CuentaService {
 
     CuentaResponse save(CuentaRequest cuentaRequest);
 
-    CuentaResponse update(String id, CuentaRequest cuentaRequest);
+    CuentaResponse update(UUID id, CuentaRequestUpdate cuentaRequestUpdate);
 
     void delete(String id);
 }
