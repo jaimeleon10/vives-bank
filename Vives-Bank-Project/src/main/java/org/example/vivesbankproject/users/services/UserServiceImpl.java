@@ -3,7 +3,8 @@ package org.example.vivesbankproject.users.services;
 import org.example.vivesbankproject.users.dto.UserRequest;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.exceptions.UserExists;
-import org.example.vivesbankproject.users.exceptions.UserNotFound;
+import org.example.vivesbankproject.users.exceptions.UserNotFoundById;
+import org.example.vivesbankproject.users.exceptions.UserNotFoundByUsername;
 import org.example.vivesbankproject.users.mappers.UserMapper;
 import org.example.vivesbankproject.users.models.Role;
 import org.example.vivesbankproject.users.models.User;
@@ -16,7 +17,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @CacheConfig(cacheNames = {"usuario"})
@@ -47,15 +47,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Cacheable(key = "#id")
-    public UserResponse getById(UUID id) {
-        var user = userRepository.findById(id).orElseThrow(() -> new UserNotFound(id));
+    public UserResponse getById(String id) {
+        var user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundById(id));
         return userMapper.toUserResponse(user);
     }
 
     @Override
     @Cacheable(key = "#username")
     public UserResponse getByUsername(String username) {
-        var user = userRepository.findByUsername(username).orElseThrow(() -> new UserNotFound(username));
+        var user = userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundByUsername(username));
         return userMapper.toUserResponse(user);
     }
 
@@ -69,9 +69,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse update(UUID id, UserRequest userRequest) {
+    public UserResponse update(String id, UserRequest userRequest) {
         if (userRepository.findById(id).isEmpty()) {
-            throw new UserNotFound(id);
+            throw new UserNotFoundById(id);
         }
         if (userRepository.findByUsername(userRequest.getUsername()).isPresent()) {
             throw new UserExists(userRequest.getUsername());
@@ -81,9 +81,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteById(UUID id) {
+    public void deleteById(String id) {
         if (userRepository.findById(id).isEmpty()) {
-            throw new UserNotFound(id);
+            throw new UserNotFoundById(id);
         }
         userRepository.deleteById(id);
     }

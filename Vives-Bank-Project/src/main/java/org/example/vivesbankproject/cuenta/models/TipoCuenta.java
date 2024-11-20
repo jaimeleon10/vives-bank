@@ -3,6 +3,7 @@ package org.example.vivesbankproject.cuenta.models;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.example.vivesbankproject.utils.IdGenerator;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -18,7 +19,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class TipoCuenta {
     @Id
-    private UUID id;
+    private String id = IdGenerator.generarId();
 
     @Column(nullable = false, unique = true)
     @NotBlank(message = "El nombre del tipo de cuenta no puede estar vacío")
