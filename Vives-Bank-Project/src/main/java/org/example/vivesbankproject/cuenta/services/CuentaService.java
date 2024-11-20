@@ -20,7 +20,7 @@ public interface CuentaService {
 
     CuentaResponse save(CuentaRequest cuentaRequest);
 
-    CuentaResponse update(UUID id, CuentaRequestUpdate cuentaRequestUpdate);
+    CuentaResponse update(String id, CuentaRequestUpdate cuentaRequestUpdate);
 
     void delete(String id);
 }
