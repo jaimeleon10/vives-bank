@@ -63,7 +63,7 @@ class MovimientosServiceImplTest {
                 .telefono("123456789")
                 .fotoPerfil("perfil.jpg")
                 .fotoDni("dni.jpg")
-                .cuentas(new ArrayList<>())
+                .cuentas(Set.of())
                 .user(new User())
                 .idMovimientos(movimientoId)
                 .createdAt(LocalDateTime.now())
