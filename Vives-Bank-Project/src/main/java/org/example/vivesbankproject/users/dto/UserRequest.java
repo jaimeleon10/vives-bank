@@ -24,5 +24,6 @@ public class UserRequest {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
-    private Set<Role> roles;
+    @Builder.Default
+    private Set<Role> roles = Set.of(Role.USER);
 }
