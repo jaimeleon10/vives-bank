@@ -52,5 +52,6 @@ public class Cuenta {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isDeleted = false;
 }
