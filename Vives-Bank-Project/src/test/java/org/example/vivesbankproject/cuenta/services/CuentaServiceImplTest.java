@@ -62,7 +62,7 @@ class CuentaServiceImplTest {
         tipoCuentaTest.setInteres(BigDecimal.valueOf(2.0));
 
         cuentaTest = new Cuenta();
-        cuentaTest.setId(UUID.fromString("12d45756-3895-49b2-90d3-c4a12d5ee081"));
+        cuentaTest.setId("12d45756-3895-49b2-90d3-c4a12d5ee081");
         cuentaTest.setIban("ES9120804243448487618583");
         cuentaTest.setSaldo(BigDecimal.valueOf(1000.0));
         cuentaTest.setTipoCuenta(tipoCuentaTest);
@@ -96,7 +96,7 @@ class CuentaServiceImplTest {
 
     @Test
     void getById() {
-        UUID idCuenta = UUID.randomUUID();
+        String idCuenta = "hola";
 
         CuentaResponse expectedCuenta = new CuentaResponse();
         expectedCuenta.setId(idCuenta);
@@ -127,8 +127,8 @@ class CuentaServiceImplTest {
 
     @Test
     void getByIdNotFound() {
-        UUID idCuenta = UUID.fromString("4182d617-ec89-4fbc-be95-85e461778700");
-        when(cuentaRepository.findById(UUID.fromString("4182d617-ec89-4fbc-be95-85e461778700"))).thenReturn(Optional.empty());
+        String idCuenta = "4182d617-ec89-4fbc-be95-85e461778700";
+        when(cuentaRepository.findById("4182d617-ec89-4fbc-be95-85e461778700")).thenReturn(Optional.empty());
 
         assertThrows(CuentaNotFound.class, () -> cuentaService.getById(idCuenta));
 
@@ -152,7 +152,7 @@ class CuentaServiceImplTest {
         tipoCuenta.setInteres(BigDecimal.valueOf(2.0));
 
         Cuenta cuenta = new Cuenta();
-        cuenta.setId(UUID.fromString("6c257ab6-e588-4cef-a479-c2f8fcd7379a"));
+        cuenta.setId("6c257ab6-e588-4cef-a479-c2f8fcd7379a");
         cuenta.setIban("ES3715447107447741413620");
         cuenta.setSaldo(BigDecimal.valueOf(1000.0));
         cuenta.setTipoCuenta(tipoCuenta);
@@ -198,7 +198,7 @@ class CuentaServiceImplTest {
 
     @Test
     void update() {
-        UUID idCuenta = UUID.fromString("6c257ab6-e588-4cef-a479-c2f8fcd7379a");
+        String idCuenta = "6c257ab6-e588-4cef-a479-c2f8fcd7379a";
 
         Cuenta cuenta = new Cuenta();
         cuenta.setId(idCuenta);
@@ -238,7 +238,7 @@ class CuentaServiceImplTest {
 
     @Test
     void updateNotFound() {
-        UUID idCuenta = UUID.fromString("4182d617-ec89-4fbc-be95-85e461778700");
+        String idCuenta = "4182d617-ec89-4fbc-be95-85e461778700";
         CuentaRequestUpdate cuentaRequestUpdate = new CuentaRequestUpdate();
         when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.empty());
 
@@ -250,7 +250,7 @@ class CuentaServiceImplTest {
 
     @Test
     void delete() {
-        UUID idCuenta = UUID.randomUUID();
+        String idCuenta = "hola";
 
         Tarjeta tarjeta = new Tarjeta();
         tarjeta.setId(UUID.fromString("921f6b86-695d-4361-8905-365d97691024"));
@@ -284,7 +284,7 @@ class CuentaServiceImplTest {
 
     @Test
     void deleteNotFound() {
-        UUID idCuenta = UUID.fromString("5f5c2645-a470-4fad-b003-5fefc08fceca");
+        String idCuenta = "5f5c2645-a470-4fad-b003-5fefc08fceca";
 
         when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.empty());
 

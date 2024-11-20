@@ -1,6 +1,7 @@
 package org.example.vivesbankproject.cuenta.mappers;
 
 import org.example.vivesbankproject.cuenta.dto.CuentaRequest;
+import org.example.vivesbankproject.cuenta.dto.CuentaRequestUpdate;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
@@ -40,7 +41,7 @@ class CuentaMapperTest {
         tipoCuentaTest.setInteres(BigDecimal.valueOf(2.0));
 
         cuentaTest = new Cuenta();
-        cuentaTest.setId(UUID.fromString("12d45756-3895-49b2-90d3-c4a12d5ee081"));
+        cuentaTest.setId("12d45756-3895-49b2-90d3-c4a12d5ee081");
         cuentaTest.setIban("ES9120804243448487618583");
         cuentaTest.setSaldo(BigDecimal.valueOf(1000.0));
         cuentaTest.setTipoCuenta(tipoCuentaTest);
@@ -78,6 +79,24 @@ class CuentaMapperTest {
                 () -> assertEquals(cuentaRequest.getSaldo(), res.getSaldo()),
                 () -> assertEquals(cuentaRequest.getTipoCuenta().getNombre(), res.getTipoCuenta().getNombre()),
                 () -> assertEquals(cuentaRequest.getTarjeta().getNumeroTarjeta(), res.getTarjeta().getNumeroTarjeta()),
+                () -> assertFalse(res.getIsDeleted())
+        );
+    }
+
+    @Test
+    void toCuentaUpdate() {
+        CuentaRequestUpdate cuentaRequestUpdate = new CuentaRequestUpdate();
+        cuentaRequestUpdate.setSaldo(BigDecimal.valueOf(1500.0));
+        cuentaRequestUpdate.setTipoCuenta(tipoCuentaTest);
+        cuentaRequestUpdate.setTarjeta(tarjetaTest);
+        cuentaRequestUpdate.setIsDeleted(false);
+
+        var res = mapper.toCuentaUpdate(cuentaRequestUpdate, cuentaTest);
+
+        assertAll(
+                () -> assertEquals(cuentaRequestUpdate.getSaldo(), res.getSaldo()),
+                () -> assertEquals(cuentaRequestUpdate.getTipoCuenta().getNombre(), res.getTipoCuenta().getNombre()),
+                () -> assertEquals(cuentaRequestUpdate.getTarjeta().getNumeroTarjeta(), res.getTarjeta().getNumeroTarjeta()),
                 () -> assertFalse(res.getIsDeleted())
         );
     }

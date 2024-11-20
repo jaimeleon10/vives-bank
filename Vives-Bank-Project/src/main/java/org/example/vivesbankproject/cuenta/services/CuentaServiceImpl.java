@@ -81,7 +81,7 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
     @Override
-    public CuentaResponse update(UUID id, CuentaRequestUpdate cuentaRequestUpdate) {
+    public CuentaResponse update(String id, CuentaRequestUpdate cuentaRequestUpdate) {
         log.info("Actualizando cuenta con id {}", id);
         var cuenta = cuentaRepository.findById(id).orElseThrow(() -> new CuentaNotFound(id));
         var cuentaSaved = cuentaRepository.save(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta));
