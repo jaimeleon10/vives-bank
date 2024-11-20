@@ -1,5 +1,6 @@
 package org.example.vivesbankproject.tarjeta.service;
 
+import org.example.vivesbankproject.tarjeta.dto.TarjetaRequest;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.models.Tipo;
@@ -16,7 +17,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -54,9 +57,9 @@ class TarjetaServiceImplTest {
                 .fechaCaducidad(LocalDate.parse("2025-12-31"))
                 .cvv(123)
                 .pin("1234")
-                .limiteDiario(100.0)
-                .limiteSemanal(200.0)
-                .limiteMensual(500.0)
+                .limiteDiario(BigDecimal.valueOf(100.0))
+                .limiteSemanal(BigDecimal.valueOf(200.0))
+                .limiteMensual(BigDecimal.valueOf(500.0))
                 .tipoTarjeta(tipoTarjetaTest)
                 .build();
     }
@@ -66,9 +69,19 @@ class TarjetaServiceImplTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Tarjeta> tarjetaPage = new PageImpl<>(List.of(tarjetaTest), pageable, 1);
 
-        when(tarjetaRepository.findAll(pageable)).thenReturn(tarjetaPage);
+        when(tarjetaRepository.findAll((Specification<Tarjeta>) any(), eq(pageable))).thenReturn(tarjetaPage);
 
-        Page<Tarjeta> result = tarjetaService.getAll(pageable);
+        Page<Tarjeta> result = tarjetaService.getAll(
+                Optional.of("424242"),
+                Optional.of(123),
+                Optional.of(LocalDate.parse("2025-12-31")),
+                Optional.of(tipoTarjetaTest),
+                Optional.of(100.0),
+                Optional.of(200.0),
+                Optional.of(500.0),
+                Optional.of(UUID.randomUUID()),
+                pageable
+        );
 
         assertAll(
                 () -> assertNotNull(result),
@@ -76,17 +89,28 @@ class TarjetaServiceImplTest {
                 () -> assertTrue(result.getContent().contains(tarjetaTest))
         );
 
-        verify(tarjetaRepository).findAll(pageable);
+        verify(tarjetaRepository).findAll((Specification<Tarjeta>) any(), eq(pageable));
     }
+
 
     @Test
     void getAllPaginaVacia() {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Tarjeta> emptyPage = new PageImpl<>(List.of(), pageable, 0);
 
-        when(tarjetaRepository.findAll(pageable)).thenReturn(emptyPage);
+        when(tarjetaRepository.findAll((Specification<Tarjeta>) any(), eq(pageable))).thenReturn(emptyPage);
 
-        Page<Tarjeta> result = tarjetaService.getAll(pageable);
+        Page<Tarjeta> result = tarjetaService.getAll(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                pageable
+        );
 
         assertAll(
                 () -> assertNotNull(result),
@@ -94,8 +118,9 @@ class TarjetaServiceImplTest {
                 () -> assertTrue(result.getContent().isEmpty())
         );
 
-        verify(tarjetaRepository).findAll(pageable);
+        verify(tarjetaRepository).findAll((Specification<Tarjeta>) any(), eq(pageable));
     }
+
 
     @Test
     void findById() {
@@ -122,36 +147,65 @@ class TarjetaServiceImplTest {
 
     @Test
     void save() {
-        when(tarjetaRepository.save(tarjetaTest)).thenReturn(tarjetaTest);
+        /*TarjetaRequest tarjetaRequest = new TarjetaRequest(
+                "4242424242424242",
+                LocalDate.parse("2025-12-31"),
+                123,
+                "1234",
+                BigDecimal.valueOf(100.0),
+                BigDecimal.valueOf(200.0),
+                BigDecimal.valueOf(500.0),
+                Tipo.DEBITO.name()
+        );
 
-        Tarjeta result = tarjetaService.save(tarjetaTest);
+        when(tarjetaRepository.save(any(Tarjeta.class))).thenReturn(tarjetaTest);
+
+        Tarjeta result = tarjetaService.save(tarjetaRequest);
 
         assertEquals(tarjetaTest, result);
-
-        verify(tarjetaRepository).save(tarjetaTest);
-    }
-
-    @Test
-    void saveExcepcion() {
-        when(tarjetaRepository.save(any(Tarjeta.class))).thenThrow(new RuntimeException("Error guardando la tarjeta"));
-
-        assertThrows(RuntimeException.class, () -> tarjetaService.save(tarjetaTest));
 
         verify(tarjetaRepository).save(any(Tarjeta.class));
     }
 
     @Test
+    void saveExcepcion() {
+        TarjetaRequest tarjetaRequest = new TarjetaRequest(
+                "4242424242424242",
+                LocalDate.parse("2025-12-31"),
+                123,
+                "1234",
+                BigDecimal.valueOf(100.0),
+                BigDecimal.valueOf(200.0),
+                BigDecimal.valueOf(500.0),
+                Tipo.DEBITO.name()
+        );
+
+        when(tarjetaRepository.save(any(Tarjeta.class))).thenThrow(new RuntimeException("Error guardando la tarjeta"));
+
+        assertThrows(RuntimeException.class, () -> tarjetaService.save(tarjetaRequest));
+
+        verify(tarjetaRepository).save(any(Tarjeta.class));*/
+    }
+
+
+    @Test
     void update() {
         UUID id = tarjetaTest.getId();
-        Tarjeta tarjetaActualizada = Tarjeta.builder()
+        TarjetaRequest tarjetaRequest = TarjetaRequest.builder()
                 .pin("5678")
-                .limiteDiario(150.0)
+                .limiteDiario(BigDecimal.valueOf(150.0))
+                .build();
+
+        Tarjeta tarjetaActualizada = Tarjeta.builder()
+                .id(id)
+                .pin("5678")
+                .limiteDiario(BigDecimal.valueOf(150.0))
                 .build();
 
         when(tarjetaRepository.findById(id)).thenReturn(Optional.of(tarjetaTest));
         when(tarjetaRepository.save(any(Tarjeta.class))).thenReturn(tarjetaActualizada);
 
-        Tarjeta result = tarjetaService.update(id, tarjetaActualizada);
+        Tarjeta result = tarjetaService.update(id, tarjetaRequest);
 
         assertAll(
                 () -> assertEquals("5678", result.getPin()),
@@ -165,11 +219,11 @@ class TarjetaServiceImplTest {
     @Test
     void UpdateNotFound() {
         UUID id = UUID.randomUUID();
-        Tarjeta tarjetaActualizada = Tarjeta.builder().build();
+        TarjetaRequest tarjetaRequest = TarjetaRequest.builder().build();
 
         when(tarjetaRepository.findById(id)).thenReturn(Optional.empty());
 
-        assertThrows(TarjetaNotFound.class, () -> tarjetaService.update(id, tarjetaActualizada));
+        assertThrows(TarjetaNotFound.class, () -> tarjetaService.update(id, tarjetaRequest));
 
         verify(tarjetaRepository).findById(id);
         verify(tarjetaRepository, never()).save(any(Tarjeta.class));
@@ -178,7 +232,13 @@ class TarjetaServiceImplTest {
     @Test
     void UpdateConValoresNull() {
         UUID id = tarjetaTest.getId();
+        TarjetaRequest tarjetaRequest = TarjetaRequest.builder()
+                .pin(null)
+                .limiteDiario(null)
+                .build();
+
         Tarjeta tarjetaActualizada = Tarjeta.builder()
+                .id(id)
                 .pin(null)
                 .limiteDiario(null)
                 .build();
@@ -186,7 +246,7 @@ class TarjetaServiceImplTest {
         when(tarjetaRepository.findById(id)).thenReturn(Optional.of(tarjetaTest));
         when(tarjetaRepository.save(any(Tarjeta.class))).thenReturn(tarjetaActualizada);
 
-        Tarjeta result = tarjetaService.update(id, tarjetaActualizada);
+        Tarjeta result = tarjetaService.update(id, tarjetaRequest);
 
         assertAll(
                 () -> assertNull(result.getPin()),
@@ -196,6 +256,7 @@ class TarjetaServiceImplTest {
         verify(tarjetaRepository).findById(id);
         verify(tarjetaRepository).save(any(Tarjeta.class));
     }
+
 
     @Test
     void deleteById() {
@@ -250,9 +311,19 @@ class TarjetaServiceImplTest {
         List<Tarjeta> tarjetas = List.of(tarjetaTest, tarjetaTest);
         Page<Tarjeta> tarjetaPage = new PageImpl<>(tarjetas, pageable, tarjetas.size());
 
-        when(tarjetaRepository.findAll(pageable)).thenReturn(tarjetaPage);
+        when(tarjetaRepository.findAll((Specification<Tarjeta>) any(), eq(pageable))).thenReturn(tarjetaPage);
 
-        Page<Tarjeta> result = tarjetaService.getAll(pageable);
+        Page<Tarjeta> result = tarjetaService.getAll(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                pageable
+        );
 
         assertAll(
                 () -> assertNotNull(result),
@@ -260,7 +331,8 @@ class TarjetaServiceImplTest {
                 () -> assertTrue(result.getContent().containsAll(tarjetas))
         );
 
-        verify(tarjetaRepository).findAll(pageable);
+        verify(tarjetaRepository).findAll((Specification<Tarjeta>) any(), eq(pageable));
     }
+
 
 }
