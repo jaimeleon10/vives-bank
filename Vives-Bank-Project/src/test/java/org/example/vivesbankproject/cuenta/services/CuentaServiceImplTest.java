@@ -1,6 +1,5 @@
 package org.example.vivesbankproject.cuenta.services;
 
-import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cuenta.exceptions.CuentaNotFound;
 import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
@@ -38,22 +37,11 @@ class CuentaServiceImplTest {
     private CuentaServiceImpl cuentaService;
 
     private Cuenta cuentaTest;
-    private Cliente clienteTest;
     private Tarjeta tarjetaTest;
     private TipoCuenta tipoCuentaTest;
 
     @BeforeEach
     void setUp() {
-        clienteTest = new Cliente();
-        clienteTest.setId(UUID.fromString("d7293a53-c441-4cda-aea2-230cbcf7ec27"));
-        clienteTest.setDni("76742083F");
-        clienteTest.setNombre("Juan");
-        clienteTest.setApellidos("Pérez");
-        clienteTest.setEmail("juan.perez@gmail.com");
-        clienteTest.setTelefono("678349823");
-        clienteTest.setFotoPerfil("https://via.placeholder.com/150");
-        clienteTest.setFotoDni("https://via.placeholder.com/150");
-
         tarjetaTest = new Tarjeta();
         tarjetaTest.setId(UUID.fromString("921f6b86-695d-4361-8905-365d97691024"));
         tarjetaTest.setNumeroTarjeta("4242424242424242");
@@ -73,7 +61,6 @@ class CuentaServiceImplTest {
         cuentaTest.setId(UUID.fromString("12d45756-3895-49b2-90d3-c4a12d5ee081"));
         cuentaTest.setIban("ES9120804243448487618583");
         cuentaTest.setSaldo(1000.0);
-        cuentaTest.setCliente(clienteTest);
         cuentaTest.setTipoCuenta(tipoCuentaTest);
         cuentaTest.setTarjeta(tarjetaTest);
         cuentaTest.setIsDeleted(false);
@@ -87,7 +74,7 @@ class CuentaServiceImplTest {
 
         when(cuentaRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(cuentaPage);
 
-        var result = cuentaService.getAll(Optional.of(cuentaTest.getIban()), Optional.of(cuentaTest.getSaldo()), Optional.of(cuentaTest.getCliente()), Optional.of(cuentaTest.getTarjeta()), Optional.of(cuentaTest.getTipoCuenta()), pageable);
+        var result = cuentaService.getAll(Optional.of(cuentaTest.getIban()), Optional.of(cuentaTest.getSaldo()), Optional.of(cuentaTest.getTarjeta()), Optional.of(cuentaTest.getTipoCuenta()), pageable);
 
         assertAll(
                 () -> assertNotNull(result),
@@ -95,7 +82,6 @@ class CuentaServiceImplTest {
                 () -> assertTrue(result.getContent().contains(cuentaTest)),
                 () -> assertEquals("ES9120804243448487618583", result.getContent().getFirst().getIban()),
                 () -> assertEquals(1000.0, result.getContent().getFirst().getSaldo()),
-                () -> assertEquals(clienteTest, result.getContent().getFirst().getCliente()),
                 () -> assertEquals(tipoCuentaTest, result.getContent().getFirst().getTipoCuenta()),
                 () -> assertEquals(tarjetaTest, result.getContent().getFirst().getTarjeta()),
                 () -> assertFalse(result.getContent().getFirst().getIsDeleted())
@@ -129,16 +115,6 @@ class CuentaServiceImplTest {
 
     @Test
     void save() {
-        Cliente cliente = new Cliente();
-        cliente.setId(UUID.fromString("68aa261a-56d7-4e5f-a7b9-1b6e7b3a04a4"));
-        cliente.setDni("44889646V");
-        cliente.setNombre("Jesus");
-        cliente.setApellidos("Jimenez");
-        cliente.setEmail("jesus.jimenez@gmail.com");
-        cliente.setTelefono("623479558");
-        cliente.setFotoPerfil("https://via.placeholder.com/150");
-        cliente.setFotoDni("https://via.placeholder.com/150");
-
         Tarjeta tarjeta = new Tarjeta();
         tarjeta.setId(UUID.fromString("7b498e86-5197-4e05-9361-3da894b62353"));
         tarjeta.setNumeroTarjeta("4009156782194826");
@@ -157,7 +133,6 @@ class CuentaServiceImplTest {
         cuenta.setId(UUID.fromString("6c257ab6-e588-4cef-a479-c2f8fcd7379a"));
         cuenta.setIban("ES0901869615019736267715");
         cuenta.setSaldo(1000.0);
-        cuenta.setCliente(cliente);
         cuenta.setTipoCuenta(tipoCuenta);
         cuenta.setTarjeta(tarjeta);
         cuenta.setIsDeleted(false);
@@ -170,7 +145,6 @@ class CuentaServiceImplTest {
                 () -> assertEquals(cuenta.getId(), result.getId()),
                 () -> assertEquals(cuenta.getIban(), result.getIban()),
                 () -> assertEquals(cuenta.getSaldo(), result.getSaldo()),
-                () -> assertEquals(cuenta.getCliente(), result.getCliente()),
                 () -> assertEquals(cuenta.getTipoCuenta(), result.getTipoCuenta()),
                 () -> assertEquals(cuenta.getTarjeta(), result.getTarjeta()),
                 () -> assertFalse(result.getIsDeleted())
@@ -181,16 +155,6 @@ class CuentaServiceImplTest {
 
     @Test
     void update() {
-        Cliente cliente = new Cliente();
-        cliente.setId(UUID.fromString("d7293a53-c441-4cda-aea2-230cbcf7ec27"));
-        cliente.setDni("46911981P");
-        cliente.setNombre("Pepe");
-        cliente.setApellidos("Gómez");
-        cliente.setEmail("pepe.gomez@gmail.com");
-        cliente.setTelefono("601938475");
-        cliente.setFotoPerfil("https://via.placeholder.com/150");
-        cliente.setFotoDni("https://via.placeholder.com/150");
-
         Tarjeta tarjeta = new Tarjeta();
         tarjeta.setId(UUID.fromString("921f6b86-695d-4361-8905-365d97691024"));
         tarjeta.setNumeroTarjeta("4009156782194826");
@@ -210,7 +174,6 @@ class CuentaServiceImplTest {
         cuenta.setId(UUID.fromString("6c257ab6-e588-4cef-a479-c2f8fcd7379a"));
         cuenta.setIban("ES7302413102733585086708");
         cuenta.setSaldo(1000.0);
-        cuenta.setCliente(cliente);
         cuenta.setTarjeta(tarjeta);
         cuenta.setIsDeleted(false);
 

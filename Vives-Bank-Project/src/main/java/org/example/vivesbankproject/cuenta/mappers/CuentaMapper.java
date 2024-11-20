@@ -13,7 +13,6 @@ public class CuentaMapper {
                 cuenta.getId(),
                 cuenta.getIban(),
                 cuenta.getSaldo(),
-                cuenta.getCliente(),
                 cuenta.getTipoCuenta(),
                 cuenta.getTarjeta(),
                 cuenta.getCreatedAt(),
@@ -27,7 +26,6 @@ public class CuentaMapper {
                 .id(cuenta.getId())
                 .iban(cuenta.getIban())
                 .saldo(cuenta.getSaldo())
-                .cliente(cuenta.getCliente())
                 .tipoCuenta(cuenta.getTipoCuenta())
                 .tarjeta(cuenta.getTarjeta())
                 .isDeleted(cuenta.getIsDeleted())
