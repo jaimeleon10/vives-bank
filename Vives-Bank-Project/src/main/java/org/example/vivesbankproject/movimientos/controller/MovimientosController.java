@@ -40,18 +40,17 @@ public class MovimientosController {
 
     @GetMapping
     public ResponseEntity<PageResponse<Movimientos>> getMovimientos(
-            @RequestParam(required = false) Optional<Cliente> cliente,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String direction,
             HttpServletRequest request
     ) {
-        log.info("Obteniendo movimientos con las siquientes condiciones: " +  cliente);
+        log.info("Obteniendo todos los movimientos");
         Sort sort = direction.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         // Creamos cómo va a ser la paginación
         Pageable pageable = PageRequest.of(page, size, sort);
-        var movimientos = service.getAll(cliente, pageable);
+        var movimientos = service.getAll(pageable);
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString());
 
