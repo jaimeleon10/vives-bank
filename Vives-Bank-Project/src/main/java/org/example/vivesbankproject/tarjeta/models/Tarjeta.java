@@ -15,7 +15,7 @@ import java.util.UUID;
 @Data
 @Builder
 @Entity
-@Table(name = "TARJETAS")
+@Table(name = "tarjetas")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Tarjeta {

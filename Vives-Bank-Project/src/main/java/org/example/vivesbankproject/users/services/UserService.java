@@ -12,13 +12,13 @@ public interface UserService {
 
     Page<UserResponse> getAll(Optional<String> username, Optional<Role> rol, Pageable pageable);
 
-    UserResponse getById(UUID id);
+    UserResponse getById(String id);
 
     UserResponse getByUsername(String username);
 
     UserResponse save(UserRequest user);
 
-    UserResponse update(UUID id, UserRequest user);
+    UserResponse update(String id, UserRequest user);
 
-    void deleteById(UUID id);
+    void deleteById(String id);
 }
