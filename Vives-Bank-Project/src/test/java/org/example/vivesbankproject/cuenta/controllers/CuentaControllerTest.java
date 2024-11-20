@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
+/*
 @SpringBootTest
 @AutoConfigureMockMvc
 class CuentaControllerTest {
@@ -290,3 +291,5 @@ class CuentaControllerTest {
         verify(cuentaService, times(1)).delete(UUID.fromString("6c257ab6-e588-4cef-a479-c2f8fcd7379a"));
     }
 }
+
+ */

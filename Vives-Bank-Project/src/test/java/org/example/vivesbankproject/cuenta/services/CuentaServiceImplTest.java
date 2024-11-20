@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -48,19 +49,19 @@ class CuentaServiceImplTest {
         tarjetaTest.setFechaCaducidad(LocalDate.parse("2025-12-31"));
         tarjetaTest.setCvv(123);
         tarjetaTest.setPin("1234");
-        tarjetaTest.setLimiteDiario(100.0);
-        tarjetaTest.setLimiteSemanal(200.0);
-        tarjetaTest.setLimiteMensual(500.0);
+        tarjetaTest.setLimiteDiario(BigDecimal.valueOf(100.0));
+        tarjetaTest.setLimiteSemanal(BigDecimal.valueOf(200.0));
+        tarjetaTest.setLimiteMensual(BigDecimal.valueOf(500.0));
         tarjetaTest.setTipoTarjeta(TipoTarjeta.builder().nombre(Tipo.valueOf("DEBITO")).build());
 
         tipoCuentaTest = new TipoCuenta();
         tipoCuentaTest.setNombre("normal");
-        tipoCuentaTest.setInteres(2.0);
+        tipoCuentaTest.setInteres(BigDecimal.valueOf(2.0));
 
         cuentaTest = new Cuenta();
         cuentaTest.setId(UUID.fromString("12d45756-3895-49b2-90d3-c4a12d5ee081"));
         cuentaTest.setIban("ES9120804243448487618583");
-        cuentaTest.setSaldo(1000.0);
+        cuentaTest.setSaldo(BigDecimal.valueOf(1000.0));
         cuentaTest.setTipoCuenta(tipoCuentaTest);
         cuentaTest.setTarjeta(tarjetaTest);
         cuentaTest.setIsDeleted(false);
