@@ -2,6 +2,7 @@ package org.example.vivesbankproject.tarjeta.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequest;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
 import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
@@ -15,9 +16,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -35,7 +37,10 @@ public class TarjetaServiceImpl implements TarjetaService {
     }
 
     @Override
-    public Page<Tarjeta> getAll(Optional<String> numero, Optional<Integer> cvv, Optional<LocalDate> caducidad, Optional<TipoTarjeta> tipoTarjeta, Optional<Double> limiteDiario, Optional<Double> limiteSemanal, Optional<Double> limiteMensual, Optional<UUID> cuentaId, Pageable pageable) {
+    public Page<TarjetaResponse> getAll(Optional<String> numero, Optional<Integer> cvv, Optional<LocalDate> caducidad,
+                                        Optional<TipoTarjeta> tipoTarjeta, Optional<Double> limiteDiario,
+                                        Optional<Double> limiteSemanal, Optional<Double> limiteMensual,
+                                        Optional<UUID> cuentaId, Pageable pageable) {
 
         log.info("Aplicando filtros: numero={}, cvv={}, caducidad={}, tipoTarjeta={}, limiteDiario={}, limiteSemanal={}, limiteMensual={}, cuentaId={}",
                 numero, cvv, caducidad, tipoTarjeta, limiteDiario, limiteSemanal, limiteMensual, cuentaId);
@@ -73,47 +78,56 @@ public class TarjetaServiceImpl implements TarjetaService {
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
         Specification<Tarjeta> criteria = Specification.where(specNumero)
-                .and(specCvv).and(specCaducidad).and(specTipoTarjeta).and(specLimiteDiario).and(specLimiteSemanal).and(specLimiteMensual).and(specCuentaId);
+                .and(specCvv).and(specCaducidad).and(specTipoTarjeta)
+                .and(specLimiteDiario).and(specLimiteSemanal)
+                .and(specLimiteMensual).and(specCuentaId);
 
-        return tarjetaRepository.findAll(criteria, pageable);
+        Page<Tarjeta> tarjetasPage = tarjetaRepository.findAll(criteria, pageable);
+
+        // Convert Tarjeta to TarjetaResponse
+        List<TarjetaResponse> tarjetaResponses = tarjetasPage.getContent().stream()
+                .map(tarjetaMapper::toTarjetaResponse)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(tarjetaResponses, pageable, tarjetasPage.getTotalElements());
     }
 
     @Override
-    public Optional<Tarjeta> getById(UUID id) {
+    public Optional<TarjetaResponse> getById(UUID id) {
         log.info("Obteniendo la tarjeta con ID: {}", id);
-        return tarjetaRepository.findById(id);
+        return tarjetaRepository.findById(id)
+                .map(tarjetaMapper::toTarjetaResponse);
     }
 
     @Override
-    public Tarjeta save(TarjetaRequest tarjetaRequest) {
+    public TarjetaResponse save(TarjetaRequest tarjetaRequest) {
         log.info("Guardando tarjeta: {}", tarjetaRequest);
         var tarjeta = tarjetaMapper.toTarjeta(tarjetaRequest);
-        return tarjetaRepository.save(tarjeta);
+        var savedTarjeta = tarjetaRepository.save(tarjeta);
+        return tarjetaMapper.toTarjetaResponse(savedTarjeta);
     }
 
-
     @Override
-    public Tarjeta update(UUID id, TarjetaRequest tarjetaRequest) {
+    public TarjetaResponse update(UUID id, TarjetaRequest tarjetaRequest) {
         log.info("Actualizando tarjeta con id: {}", id);
         var existingTarjeta = tarjetaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarjeta no encontrada"));
+                .orElseThrow(() -> new TarjetaNotFound(id));
 
         var tarjeta = tarjetaMapper.toTarjeta(tarjetaRequest);
         tarjeta.setId(existingTarjeta.getId());
-        return tarjetaRepository.save(tarjeta);
+        var updatedTarjeta = tarjetaRepository.save(tarjeta);
+        return tarjetaMapper.toTarjetaResponse(updatedTarjeta);
     }
 
-
     @Override
-    public Tarjeta deleteById(UUID id) {
+    public TarjetaResponse deleteById(UUID id) {
         log.info("Eliminando tarjeta con ID: {}", id);
         var tarjetaExistente = tarjetaRepository.findById(id)
                 .orElseThrow(() -> new TarjetaNotFound(id));
 
         tarjetaRepository.delete(tarjetaExistente);
-        return tarjetaExistente;
+        return tarjetaMapper.toTarjetaResponse(tarjetaExistente);
     }
-
 
     @Override
     public TipoTarjeta getTipoTarjetaByNombre(Tipo nombre) {
