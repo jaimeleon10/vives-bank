@@ -1,18 +1,18 @@
 package org.example.vivesbankproject.utils;
 
 import lombok.experimental.UtilityClass;
-import java.util.Random;
+import java.security.SecureRandom;
 
 @UtilityClass
 public class IdGenerator {
-    private static final String CARACTERES = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    private static final Random RANDOM = new Random();
+    private static final String caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    private static final SecureRandom random = new SecureRandom();
 
-    public String generarIdYoutube(int longitud) {
+    public String generarId(int longitud) {
         StringBuilder id = new StringBuilder(longitud);
         for (int i = 0; i < longitud; i++) {
-            int indice = RANDOM.nextInt(CARACTERES.length());
-            id.append(CARACTERES.charAt(indice));
+            int indice = random.nextInt(caracteres.length());
+            id.append(caracteres.charAt(indice));
         }
         return id.toString();
     }
