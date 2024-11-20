@@ -40,7 +40,6 @@ public class CuentaController {
     public ResponseEntity<PageResponse<Cuenta>> getAllPageable(
             @RequestParam(required = false) Optional<String> iban,
             @RequestParam(required = false) Optional<Double> saldo,
-            @RequestParam(required = false) Optional<Cliente> cliente,
             @RequestParam(required = false) Optional<TipoCuenta> tipoCuenta,
             @RequestParam(required = false) Optional<Tarjeta> tarjeta,
             @RequestParam(defaultValue = "0") int page,
@@ -49,11 +48,11 @@ public class CuentaController {
             @RequestParam(defaultValue = "asc") String direction,
             HttpServletRequest request
     ){
-        log.info("Buscando todas las cuentas con las siguientes opciones: {}, {}, {}, {}, {}", iban, saldo, cliente, tarjeta, tipoCuenta);
+        log.info("Buscando todas las cuentas con las siguientes opciones: {}, {}, {}, {}", iban, saldo, tarjeta, tipoCuenta);
         Sort sort = direction.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString());
-        Page<Cuenta> pageResult = cuentaService.getAll(iban, saldo, cliente, tarjeta, tipoCuenta, PageRequest.of(page, size, sort));
+        Page<Cuenta> pageResult = cuentaService.getAll(iban, saldo, tarjeta, tipoCuenta, PageRequest.of(page, size, sort));
         return ResponseEntity.ok()
                 .header("link", paginationLinksUtils.createLinkHeader(pageResult, uriBuilder))
                 .body(PageResponse.of(pageResult, sortBy, direction));

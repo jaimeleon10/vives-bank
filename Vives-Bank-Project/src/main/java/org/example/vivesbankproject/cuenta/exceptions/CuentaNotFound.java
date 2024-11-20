@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class CuentaNotFound extends CuentaException {
-    public CuentaNotFound(UUID id) {
+    public CuentaNotFound(String id) {
         super("Cuenta con id " + id + " no encontrada");
     }
 }
