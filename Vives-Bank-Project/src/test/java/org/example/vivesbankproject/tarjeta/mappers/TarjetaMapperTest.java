@@ -65,7 +65,6 @@ public class TarjetaMapperTest {
         cuenta.setId(UUID.fromString("6c257ab6-e588-4cef-a479-c2f8fcd7379a"));
         cuenta.setIban("ES7302413102733585086708");
         cuenta.setSaldo(1000.0);
-        cuenta.setCliente(cliente);
         cuenta.setTarjeta(tarjeta);
         cuenta.setIsDeleted(false);
 

@@ -18,7 +18,6 @@ public class CuentaResponse {
     private UUID id;
     private String iban;
     private Double saldo;
-    private Cliente cliente;
     private TipoCuenta tipoCuenta;
     private Tarjeta tarjeta;
     private Boolean isDeleted;

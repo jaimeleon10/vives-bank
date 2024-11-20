@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface CuentaService {
-    Page<Cuenta> getAll(Optional<String> iban, Optional<Double> saldo, Optional<Cliente> cliente, Optional<Tarjeta> tarjeta, Optional<TipoCuenta> tipoCuenta, Pageable pageable);
+    Page<Cuenta> getAll(Optional<String> iban, Optional<Double> saldo, Optional<Tarjeta> tarjeta, Optional<TipoCuenta> tipoCuenta, Pageable pageable);
     Optional<Cuenta> getById(UUID id);
     Cuenta save(Cuenta cuenta);
     Cuenta update(UUID id, Cuenta cuenta);

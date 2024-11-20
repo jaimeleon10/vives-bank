@@ -33,7 +33,7 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
     @Override
-    public Page<Cuenta> getAll(Optional<String> iban, Optional<Double> saldo, Optional<Cliente> cliente, Optional<Tarjeta> tarjeta, Optional<TipoCuenta> tipoCuenta, Pageable pageable) {
+    public Page<Cuenta> getAll(Optional<String> iban, Optional<Double> saldo, Optional<Tarjeta> tarjeta, Optional<TipoCuenta> tipoCuenta, Pageable pageable) {
         log.info("Obteniendo todas las cuentas...");
 
         Specification<Cuenta> specIbanCuenta = (root, query, criteriaBuilder) ->
@@ -43,12 +43,6 @@ public class CuentaServiceImpl implements CuentaService{
         Specification<Cuenta> specSaldoCuenta = (root, query, criteriaBuilder) ->
                 saldo.map(m -> criteriaBuilder.lessThanOrEqualTo(root.get("saldo"), m))
                         .orElseGet(() -> criteriaBuilder.conjunction());
-
-        Specification<Cuenta> specClienteCuenta = (root, query, criteriaBuilder) ->
-                cliente.map(id -> {
-                    Join<Cuenta, Cliente> clienteJoin = root.join("cliente");
-                    return criteriaBuilder.equal(clienteJoin.get("id"), id);
-                }).orElseGet(criteriaBuilder::conjunction);
 
         Specification<Cuenta> specTipoCuenta = (root, query, criteriaBuilder) ->
                 tipoCuenta.map(tc -> {
@@ -64,7 +58,6 @@ public class CuentaServiceImpl implements CuentaService{
 
         Specification<Cuenta> criterio = Specification.where(specIbanCuenta)
                 .and(specSaldoCuenta)
-                .and(specClienteCuenta)
                 .and(specTipoCuenta)
                 .and(specTarjetaCuenta);
 

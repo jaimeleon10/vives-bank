@@ -31,10 +31,6 @@ public class Cuenta {
     private Double saldo;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "cliente_id", nullable = false, referencedColumnName = "id")
-    private Cliente cliente;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "tipo_cuenta_id", nullable = false, referencedColumnName = "id")
     private TipoCuenta tipoCuenta;
 
