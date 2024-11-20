@@ -10,6 +10,7 @@ import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.users.models.Role;
 import org.example.vivesbankproject.users.models.User;
+import org.example.vivesbankproject.utils.IdGenerator;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -28,7 +29,7 @@ import java.util.UUID;
 public class Cliente {
     @Id
     @Builder.Default
-    private UUID id = UUID.randomUUID();
+    private String id = IdGenerator.generarId();
 
     @Column(nullable = false, unique = true)
     @NotBlank(message = "El DNI no puede estar vacío")
