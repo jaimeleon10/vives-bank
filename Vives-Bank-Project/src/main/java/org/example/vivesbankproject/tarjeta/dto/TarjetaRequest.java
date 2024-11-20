@@ -4,6 +4,7 @@ import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -26,13 +27,13 @@ public class TarjetaRequest {
     private String pin;
 
     @Positive(message = "El límite diario debe ser un número positivo")
-    private Double limiteDiario;
+    private BigDecimal limiteDiario;
 
     @Positive(message = "El límite semanal debe ser un número positivo")
-    private Double limiteSemanal;
+    private BigDecimal limiteSemanal;
 
     @Positive(message = "El límite mensual debe ser un número positivo")
-    private Double limiteMensual;
+    private BigDecimal limiteMensual;
 
     @NotNull(message = "El ID del tipo de tarjeta no puede estar vacío")
     private String tipoTarjeta;

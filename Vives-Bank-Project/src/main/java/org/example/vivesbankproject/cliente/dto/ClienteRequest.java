@@ -7,11 +7,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
+import org.example.vivesbankproject.users.models.Role;
 import org.example.vivesbankproject.users.models.User;
 import org.hibernate.validator.constraints.Length;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Builder
@@ -43,7 +45,8 @@ public class ClienteRequest {
     @NotBlank(message = "La foto del DNI no puede estar vacía")
     private String fotoDni;
 
-    private List<Cuenta> cuentas = new ArrayList<>();
+    @Builder.Default
+    private Set<Cuenta> cuentas = Set.of();
 
     @NotNull(message = "El usuario no puede ser un campo nulo")
     private User user;

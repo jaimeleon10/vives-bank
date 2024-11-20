@@ -1,3 +1,4 @@
+/*
 package org.example.vivesbankproject.cuenta.controllers;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -79,4 +80,4 @@ public class CuentaController {
         cuentaService.delete(id);
         return ResponseEntity.noContent().build();
     }
-}
+}*/

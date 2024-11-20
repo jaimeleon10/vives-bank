@@ -33,7 +33,6 @@ public class TarjetaMapper {
                 .limiteSemanal(request.getLimiteSemanal())
                 .limiteMensual(request.getLimiteMensual())
                 .tipoTarjeta(tipoTarjeta)
-                .cuenta(null)
                 .build();
     }
 
@@ -48,7 +47,6 @@ public class TarjetaMapper {
                 .limiteSemanal(tarjeta.getLimiteSemanal())
                 .limiteMensual(tarjeta.getLimiteMensual())
                 .tipoTarjeta(tarjeta.getTipoTarjeta().getNombre().name())
-                .cuentaId(tarjeta.getCuenta().getId())
                 .build();
     }
 }
