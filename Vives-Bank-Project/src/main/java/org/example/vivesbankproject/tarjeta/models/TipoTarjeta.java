@@ -12,7 +12,7 @@ import java.util.UUID;
 @Data
 @Builder
 @Entity
-@Table(name = "TIPOS_TARJETA")
+@Table(name = "tipoTarjetas")
 @NoArgsConstructor
 @AllArgsConstructor
 public class TipoTarjeta {
