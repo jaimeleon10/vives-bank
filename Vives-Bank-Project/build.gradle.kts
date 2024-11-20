@@ -58,6 +58,8 @@ dependencies {
     // Jackson
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.1")
 
+    // Redis
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
