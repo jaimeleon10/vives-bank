@@ -1,100 +1,160 @@
 package org.example.vivesbankproject.tarjeta.mappers;
 
-import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequest;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.models.Tipo;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.tarjeta.service.TarjetaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class TarjetaMapperTest {
+@ExtendWith(MockitoExtension.class)
+class TarjetaMapperTest {
 
     @Mock
     private TarjetaService tarjetaService;
 
-    @InjectMocks
     private TarjetaMapper tarjetaMapper;
 
-    private TarjetaRequest tarjetaRequest;
-    private Tarjeta tarjeta;
-    private TipoTarjeta tipoTarjeta;
-    private Cuenta cuenta;
-
     @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.openMocks(this);
+    void setUp() {
+        tarjetaMapper = new TarjetaMapper(tarjetaService);
+    }
 
-        tarjetaRequest = TarjetaRequest.builder()
+    @Test
+    void testToTarjeta() {
+        TipoTarjeta tipoTarjeta = TipoTarjeta.builder()
+                .id(UUID.randomUUID())
+                .nombre(Tipo.CREDITO)
+                .build();
+        TarjetaRequest request = TarjetaRequest.builder()
                 .numeroTarjeta("1234567890123456")
                 .fechaCaducidad(LocalDate.of(2025, 12, 31))
                 .cvv(123)
                 .pin("1234")
-                .limiteDiario(BigDecimal.valueOf(5000.0))
-                .limiteSemanal(BigDecimal.valueOf(20000.0))
-                .limiteMensual(BigDecimal.valueOf(50000.0))
-                .tipoTarjeta("DEBITO")
-                .cuentaId(UUID.randomUUID())
+                .limiteDiario(BigDecimal.valueOf(1000))
+                .limiteSemanal(BigDecimal.valueOf(5000))
+                .limiteMensual(BigDecimal.valueOf(20000))
+                .tipoTarjeta(Tipo.CREDITO.name())
                 .build();
 
-        tipoTarjeta = new TipoTarjeta();
-        tipoTarjeta.setNombre(Tipo.DEBITO);
+        when(tarjetaService.getTipoTarjetaByNombre(Tipo.CREDITO)).thenReturn(tipoTarjeta);
 
-        tarjeta = Tarjeta.builder()
+        Tarjeta result = tarjetaMapper.toTarjeta(request);
+
+        assertNotNull(result);
+        assertEquals(request.getNumeroTarjeta(), result.getNumeroTarjeta());
+        assertEquals(request.getFechaCaducidad(), result.getFechaCaducidad());
+        assertEquals(request.getCvv(), result.getCvv());
+        assertEquals(request.getPin(), result.getPin());
+        assertEquals(request.getLimiteDiario(), result.getLimiteDiario());
+        assertEquals(request.getLimiteSemanal(), result.getLimiteSemanal());
+        assertEquals(request.getLimiteMensual(), result.getLimiteMensual());
+        assertEquals(tipoTarjeta, result.getTipoTarjeta());
+        assertNotNull(result.getId());
+    }
+
+    @Test
+    void testToTarjetaResponse() {
+        TipoTarjeta tipoTarjeta = TipoTarjeta.builder()
+                .id(UUID.randomUUID())
+                .nombre(Tipo.CREDITO)
+                .build();
+        Tarjeta tarjeta = Tarjeta.builder()
                 .id(UUID.randomUUID())
                 .numeroTarjeta("1234567890123456")
                 .fechaCaducidad(LocalDate.of(2025, 12, 31))
                 .cvv(123)
+                .limiteDiario(BigDecimal.valueOf(1000))
+                .limiteSemanal(BigDecimal.valueOf(5000))
+                .limiteMensual(BigDecimal.valueOf(20000))
+                .tipoTarjeta(tipoTarjeta)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        TarjetaResponse result = tarjetaMapper.toTarjetaResponse(tarjeta);
+
+        assertNotNull(result);
+        assertEquals(tarjeta.getId(), result.getId());
+        assertEquals(tarjeta.getNumeroTarjeta(), result.getNumeroTarjeta());
+        assertEquals(tarjeta.getFechaCaducidad(), result.getFechaCaducidad());
+        assertEquals(tarjeta.getCvv(), result.getCvv());
+        assertEquals(tarjeta.getLimiteDiario(), result.getLimiteDiario());
+        assertEquals(tarjeta.getLimiteSemanal(), result.getLimiteSemanal());
+        assertEquals(tarjeta.getLimiteMensual(), result.getLimiteMensual());
+        assertEquals(tarjeta.getTipoTarjeta().getNombre().name(), result.getTipoTarjeta());
+        assertEquals(tarjeta.getCreatedAt(), result.getCreatedAt());
+        assertEquals(tarjeta.getUpdatedAt(), result.getUpdatedAt());
+    }
+
+    @Test
+    void testToTarjetaResponseNullTarjeta() {
+        TarjetaResponse result = tarjetaMapper.toTarjetaResponse(null);
+
+        assertNull(result);
+    }
+
+    @Test
+    void ToTarjetaResponseNullTipoTarjeta() {
+        Tarjeta tarjeta = Tarjeta.builder()
+                .id(UUID.randomUUID())
+                .numeroTarjeta("1234567890123456")
+                .fechaCaducidad(LocalDate.of(2025, 12, 31))
+                .cvv(123)
+                .limiteDiario(BigDecimal.valueOf(1000))
+                .limiteSemanal(BigDecimal.valueOf(5000))
+                .limiteMensual(BigDecimal.valueOf(20000))
+                .tipoTarjeta(null)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        TarjetaResponse result = tarjetaMapper.toTarjetaResponse(tarjeta);
+
+        assertNotNull(result);
+        assertNull(result.getTipoTarjeta());
+    }
+
+    @Test
+    void testToRequest() {
+        TipoTarjeta tipoTarjeta = TipoTarjeta.builder()
+                .id(UUID.randomUUID())
+                .nombre(Tipo.CREDITO)
+                .build();
+        Tarjeta tarjeta = Tarjeta.builder()
+                .numeroTarjeta("1234567890123456")
+                .fechaCaducidad(LocalDate.of(2025, 12, 31))
+                .cvv(123)
                 .pin("1234")
-                .limiteDiario(BigDecimal.valueOf(5000.0))
-                .limiteSemanal(BigDecimal.valueOf(20000.0))
-                .limiteMensual(BigDecimal.valueOf(50000.0))
+                .limiteDiario(BigDecimal.valueOf(1000))
+                .limiteSemanal(BigDecimal.valueOf(5000))
+                .limiteMensual(BigDecimal.valueOf(20000))
                 .tipoTarjeta(tipoTarjeta)
                 .build();
 
-        cuenta.setTarjeta(tarjeta);
-    }
+        TarjetaRequest result = tarjetaMapper.toRequest(tarjeta);
 
-    @Test
-    public void testToTarjeta() {
-        when(tarjetaService.getTipoTarjetaByNombre(Tipo.DEBITO)).thenReturn(tipoTarjeta);
-
-        Tarjeta mappedTarjeta = tarjetaMapper.toTarjeta(tarjetaRequest);
-
-        assertNotNull(mappedTarjeta);
-        assertEquals(tarjetaRequest.getNumeroTarjeta(), mappedTarjeta.getNumeroTarjeta());
-        assertEquals(tarjetaRequest.getFechaCaducidad(), mappedTarjeta.getFechaCaducidad());
-        assertEquals(tarjetaRequest.getCvv(), mappedTarjeta.getCvv());
-        assertEquals(tarjetaRequest.getPin(), mappedTarjeta.getPin());
-        assertEquals(tarjetaRequest.getLimiteDiario(), mappedTarjeta.getLimiteDiario());
-        assertEquals(tarjetaRequest.getLimiteSemanal(), mappedTarjeta.getLimiteSemanal());
-        assertEquals(tarjetaRequest.getLimiteMensual(), mappedTarjeta.getLimiteMensual());
-        assertEquals(tipoTarjeta, mappedTarjeta.getTipoTarjeta());
-    }
-
-    @Test
-    public void testToRequest() {
-        TarjetaRequest mappedRequest = tarjetaMapper.toRequest(tarjeta);
-
-        assertNotNull(mappedRequest);
-        assertEquals(tarjeta.getNumeroTarjeta(), mappedRequest.getNumeroTarjeta());
-        assertEquals(tarjeta.getFechaCaducidad(), mappedRequest.getFechaCaducidad());
-        assertEquals(tarjeta.getCvv(), mappedRequest.getCvv());
-        assertEquals(tarjeta.getPin(), mappedRequest.getPin());
-        assertEquals(tarjeta.getLimiteDiario(), mappedRequest.getLimiteDiario());
-        assertEquals(tarjeta.getLimiteSemanal(), mappedRequest.getLimiteSemanal());
-        assertEquals(tarjeta.getLimiteMensual(), mappedRequest.getLimiteMensual());
-        assertEquals(tarjeta.getTipoTarjeta().getNombre().name(), mappedRequest.getTipoTarjeta());
+        assertNotNull(result);
+        assertEquals(tarjeta.getNumeroTarjeta(), result.getNumeroTarjeta());
+        assertEquals(tarjeta.getFechaCaducidad(), result.getFechaCaducidad());
+        assertEquals(tarjeta.getCvv(), result.getCvv());
+        assertEquals(tarjeta.getPin(), result.getPin());
+        assertEquals(tarjeta.getLimiteDiario(), result.getLimiteDiario());
+        assertEquals(tarjeta.getLimiteSemanal(), result.getLimiteSemanal());
+        assertEquals(tarjeta.getLimiteMensual(), result.getLimiteMensual());
+        assertEquals(tarjeta.getTipoTarjeta().getNombre().name(), result.getTipoTarjeta());
     }
 }
