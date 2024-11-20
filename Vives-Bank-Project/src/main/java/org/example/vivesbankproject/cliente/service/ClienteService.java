@@ -1,6 +1,8 @@
 package org.example.vivesbankproject.cliente.service;
 
 import org.example.vivesbankproject.cliente.dto.ClienteRequest;
+import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdate;
+import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdateAdmin;
 import org.example.vivesbankproject.cliente.dto.ClienteResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,11 +14,13 @@ public interface ClienteService {
 
     Page<ClienteResponse> getAll(Optional<String> dni, Optional<String> nombre, Optional<String> apellidos, Optional<String> email, Optional<String> telefono, Pageable pageable);
 
-    ClienteResponse getById(UUID id);
+    ClienteResponse getById(String id);
 
     ClienteResponse save(ClienteRequest cliente);
 
-    ClienteResponse update(UUID id, ClienteRequest cliente);
+    ClienteResponse update(String id, ClienteRequestUpdate clienteRequestUpdate);
 
-    void deleteById(UUID id);
+    ClienteResponse updateByAdmin(String id, ClienteRequestUpdateAdmin clienteRequestUpdateAdmin);
+
+    void deleteById(String id);
 }
