@@ -6,6 +6,7 @@ import lombok.*;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.utils.IbanGenerator;
+import org.example.vivesbankproject.utils.IdGenerator;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -21,7 +22,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Cuenta {
     @Id
-    private UUID id;
+    private String id = IdGenerator.generarId();
 
     @Column(nullable = false, unique = true)
     @NotBlank(message = "El numero de cuenta (IBAN) no puede estar vacio")
