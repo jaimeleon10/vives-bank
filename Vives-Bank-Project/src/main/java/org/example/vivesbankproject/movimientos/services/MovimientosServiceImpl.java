@@ -50,16 +50,20 @@ public class MovimientosServiceImpl implements MovimientosService {
         Query query = new Query();
 
         cliente.ifPresent(c -> {
-            // Usar Criteria para filtrar por cliente
-            query.addCriteria(Criteria.where("cliente.name").regex(".*" + c.getNombre().toLowerCase() + ".*", "i"));
+            // Usar Criteria para filtrar por ID del cliente
+            query.addCriteria(Criteria.where("cliente.id").is(c.getId()));
         });
 
         // Configurar paginación
-        long total = mongoTemplate.count(query, Movimientos.class);
         query.with(pageable);
 
         // Ejecutar la consulta
         List<Movimientos> movimientos = mongoTemplate.find(query, Movimientos.class);
+
+        // Contar el total de elementos solo si es necesario
+        long total = cliente.isPresent() || pageable.getOffset() > 0 || movimientos.size() == pageable.getPageSize() ?
+                mongoTemplate.count(query, Movimientos.class) :
+                movimientos.size();
 
         // Devolver como Page
         return PageableExecutionUtils.getPage(movimientos, pageable, () -> total);

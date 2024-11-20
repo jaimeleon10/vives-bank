@@ -2,6 +2,7 @@ package org.example.vivesbankproject.movimientos.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.movimientos.models.Movimientos;
 import org.example.vivesbankproject.movimientos.models.Transacciones;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("${api.version}/movimientos")
@@ -59,10 +61,26 @@ public class MovimientosController {
     }
 
 
+    @GetMapping("/id/{id}")
+    public ResponseEntity<Movimientos> getMovimientoById(@PathVariable ObjectId id) {
+        log.info("Obteniendo movimiento con id: " + id);
+        Movimientos movimiento = service.getById(id);
+        return ResponseEntity.ok(movimiento);
+    }
+
+    @GetMapping("/cliente/{clienteId}")
+    public ResponseEntity<Movimientos> getMovimientoByClienteId(@PathVariable UUID clienteId) {
+        log.info("Obteniendo movimiento con id de cliente: " + clienteId);
+        Movimientos movimiento = service.getByIdCliente(clienteId);
+        return ResponseEntity.ok(movimiento);
+    }
+
+
     @PostMapping
-    public ResponseEntity<Transacciones> createOrUpdateMovimientos(@RequestBody Movimientos movimiento) {
-        Transacciones savedTransaccion = service.save(movimiento);
-        return ResponseEntity.ok(savedTransaccion);
+    public ResponseEntity<Movimientos> createOrUpdateMovimientos(@RequestBody Movimientos movimiento) {
+        log.info("Creando/actualizando movimiento: " + movimiento);
+        Movimientos savedMovimiento = service.save(movimiento);
+        return ResponseEntity.ok(savedMovimiento);
     }
 
 
