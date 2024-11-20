@@ -1,4 +1,4 @@
-package org.example.vivesbankproject.common;
+package org.example.vivesbankproject.cache;
 
 public interface Cache <K, V>{
     void save(K key, V value);

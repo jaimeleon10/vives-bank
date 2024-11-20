@@ -7,11 +7,7 @@ import java.util.UUID;
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class ClienteNotFound extends ClienteExceptions {
-    public ClienteNotFound(String message) {
-        super(message);
-    }
-
     public ClienteNotFound(UUID id) {
-        super("Cliente con id " + id + " no encontrado");
+        super("Cliente con id '" + id + "' no encontrado");
     }
 }

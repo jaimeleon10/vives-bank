@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.users.models.User;
-
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -29,4 +27,5 @@ public class ClienteResponse {
     @Builder.Default
     private List<Cuenta> cuentas = new ArrayList<>();
     private User user;
+    private ObjectId idMovimientos;
 }
