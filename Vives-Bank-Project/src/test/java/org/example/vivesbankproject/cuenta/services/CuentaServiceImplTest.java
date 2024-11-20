@@ -1,5 +1,7 @@
 package org.example.vivesbankproject.cuenta.services;
 
+import org.example.vivesbankproject.cuenta.dto.CuentaRequest;
+import org.example.vivesbankproject.cuenta.dto.CuentaResponse;
 import org.example.vivesbankproject.cuenta.exceptions.CuentaNotFound;
 import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
@@ -75,14 +77,14 @@ class CuentaServiceImplTest {
 
         when(cuentaRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(cuentaPage);
 
-        var result = cuentaService.getAll(Optional.of(cuentaTest.getIban()), Optional.of(cuentaTest.getSaldo()), Optional.of(cuentaTest.getTarjeta()), Optional.of(cuentaTest.getTipoCuenta()), pageable);
+        var result = cuentaService.getAll(Optional.of(cuentaTest.getIban()), Optional.of(cuentaTest.getSaldo()), Optional.of(cuentaTest.getSaldo()), Optional.of(String.valueOf(cuentaTest.getTipoCuenta())), pageable);
 
         assertAll(
                 () -> assertNotNull(result),
                 () -> assertEquals(1, result.getContent().size()),
                 () -> assertTrue(result.getContent().contains(cuentaTest)),
                 () -> assertEquals("ES9120804243448487618583", result.getContent().getFirst().getIban()),
-                () -> assertEquals(1000.0, result.getContent().getFirst().getSaldo()),
+                () -> assertEquals(BigDecimal.valueOf(1000.0), result.getContent().getFirst().getSaldo()),
                 () -> assertEquals(tipoCuentaTest, result.getContent().getFirst().getTipoCuenta()),
                 () -> assertEquals(tarjetaTest, result.getContent().getFirst().getTarjeta()),
                 () -> assertFalse(result.getContent().getFirst().getIsDeleted())
@@ -94,14 +96,17 @@ class CuentaServiceImplTest {
     @Test
     void getById() {
         UUID idCuenta = cuentaTest.getId();
-        Optional<Cuenta> expectedCuenta = Optional.of(new Cuenta());
-        when(cuentaRepository.findById(idCuenta)).thenReturn(expectedCuenta);
+        CuentaRequest expectedCuenta = new CuentaRequest();
 
-        Optional<Cuenta> resultCuenta = cuentaService.getById(idCuenta);
+        var cuentaMapped = cuentaMapper.toCuenta(expectedCuenta);
+
+        when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.ofNullable(cuentaMapped));
+
+        CuentaResponse resultCuenta = cuentaService.getById(idCuenta);
 
         assertEquals(expectedCuenta, resultCuenta);
 
-        verify(cuentaRepository).findById(idCuenta);
+        verify(cuentaRepository, times(1)).findById(idCuenta);
     }
 
     @Test
@@ -122,25 +127,32 @@ class CuentaServiceImplTest {
         tarjeta.setFechaCaducidad(LocalDate.parse("2025-12-31"));
         tarjeta.setCvv(987);
         tarjeta.setPin("0987");
-        tarjeta.setLimiteDiario(100.0);
-        tarjeta.setLimiteSemanal(200.0);
-        tarjeta.setLimiteMensual(500.0);
+        tarjeta.setLimiteDiario(BigDecimal.valueOf(100.0));
+        tarjeta.setLimiteSemanal(BigDecimal.valueOf(200.0));
+        tarjeta.setLimiteMensual(BigDecimal.valueOf(500.0));
 
         TipoCuenta tipoCuenta = new TipoCuenta();
         tipoCuenta.setNombre("normal");
-        tipoCuenta.setInteres(2.0);
+        tipoCuenta.setInteres(BigDecimal.valueOf(2.0));
 
         Cuenta cuenta = new Cuenta();
         cuenta.setId(UUID.fromString("6c257ab6-e588-4cef-a479-c2f8fcd7379a"));
         cuenta.setIban("ES0901869615019736267715");
-        cuenta.setSaldo(1000.0);
+        cuenta.setSaldo(BigDecimal.valueOf(1000.0));
         cuenta.setTipoCuenta(tipoCuenta);
         cuenta.setTarjeta(tarjeta);
         cuenta.setIsDeleted(false);
 
+        CuentaRequest cuentaRequest = new CuentaRequest();
+        cuentaRequest.setIban(cuenta.getIban());
+        cuentaRequest.setSaldo(cuenta.getSaldo());
+        cuentaRequest.setTipoCuenta(cuenta.getTipoCuenta());
+        cuentaRequest.setTarjeta(cuenta.getTarjeta());
+        cuentaRequest.setIsDeleted(cuenta.getIsDeleted());
+
         when(cuentaRepository.save(cuenta)).thenReturn(cuenta);
 
-        var result = cuentaService.save(cuenta);
+        var result = cuentaService.save(cuentaRequest);
 
         assertAll(
                 () -> assertEquals(cuenta.getId(), result.getId()),
@@ -162,28 +174,35 @@ class CuentaServiceImplTest {
         tarjeta.setFechaCaducidad(LocalDate.parse("2025-12-31"));
         tarjeta.setCvv(456);
         tarjeta.setPin("4567");
-        tarjeta.setLimiteDiario(100.0);
-        tarjeta.setLimiteSemanal(200.0);
-        tarjeta.setLimiteMensual(500.0);
+        tarjeta.setLimiteDiario(BigDecimal.valueOf(100.0));
+        tarjeta.setLimiteSemanal(BigDecimal.valueOf(200.0));
+        tarjeta.setLimiteMensual(BigDecimal.valueOf(500.0));
         tarjeta.setTipoTarjeta(TipoTarjeta.builder().nombre(Tipo.valueOf("DEBITO")).build());
 
         tipoCuentaTest = new TipoCuenta();
         tipoCuentaTest.setNombre("ahorro");
-        tipoCuentaTest.setInteres(3.0);
+        tipoCuentaTest.setInteres(BigDecimal.valueOf(3.0));
 
         Cuenta cuenta = new Cuenta();
         cuenta.setId(UUID.fromString("6c257ab6-e588-4cef-a479-c2f8fcd7379a"));
         cuenta.setIban("ES7302413102733585086708");
-        cuenta.setSaldo(1000.0);
+        cuenta.setSaldo(BigDecimal.valueOf(1000.0));
         cuenta.setTarjeta(tarjeta);
         cuenta.setIsDeleted(false);
+
+        CuentaRequest cuentaRequest = new CuentaRequest();
+        cuentaRequest.setIban(cuenta.getIban());
+        cuentaRequest.setSaldo(cuenta.getSaldo());
+        cuentaRequest.setTipoCuenta(cuenta.getTipoCuenta());
+        cuentaRequest.setTarjeta(cuenta.getTarjeta());
+        cuentaRequest.setIsDeleted(cuenta.getIsDeleted());
 
         UUID idCuenta = cuenta.getId();
 
         when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.of(cuenta));
-        when(cuentaRepository.save(any(Cuenta.class))).thenReturn(cuenta);
+        when(cuentaRepository.save(cuenta)).thenReturn(cuenta);
 
-        Cuenta resultPedido = cuentaService.update(idCuenta, cuenta);
+        CuentaResponse resultPedido = cuentaService.update(idCuenta, cuentaRequest);
 
         assertAll(
                 () -> assertEquals(cuenta, resultPedido)
@@ -197,9 +216,10 @@ class CuentaServiceImplTest {
     void updateNotFound() {
         UUID idCuenta = UUID.fromString("4182d617-ec89-4fbc-be95-85e461778700");
         Cuenta cuenta = new Cuenta();
+        CuentaRequest cuentaRequest = new CuentaRequest();
         when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.empty());
 
-        assertThrows(CuentaNotFound.class, () -> cuentaService.update(idCuenta, cuenta));
+        assertThrows(CuentaNotFound.class, () -> cuentaService.update(idCuenta, cuentaRequest));
 
         verify(cuentaRepository).findById(idCuenta);
         verify(cuentaRepository, never()).save(any(Cuenta.class));
@@ -208,24 +228,46 @@ class CuentaServiceImplTest {
     @Test
     void delete() {
         UUID idCuenta = UUID.randomUUID();
+
+        Tarjeta tarjeta = new Tarjeta();
+        tarjeta.setId(UUID.fromString("921f6b86-695d-4361-8905-365d97691024"));
+        tarjeta.setNumeroTarjeta("4009156782194826");
+        tarjeta.setFechaCaducidad(LocalDate.parse("2025-12-31"));
+        tarjeta.setCvv(456);
+        tarjeta.setPin("4567");
+        tarjeta.setLimiteDiario(BigDecimal.valueOf(100.0));
+        tarjeta.setLimiteSemanal(BigDecimal.valueOf(200.0));
+        tarjeta.setLimiteMensual(BigDecimal.valueOf(500.0));
+        tarjeta.setTipoTarjeta(TipoTarjeta.builder().nombre(Tipo.valueOf("DEBITO")).build());
+
+        TipoCuenta tipoCuenta = new TipoCuenta();
+        tipoCuenta.setNombre("ahorro");
+        tipoCuenta.setInteres(BigDecimal.valueOf(3.0));
+
         Cuenta cuentaToDelete = new Cuenta();
+        cuentaToDelete.setId(idCuenta);
+        cuentaToDelete.setIban("ES7302413102733585086708");
+        cuentaToDelete.setSaldo(BigDecimal.valueOf(1000.0));
+        cuentaToDelete.setTarjeta(tarjeta);
+        cuentaToDelete.setTipoCuenta(tipoCuenta);
+        cuentaToDelete.setIsDeleted(false);
         
         when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.of(cuentaToDelete));
 
         cuentaService.delete(idCuenta);
 
         verify(cuentaRepository, times(1)).findById(idCuenta);
-        verify(cuentaMapper, times(1)).toCuentaUpdate(cuentaToDelete);
     }
 
     @Test
     void deleteNotFound() {
-        UUID idCuenta = cuentaTest.getId();
+        UUID idCuenta = UUID.fromString("5f5c2645-a470-4fad-b003-5fefc08fceca");
+
         when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.empty());
 
         assertThrows(CuentaNotFound.class, () -> cuentaService.delete(idCuenta));
 
-        verify(cuentaRepository).findById(idCuenta);
+        verify(cuentaRepository, times(0)).findById(idCuenta);
         verify(cuentaRepository, times(0)).deleteById(idCuenta);
     }
 }

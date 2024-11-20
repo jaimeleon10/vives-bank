@@ -1,5 +1,6 @@
 package org.example.vivesbankproject.cuenta.mappers;
 
+import org.example.vivesbankproject.cuenta.dto.CuentaRequest;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
@@ -63,5 +64,21 @@ class CuentaMapperTest {
 
     @Test
     void toCuenta() {
+        CuentaRequest cuentaRequest = new CuentaRequest();
+        cuentaRequest.setIban("ES9120804243448487618583");
+        cuentaRequest.setSaldo(BigDecimal.valueOf(1000.0));
+        cuentaRequest.setTipoCuenta(tipoCuentaTest);
+        cuentaRequest.setTarjeta(tarjetaTest);
+        cuentaRequest.setIsDeleted(false);
+
+        var res = mapper.toCuenta(cuentaRequest);
+
+        assertAll(
+                () -> assertEquals(cuentaRequest.getIban(), res.getIban()),
+                () -> assertEquals(cuentaRequest.getSaldo(), res.getSaldo()),
+                () -> assertEquals(cuentaRequest.getTipoCuenta().getNombre(), res.getTipoCuenta().getNombre()),
+                () -> assertEquals(cuentaRequest.getTarjeta().getNumeroTarjeta(), res.getTarjeta().getNumeroTarjeta()),
+                () -> assertFalse(res.getIsDeleted())
+        );
     }
 }
