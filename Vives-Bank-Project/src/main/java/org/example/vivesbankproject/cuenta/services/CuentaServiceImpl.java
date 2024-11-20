@@ -4,6 +4,7 @@ import jakarta.persistence.criteria.Join;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.cuenta.dto.CuentaRequest;
+import org.example.vivesbankproject.cuenta.dto.CuentaRequestUpdate;
 import org.example.vivesbankproject.cuenta.dto.CuentaResponse;
 import org.example.vivesbankproject.cuenta.exceptions.CuentaExists;
 import org.example.vivesbankproject.cuenta.exceptions.CuentaNotFound;
@@ -82,22 +83,17 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
     @Override
-    public CuentaResponse update(UUID id, CuentaRequest cuentaRequest) {
+    public CuentaResponse update(UUID id, CuentaRequestUpdate cuentaRequestUpdate) {
         log.info("Actualizando cuenta con id {}", id);
-        if (cuentaRepository.findById(id).isPresent()) {
-            throw new CuentaNotFound(id);
-        }
-        if (cuentaRepository.findByIban(cuentaRequest.getIban()).isPresent()) {
-            throw new CuentaExists(cuentaRequest.getIban());
-        }
-        var cuenta = cuentaRepository.save(cuentaMapper.toCuenta(cuentaRequest));
-        return cuentaMapper.toCuentaResponse(cuenta);
+        var cuenta = cuentaRepository.findById(id).orElseThrow(() -> new CuentaNotFound(id));
+        var cuentaSaved = cuentaRepository.save(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta));
+        return cuentaMapper.toCuentaResponse(cuentaSaved);
     }
 
     @Override
     public void delete(UUID id) {
         log.info("Eliminando cuenta con id {}", id);
-        if (cuentaRepository.findById(id).isPresent()) {
+        if (cuentaRepository.findById(id).isEmpty()) {
             throw new CuentaNotFound(id);
         }
         cuentaRepository.deleteById(id);
