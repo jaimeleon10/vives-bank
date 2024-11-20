@@ -23,9 +23,6 @@ public class CuentaRequest {
     @PositiveOrZero(message = "El saldo no puede ser negativo")
     private Double saldo;
 
-    @NotBlank(message = "El campo cliente no puede estar vacio")
-    private Cliente cliente;
-
     @NotBlank(message = "El campo del tipo de cuenta no puede estar vacio")
     private TipoCuenta tipoCuenta;
 
