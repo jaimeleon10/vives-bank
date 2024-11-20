@@ -24,7 +24,7 @@ public class UserMapperTest {
     }
 
     @Test
-    void testToUserResponse() {
+    void ToUserResponse() {
         User user = User.builder()
                 .id(UUID.randomUUID())
                 .username("testuser")
@@ -44,7 +44,7 @@ public class UserMapperTest {
     }
 
     @Test
-    void testToUser() {
+    void ToUser() {
         UserRequest userRequest = UserRequest.builder()
                 .username("testuser")
                 .password("password")
