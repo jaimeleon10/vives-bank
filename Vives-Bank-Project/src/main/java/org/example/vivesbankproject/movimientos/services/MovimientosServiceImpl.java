@@ -32,41 +32,18 @@ public class MovimientosServiceImpl implements MovimientosService {
    // private final ClienteService clienteService;
     private final ClienteRepository clienteRepository;
     private final MovimientosRepository movimientosRepository;
-    private final MongoTemplate mongoTemplate;
 
     @Autowired
-    public MovimientosServiceImpl( MovimientosRepository movimientosRepository, MongoTemplate mongoTemplate, ClienteRepository clienteRepository) {
+    public MovimientosServiceImpl( MovimientosRepository movimientosRepository, ClienteRepository clienteRepository) {
         //this.clienteService = clienteService;
         this.clienteRepository = clienteRepository;
         this.movimientosRepository = movimientosRepository;
-        this.mongoTemplate = mongoTemplate;
     }
 
     @Override
-    public Page<Movimientos> getAll(Optional<Cliente> cliente, Pageable pageable) {
+    public Page<Movimientos> getAll(Pageable pageable) {
         log.info("Encontrando todos los Movimientos");
-
-        // Construir el filtro dinámico para MongoDB
-        Query query = new Query();
-
-        cliente.ifPresent(c -> {
-            // Usar Criteria para filtrar por ID del cliente
-            query.addCriteria(Criteria.where("cliente.id").is(c.getId()));
-        });
-
-        // Configurar paginación
-        query.with(pageable);
-
-        // Ejecutar la consulta
-        List<Movimientos> movimientos = mongoTemplate.find(query, Movimientos.class);
-
-        // Contar el total de elementos solo si es necesario
-        long total = cliente.isPresent() || pageable.getOffset() > 0 || movimientos.size() == pageable.getPageSize() ?
-                mongoTemplate.count(query, Movimientos.class) :
-                movimientos.size();
-
-        // Devolver como Page
-        return PageableExecutionUtils.getPage(movimientos, pageable, () -> total);
+        return movimientosRepository.findAll(pageable);
     }
 
 
@@ -81,8 +58,9 @@ public class MovimientosServiceImpl implements MovimientosService {
 
     @Override
     @Cacheable(key = "#idCliente")
-    public Movimientos getByIdCliente(UUID idCliente) {
+    public Movimientos getByClienteId(UUID idCliente) {
         log.info("Encontrando Movimientos por idCliente: {}", idCliente);
+        clienteRepository.findById(idCliente).orElseThrow(() -> new ClienteNotFound(idCliente));
         return movimientosRepository.findMovimientosByClienteId(idCliente)
                 .orElseThrow(() -> new ClienteHasNoMovements(idCliente));
     }

@@ -10,11 +10,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface MovimientosService {
-    Page<Movimientos> getAll(Optional<Cliente> cliente, Pageable pageable);
+    Page<Movimientos> getAll(Pageable pageable);
 
     Movimientos getById(ObjectId idMovimiento);
 
-    Movimientos getByIdCliente(UUID idCliente);
+    Movimientos getByClienteId(UUID idCliente);
 
     Movimientos save(Movimientos movimiento);
 
