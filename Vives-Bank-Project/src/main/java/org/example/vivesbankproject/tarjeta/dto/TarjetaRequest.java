@@ -1,12 +1,14 @@
 package org.example.vivesbankproject.tarjeta.dto;
 
 import jakarta.validation.constraints.*;
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
+@Builder
 public class TarjetaRequest {
 
     @NotBlank(message = "El número de tarjeta no puede estar vacío")

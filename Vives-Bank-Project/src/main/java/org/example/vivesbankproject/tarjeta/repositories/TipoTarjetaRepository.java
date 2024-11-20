@@ -1,4 +1,4 @@
-package org.example.vivesbankproject.tarjeta.repository;
+package org.example.vivesbankproject.tarjeta.repositories;
 
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.tarjeta.models.Tipo;

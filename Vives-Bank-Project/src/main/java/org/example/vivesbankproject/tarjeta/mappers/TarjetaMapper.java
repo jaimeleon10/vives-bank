@@ -36,4 +36,19 @@ public class TarjetaMapper {
                 .cuenta(null)
                 .build();
     }
+
+    public TarjetaRequest toRequest(Tarjeta tarjeta) {
+
+        return TarjetaRequest.builder()
+                .numeroTarjeta(tarjeta.getNumeroTarjeta())
+                .fechaCaducidad(tarjeta.getFechaCaducidad())
+                .cvv(tarjeta.getCvv())
+                .pin(tarjeta.getPin())
+                .limiteDiario(tarjeta.getLimiteDiario())
+                .limiteSemanal(tarjeta.getLimiteSemanal())
+                .limiteMensual(tarjeta.getLimiteMensual())
+                .tipoTarjeta(tarjeta.getTipoTarjeta().getNombre().name())
+                .cuentaId(tarjeta.getCuenta().getId())
+                .build();
+    }
 }

@@ -1,4 +1,4 @@
-package org.example.vivesbankproject.tarjeta.repository;
+package org.example.vivesbankproject.tarjeta.repositories;
 
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.springframework.data.jpa.repository.JpaRepository;
