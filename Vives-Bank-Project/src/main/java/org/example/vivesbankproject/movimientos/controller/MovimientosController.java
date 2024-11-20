@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.movimientos.models.Movimientos;
+import org.example.vivesbankproject.movimientos.models.Transacciones;
 import org.example.vivesbankproject.movimientos.services.MovimientosService;
 import org.example.vivesbankproject.movimientos.services.MovimientosServiceImpl;
 import org.example.vivesbankproject.utils.PageResponse;
@@ -15,10 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Optional;
@@ -58,6 +56,13 @@ public class MovimientosController {
         return ResponseEntity.ok()
                 .header("link", paginationLinksUtils.createLinkHeader(movimientos, uriBuilder))
                 .body(PageResponse.of(movimientos, sortBy, direction));
+    }
+
+
+    @PostMapping
+    public ResponseEntity<Transacciones> createOrUpdateMovimientos(@RequestBody Movimientos movimiento) {
+        Transacciones savedTransaccion = service.save(movimiento);
+        return ResponseEntity.ok(savedTransaccion);
     }
 
 

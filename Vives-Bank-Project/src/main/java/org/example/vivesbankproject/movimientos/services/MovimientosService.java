@@ -12,16 +12,16 @@ import java.util.UUID;
 public interface MovimientosService {
     Page<Movimientos> getAll(Optional<Cliente> cliente, Pageable pageable);
 
-    Movimientos getById(ObjectId idPedido);
+    Movimientos getById(ObjectId idMovimiento);
 
     Movimientos getByIdCliente(UUID idCliente);
 
-    Movimientos save(Movimientos pedido);
+    Movimientos save(Movimientos movimiento);
 
-    Movimientos update(ObjectId idPedido, Movimientos pedido);
+    Movimientos update(ObjectId idMovimiento, Movimientos movimiento);
 
-    void delete(ObjectId idPedido);
+    void delete(ObjectId idMovimiento);
 
-    void softDelete(ObjectId idPedido);
+    void softDelete(ObjectId idMovimiento);
 
 }

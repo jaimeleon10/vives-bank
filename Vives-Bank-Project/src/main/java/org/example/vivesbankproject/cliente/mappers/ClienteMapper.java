@@ -48,6 +48,7 @@ public class ClienteMapper {
                 .telefono(cliente.getTelefono())
                 .fotoPerfil(cliente.getFotoPerfil())
                 .fotoDni(cliente.getFotoDni())
+                .idMovimientos(cliente.getIdMovimientos())
                 .createdAt(cliente.getCreatedAt())
                 .updatedAt(cliente.getUpdatedAt())
                 .build();

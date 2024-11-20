@@ -2,7 +2,9 @@ package org.example.vivesbankproject.movimientos.services;
 
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
+import org.example.vivesbankproject.cliente.exceptions.ClienteNotFound;
 import org.example.vivesbankproject.cliente.models.Cliente;
+import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.movimientos.exceptions.ClienteHasNoMovements;
 import org.example.vivesbankproject.movimientos.exceptions.MovimientoNotFound;
 import org.example.vivesbankproject.movimientos.models.Movimientos;
@@ -28,12 +30,14 @@ import java.util.UUID;
 public class MovimientosServiceImpl implements MovimientosService {
 
    // private final ClienteService clienteService;
+    private final ClienteRepository clienteRepository;
     private final MovimientosRepository movimientosRepository;
     private final MongoTemplate mongoTemplate;
 
     @Autowired
-    public MovimientosServiceImpl( MovimientosRepository movimientosRepository, MongoTemplate mongoTemplate) {
+    public MovimientosServiceImpl( MovimientosRepository movimientosRepository, MongoTemplate mongoTemplate, ClienteRepository clienteRepository) {
         //this.clienteService = clienteService;
+        this.clienteRepository = clienteRepository;
         this.movimientosRepository = movimientosRepository;
         this.mongoTemplate = mongoTemplate;
     }
@@ -83,9 +87,23 @@ public class MovimientosServiceImpl implements MovimientosService {
     @CachePut(key = "#result.idMovimiento")
     public Movimientos save(Movimientos movimiento) {
         log.info("Guardando Movimiento: {}", movimiento);
-        return movimientosRepository.save(movimiento);
+        var cliente = clienteRepository.findById(movimiento.getCliente().getId()).orElseThrow(() -> new ClienteNotFound(movimiento.getCliente().getId()));
+        if (cliente.getIdMovimientos() == null) {
+            cliente.setIdMovimientos(movimiento.getId());
+            movimiento.setCliente(cliente);
+            return movimientosRepository.save(movimiento);
+        } else {
+            var savedMovimiento = getById(cliente.getIdMovimientos());
+            movimiento.getTransacciones().forEach(newTransaccion -> {
+                    savedMovimiento.getTransacciones().add(newTransaccion);
+            });
+            return movimientosRepository.save(savedMovimiento);
+        }
     }
 
+    /**
+     * MIRAR SI LO BORRAMOS YA QUE UN MOVIMIENTO NUNCA SE DERIA DE ACTUALIZAR
+     * */
     @Override
     public Movimientos update(ObjectId idMovimiento, Movimientos Movimiento) {
         log.info("Actualizando Movimiento: {} con {}", idMovimiento, Movimiento);
