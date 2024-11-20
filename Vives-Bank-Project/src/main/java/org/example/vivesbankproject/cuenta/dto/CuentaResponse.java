@@ -16,7 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CuentaResponse {
-    private UUID id;
+    private String id;
     private String iban;
     private BigDecimal saldo;
     private TipoCuenta tipoCuenta;

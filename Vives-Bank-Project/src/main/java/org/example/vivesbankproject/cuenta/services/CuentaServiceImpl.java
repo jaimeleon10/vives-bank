@@ -2,7 +2,6 @@ package org.example.vivesbankproject.cuenta.services;
 
 import jakarta.persistence.criteria.Join;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.cuenta.dto.CuentaRequest;
 import org.example.vivesbankproject.cuenta.dto.CuentaResponse;
 import org.example.vivesbankproject.cuenta.exceptions.CuentaExists;
@@ -18,7 +17,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -65,7 +63,7 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
     @Override
-    public CuentaResponse getById(UUID id) {
+    public CuentaResponse getById(String id) {
         log.info("Obteniendo la cuenta con id: {}", id);
         var cuenta = cuentaRepository.findById(id).orElseThrow(() -> new CuentaNotFound(id));
         return cuentaMapper.toCuentaResponse(cuenta);
@@ -82,9 +80,9 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
     @Override
-    public CuentaResponse update(UUID id, CuentaRequest cuentaRequest) {
+    public CuentaResponse update(String id, CuentaRequest cuentaRequest) {
         log.info("Actualizando cuenta con id {}", id);
-        if (cuentaRepository.findById(id).isPresent()) {
+        if (cuentaRepository.findById(id).isEmpty()) {
             throw new CuentaNotFound(id);
         }
         if (cuentaRepository.findByIban(cuentaRequest.getIban()).isPresent()) {
@@ -95,9 +93,9 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
     @Override
-    public void delete(UUID id) {
+    public void delete(String id) {
         log.info("Eliminando cuenta con id {}", id);
-        if (cuentaRepository.findById(id).isPresent()) {
+        if (cuentaRepository.findById(id).isEmpty()) {
             throw new CuentaNotFound(id);
         }
         cuentaRepository.deleteById(id);
