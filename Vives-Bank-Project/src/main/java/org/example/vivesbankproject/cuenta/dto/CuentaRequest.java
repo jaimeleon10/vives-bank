@@ -11,6 +11,8 @@ import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 
+import java.math.BigDecimal;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -21,7 +23,7 @@ public class CuentaRequest {
 
     @Digits(integer = 8, fraction = 2, message = "El saldo debe ser un numero valido con hasta dos decimales")
     @PositiveOrZero(message = "El saldo no puede ser negativo")
-    private Double saldo;
+    private BigDecimal saldo;
 
     @NotBlank(message = "El campo del tipo de cuenta no puede estar vacio")
     private TipoCuenta tipoCuenta;

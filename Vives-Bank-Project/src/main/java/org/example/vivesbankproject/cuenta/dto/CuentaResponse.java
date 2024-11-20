@@ -8,6 +8,7 @@ import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
@@ -17,7 +18,7 @@ import java.util.UUID;
 public class CuentaResponse {
     private UUID id;
     private String iban;
-    private Double saldo;
+    private BigDecimal saldo;
     private TipoCuenta tipoCuenta;
     private Tarjeta tarjeta;
     private Boolean isDeleted;

@@ -7,6 +7,7 @@ import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -41,23 +42,19 @@ public class Tarjeta {
 
     @Column(nullable = false)
     @Positive(message = "El límite diario debe ser un número positivo")
-    private Double limiteDiario;
+    private BigDecimal limiteDiario;
 
     @Column(nullable = false)
     @Positive(message = "El límite semanal debe ser un número positivo")
-    private Double limiteSemanal;
+    private BigDecimal limiteSemanal;
 
     @Column(nullable = false)
     @Positive(message = "El límite mensual debe ser un número positivo")
-    private Double limiteMensual;
+    private BigDecimal limiteMensual;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "tipo_tarjeta_id", nullable = false, referencedColumnName = "id")
+    @ManyToOne
+    @JoinColumn(name = "tipoTarjeta_id", nullable = false)
     private TipoTarjeta tipoTarjeta;
-
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "cuenta_id", nullable = false, referencedColumnName = "id")
-    private Cuenta cuenta;
 
     @CreationTimestamp
     @Column(updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
