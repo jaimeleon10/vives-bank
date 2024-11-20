@@ -1,0 +1,12 @@
+package org.example.vivesbankproject.movimientos.models;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+
+public class Transferencia extends Transacciones {
+    @NotBlank
+    private String iban_Origen;
+    @NotBlank
+    @Pattern()
+    private String iban_Destino;
+}
