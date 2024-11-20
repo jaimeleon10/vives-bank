@@ -9,12 +9,12 @@ import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.tarjeta.repository.TarjetaRepository;
 import org.example.vivesbankproject.tarjeta.repository.TipoTarjetaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 import java.util.UUID;
+
 
 @Slf4j
 @Service
@@ -55,15 +55,11 @@ public class TarjetaServiceImpl implements TarjetaService {
         var tarjetaExistente = tarjetaRepository.findById(id)
                 .orElseThrow(() -> new TarjetaNotFound(id));
 
-        tarjetaExistente.setNumeroTarjeta(tarjetaActualizada.getNumeroTarjeta());
-        tarjetaExistente.setFechaCaducidad(tarjetaActualizada.getFechaCaducidad());
-        tarjetaExistente.setCvv(tarjetaActualizada.getCvv());
         tarjetaExistente.setPin(tarjetaActualizada.getPin());
         tarjetaExistente.setLimiteDiario(tarjetaActualizada.getLimiteDiario());
         tarjetaExistente.setLimiteSemanal(tarjetaActualizada.getLimiteSemanal());
         tarjetaExistente.setLimiteMensual(tarjetaActualizada.getLimiteMensual());
         tarjetaExistente.setTipoTarjeta(tarjetaActualizada.getTipoTarjeta());
-        tarjetaExistente.setCuenta(tarjetaActualizada.getCuenta());
 
         return tarjetaRepository.save(tarjetaExistente);
     }
