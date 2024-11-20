@@ -1,15 +1,17 @@
-/*
 package org.example.vivesbankproject.cliente.service;
 
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.cliente.dto.ClienteInfoResponse;
 import org.example.vivesbankproject.cliente.dto.ClienteRequest;
 import org.example.vivesbankproject.cliente.dto.ClienteResponse;
+import org.example.vivesbankproject.cliente.exceptions.ClienteExistsByDni;
+import org.example.vivesbankproject.cliente.exceptions.ClienteExistsByEmail;
+import org.example.vivesbankproject.cliente.exceptions.ClienteExistsByTelefono;
 import org.example.vivesbankproject.cliente.exceptions.ClienteNotFound;
 import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
+import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -33,80 +35,77 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
-    public Page<ClienteResponse> findAll(Optional<String> nombre, Optional<String> dni, Optional<String> email, Optional<String> telefono, Pageable pageable) {
-        log.info("Buscando todos los clientes con filtrado por: {}, {}, {} con borrado: {}", nombre, dni, email, telefono);
+    public Page<ClienteResponse> getAll(Optional<String> dni, Optional<String> nombre, Optional<String> apellidos, Optional<String> email, Optional<String> telefono, Pageable pageable) {
+        Specification<Cliente> specDniCliente = (root, query, criteriaBuilder) ->
+                dni.map(m -> criteriaBuilder.like(criteriaBuilder.lower(root.get("dni")), "%" + m.toLowerCase() + "%"))
+                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
         Specification<Cliente> specNombreCliente = (root, query, criteriaBuilder) ->
                 nombre.map(m -> criteriaBuilder.like(criteriaBuilder.lower(root.get("nombre")), "%" + m.toLowerCase() + "%"))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
-        Specification<Cliente> specDniCliente = (root, query, criteriaBuilder) ->
-                dni.map(m -> criteriaBuilder.like(criteriaBuilder.lower(root.get("dni")), "%" + m.toLowerCase() + "%"))
+        Specification<Cliente> specApellidosCliente = (root, query, criteriaBuilder) ->
+                apellidos.map(m -> criteriaBuilder.like(criteriaBuilder.lower(root.get("apellidos")), "%" + m.toLowerCase() + "%"))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
         Specification<Cliente> specEmailCliente = (root, query, criteriaBuilder) ->
                 email.map(m -> criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), "%" + m.toLowerCase() + "%"))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
-        Specification<Cliente> specteleCliente = (root, query, criteriaBuilder) ->
+        Specification<Cliente> specTelefonoCliente = (root, query, criteriaBuilder) ->
                 telefono.map(m -> criteriaBuilder.equal(root.get("telefono"), m))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
-        Specification<Cliente> criterio = Specification.where(specNombreCliente)
-                .and(specDniCliente)
+        Specification<Cliente> criterio = Specification.where(specDniCliente)
+                .and(specNombreCliente)
+                .and(specApellidosCliente)
                 .and(specEmailCliente)
-                .and(specteleCliente);
+                .and(specTelefonoCliente);
 
         return clienteRepository.findAll(criterio, pageable).map(clienteMapper::toClienteResponse);
     }
 
-    */
-/*@Override
-    public ClienteInfoResponse findById(UUID id) {
-        log.info("Buscando cliente por id: {}", id);
-
+@Override
+    public ClienteResponse getById(UUID id) {
         var cliente = clienteRepository.findById(id).orElseThrow(() -> new ClienteNotFound(id));
-        var cuenta = cuentaRepository.findCuentaIdsByIdCliente(id).stream().map(p -> p.getId().toHexString()).toList();
-
-        return clienteMapper.toClienteInfoResponse(cliente, cuenta);
+        return clienteMapper.toClienteResponse(cliente);
     }
 
     @Override
     public ClienteResponse save(ClienteRequest clienteRequest) {
-        log.info("Guardando cliente: {}", clienteRequest);
-        clienteRepository.findByCliente(clienteRequest.getNombre(), clienteRequest.getEmail())
-                .ifPresent(u -> {
-                    throw new UserNameOrEmailExists("Ya existe un usuario con el username o email introducido");
-                });
-        return clienteMapper.toClienteResponse(clienteRepository.save(clienteMapper.toCliente(clienteRequest)));
+        validarClienteExistente(clienteRequest);
+        var cliente = clienteRepository.save(clienteMapper.toCliente(clienteRequest));
+        return clienteMapper.toClienteResponse(cliente);
     }
 
     @Override
     public ClienteResponse update(UUID id, ClienteRequest clienteRequest) {
-        log.info("Actualizando cliente: {}", clienteRequest);
-       clienteRepository.findById(id).orElseThrow(() -> new ClienteNotFound(id));
-        clienteRepository.findByClienteEqualsIgnoreCaseOrEmailEqualsIgnoreCase(clienteRequest.getUsername(), clienteRequest.getEmail())
-                .ifPresent(u -> {
-                    if (!u.getId().equals(id)) {
-                        System.out.println("cliente encontrado: " + u.getId() + " Mi id: " + id);
-                        throw new ClienteNameOrEmailExists("Ya existe un cliente con el username o email introducido");
-                    }
-                });
-        return clienteMapper.toClienteResponse(clienteRepository.save(clienteMapper.toCliente(clienteRequest, id)));
+        if (clienteRepository.findById(id).isEmpty()) {
+            throw new ClienteNotFound(id);
+        }
+        validarClienteExistente(clienteRequest);
+        var cliente = clienteRepository.save(clienteMapper.toCliente(clienteRequest));
+        return clienteMapper.toClienteResponse(cliente);
     }
 
     @Override
     @Transactional
     public void deleteById(UUID id) {
-        log.info("Borrando cliente por id: {}", id);
-        Cliente cliente = clienteRepository.findById(id).orElseThrow(() -> new ClienteNotFound(id));
-        if (cuentaRepository.existsByIdCliente(id)) {
-            log.info("Borrado lógico de cliente por id: {}", id);
-            clienteRepository.updateIsDeletedToTrueById(id);
-        } else {
-            log.info("Borrado físico de cliente por id: {}", id);
-           clienteRepository.delete(cliente);
+        if (clienteRepository.findById(id).isEmpty()) {
+            throw new ClienteNotFound(id);
         }
-    }*//*
+        clienteRepository.deleteById(id);
+    }
 
-}*/
+    private void validarClienteExistente(ClienteRequest cliente) {
+        if (clienteRepository.findByDni(cliente.getDni()).isPresent()) {
+            throw new ClienteExistsByDni(cliente.getDni());
+        }
+        if (clienteRepository.findByTelefono(cliente.getTelefono()).isPresent()) {
+            throw new ClienteExistsByTelefono(cliente.getTelefono());
+        }
+        if (clienteRepository.findByEmail(cliente.getEmail()).isPresent()) {
+            throw new ClienteExistsByEmail(cliente.getEmail());
+        }
+    }
+}

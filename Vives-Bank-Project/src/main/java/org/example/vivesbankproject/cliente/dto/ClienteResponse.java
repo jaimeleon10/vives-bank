@@ -6,8 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
-
-import java.time.LocalDateTime;
+import org.example.vivesbankproject.users.models.User;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,12 +24,8 @@ public class ClienteResponse {
     private String telefono;
     private String fotoPerfil;
     private String fotoDni;
-
-    private List<Cuenta> cuentas;
-
+    @Builder.Default
+    private List<Cuenta> cuentas = new ArrayList<>();
+    private User user;
     private ObjectId idMovimientos;
-
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-
 }
