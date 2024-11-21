@@ -3,7 +3,6 @@ package org.example.vivesbankproject.cuenta.models;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.utils.IbanGenerator;
 import org.example.vivesbankproject.utils.IdGenerator;
@@ -12,7 +11,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Data
 @Builder
