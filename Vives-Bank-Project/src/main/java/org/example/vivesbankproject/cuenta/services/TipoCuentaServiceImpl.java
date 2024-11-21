@@ -15,6 +15,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -60,6 +61,7 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
     public TipoCuenta update(String id, TipoCuenta tipoCuenta) {
         log.info("Actualizando tipo de cuenta con id {}", id);
         var tipoCuentaEncontrada = tipoCuentaRepository.findById(id).orElseThrow(() -> new TipoCuentaNotFound(id));
+        tipoCuentaEncontrada.setUpdatedAt(LocalDateTime.now());
         return tipoCuentaRepository.save(tipoCuentaEncontrada);
     }
 
