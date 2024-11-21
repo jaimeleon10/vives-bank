@@ -18,10 +18,4 @@ public interface MovimientosService {
 
     Movimientos save(Movimientos movimiento);
 
-    Movimientos update(ObjectId idMovimiento, Movimientos movimiento);
-
-    void delete(ObjectId idMovimiento);
-
-    void softDelete(ObjectId idMovimiento);
-
 }
