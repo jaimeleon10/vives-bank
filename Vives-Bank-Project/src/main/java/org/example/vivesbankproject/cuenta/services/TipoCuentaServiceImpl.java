@@ -2,12 +2,10 @@ package org.example.vivesbankproject.cuenta.services;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cuenta.exceptions.CuentaExists;
-import org.example.vivesbankproject.cuenta.exceptions.CuentaNotFound;
 import org.example.vivesbankproject.cuenta.exceptions.TipoCuentaNotFound;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.TipoCuentaRepository;
-import org.example.vivesbankproject.tarjeta.models.Tipo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,7 +34,12 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
                 nombre.map(i -> criteriaBuilder.like(criteriaBuilder.lower(root.get("nombre")), "%" + i.toLowerCase() + "%"))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
-        Specification<TipoCuenta> criterio = Specification.where(specNombreTipoCuenta);
+        Specification<TipoCuenta> specInteresTipoCuenta = (root, query, criteriaBuilder) ->
+                interes.map(s -> criteriaBuilder.lessThanOrEqualTo(root.get("interes"), s))
+                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
+
+        Specification<TipoCuenta> criterio = Specification.where(specNombreTipoCuenta)
+                .and(specInteresTipoCuenta);
 
         return tipoCuentaRepository.findAll(criterio, pageable);
     }
