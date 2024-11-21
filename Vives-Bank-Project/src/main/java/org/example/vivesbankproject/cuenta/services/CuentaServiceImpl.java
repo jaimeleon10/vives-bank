@@ -73,9 +73,6 @@ public class CuentaServiceImpl implements CuentaService{
     @Override
     public CuentaResponse save(CuentaRequest cuentaRequest) {
         log.info("Guardando cuenta: {}", cuentaRequest);
-        if (cuentaRepository.findByIban(cuentaRequest.getIban()).isPresent()) {
-            throw new CuentaExists(cuentaRequest.getIban());
-        }
         var cuenta = cuentaRepository.save(cuentaMapper.toCuenta(cuentaRequest));
         return cuentaMapper.toCuentaResponse(cuenta);
     }
@@ -89,12 +86,11 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
     @Override
-    public Cuenta delete(String id) {
+    public void delete(String id) {
         log.info("Eliminando cuenta con id {}", id);
         var cuentaExistente = cuentaRepository.findByGuid(id).orElseThrow(
                 () -> new CuentaNotFound(id)
         );
         cuentaExistente.setIsDeleted(true);
-        return cuentaRepository.save(cuentaExistente);
     }
 }
