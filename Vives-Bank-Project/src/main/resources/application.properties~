@@ -31,4 +31,4 @@ spring.data.redis.host=localhost
 spring.data.redis.port=6379
 
 ## FrankFurter
-frankfurter.base-url=${FRANKFURTER_BASE_URL:https://api.frankfurter.app}
+frankfurter.base-url=${FRANKFURTER_BASE_URL}

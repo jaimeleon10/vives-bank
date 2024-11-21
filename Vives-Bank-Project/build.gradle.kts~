@@ -67,7 +67,9 @@ dependencies {
     testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     // testear MongoDB
-    testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo")
+    implementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo:4.18.0")
+
+    testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo:4.18.0")
 
 }
 
