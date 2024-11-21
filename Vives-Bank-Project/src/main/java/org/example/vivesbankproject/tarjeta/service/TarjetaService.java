@@ -12,9 +12,15 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface TarjetaService {
-    Page<TarjetaResponse> getAll(Optional<String> numero, Optional<Integer> cvv, Optional<LocalDate> caducidad, Optional<TipoTarjeta> tipoTarjeta, Optional<Double> limiteDiario, Optional<Double> limiteSemanal, Optional<Double> limiteMensual, Optional<UUID> cuentaId, Pageable pageable);
 
-    Optional<TarjetaResponse> getById(UUID id);
+    Page<TarjetaResponse> getAll(Optional<String> numero, Optional<LocalDate> caducidad,
+                                 Optional<TipoTarjeta> tipoTarjeta,
+                                 Optional<Double> limiteDiario,
+                                 Optional<Double> limiteSemanal,
+                                 Optional<Double> limiteMensual,
+                                 Pageable pageable);
+
+    TarjetaResponse getById(UUID id);
 
     TarjetaResponse save(TarjetaRequest tarjetaRequest);
 
