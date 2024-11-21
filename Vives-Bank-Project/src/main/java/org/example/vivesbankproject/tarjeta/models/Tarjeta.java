@@ -44,7 +44,7 @@ public class Tarjeta {
 
     @Column(nullable = false)
     @NotBlank(message = "El PIN no puede estar vacío")
-    @Length(min = 4, max = 4, message = "El PIN debe ser un número de 4 dígitos")
+    @Pattern(regexp = "^[0-9]{3}$", message = "El PIN debe ser un número de 3 dígitos")
     private String pin;
 
     @Column(nullable = false)
@@ -61,7 +61,7 @@ public class Tarjeta {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @NotNull
+    @NotBlank(message = "El tipo de tarjeta no puede ser un campo vacío")
     private TipoTarjeta tipoTarjeta;
 
     @CreationTimestamp

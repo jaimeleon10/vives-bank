@@ -1,18 +1,22 @@
 package org.example.vivesbankproject.tarjeta.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequest;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaResponseCVV;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
 import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@CacheConfig(cacheNames = {"tarjetas"})
 public class TarjetaServiceImpl implements TarjetaService {
 
     private final TarjetaRepository tarjetaRepository;
@@ -33,15 +38,10 @@ public class TarjetaServiceImpl implements TarjetaService {
     }
 
     @Override
-    public Page<TarjetaResponse> getAll(Optional<String> numero, Optional<LocalDate> caducidad,
-                                        Optional<TipoTarjeta> tipoTarjeta,
-                                        Optional<Double> limiteDiario,
-                                        Optional<Double> limiteSemanal,
-                                        Optional<Double> limiteMensual,
-                                        Pageable pageable) {
+    public Page<Tarjeta> getAll(Optional<String> numero, Optional<LocalDate> caducidad, Optional<TipoTarjeta> tipoTarjeta, Optional<BigDecimal> minLimiteDiario, Optional<BigDecimal> maxLimiteDiario, Optional<BigDecimal> minLimiteSemanal, Optional<BigDecimal> maxLimiteSemanal, Optional<BigDecimal> minLimiteMensual, Optional<BigDecimal> maxLimiteMensual, Pageable pageable) {
 
         Specification<Tarjeta> specNumero = (root, query, criteriaBuilder) ->
-                numero.map(value -> criteriaBuilder.like(root.get("numeroTarjeta"), "%" + value + "%"))
+                numero.map(value -> criteriaBuilder.like(criteriaBuilder.lower(root.get("numeroTarjeta")), "%" + value.toLowerCase() + "%"))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
         Specification<Tarjeta> specCaducidad = (root, query, criteriaBuilder) ->
@@ -52,32 +52,41 @@ public class TarjetaServiceImpl implements TarjetaService {
                 tipoTarjeta.map(value -> criteriaBuilder.equal(root.get("tipoTarjeta"), value))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
-        Specification<Tarjeta> specLimiteDiario = (root, query, criteriaBuilder) ->
-                limiteDiario.map(value -> criteriaBuilder.equal(root.get("limiteDiario"), value))
+        Specification<Tarjeta> specMinLimiteDiario = (root, query, criteriaBuilder) ->
+                minLimiteDiario.map(value -> criteriaBuilder.greaterThanOrEqualTo(root.get("limiteDiario"), value))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
-        Specification<Tarjeta> specLimiteSemanal = (root, query, criteriaBuilder) ->
-                limiteSemanal.map(value -> criteriaBuilder.equal(root.get("limiteSemanal"), value))
+        Specification<Tarjeta> specMaxLimiteDiario = (root, query, criteriaBuilder) ->
+                maxLimiteDiario.map(value -> criteriaBuilder.lessThanOrEqualTo(root.get("limiteDiario"), value))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
-        Specification<Tarjeta> specLimiteMensual = (root, query, criteriaBuilder) ->
-                limiteMensual.map(value -> criteriaBuilder.equal(root.get("limiteMensual"), value))
+        Specification<Tarjeta> specMinLimiteSemanal = (root, query, criteriaBuilder) ->
+                minLimiteSemanal.map(value -> criteriaBuilder.greaterThanOrEqualTo(root.get("limiteSemanal"), value))
+                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
+
+        Specification<Tarjeta> specMaxLimiteSemanal = (root, query, criteriaBuilder) ->
+                maxLimiteSemanal.map(value -> criteriaBuilder.lessThanOrEqualTo(root.get("limiteSemanal"), value))
+                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
+
+        Specification<Tarjeta> specMinLimiteMensual = (root, query, criteriaBuilder) ->
+                minLimiteMensual.map(value -> criteriaBuilder.greaterThanOrEqualTo(root.get("limiteMensual"), value))
+                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
+
+        Specification<Tarjeta> specMaxLimiteMensual = (root, query, criteriaBuilder) ->
+                maxLimiteMensual.map(value -> criteriaBuilder.lessThanOrEqualTo(root.get("limiteMensual"), value))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
         Specification<Tarjeta> criteria = Specification.where(specNumero)
                 .and(specCaducidad)
                 .and(specTipoTarjeta)
-                .and(specLimiteDiario)
-                .and(specLimiteSemanal)
-                .and(specLimiteMensual);
+                .and(specMinLimiteDiario)
+                .and(specMaxLimiteDiario)
+                .and(specMinLimiteSemanal)
+                .and(specMaxLimiteSemanal)
+                .and(specMinLimiteMensual)
+                .and(specMaxLimiteMensual);
 
-        Page<Tarjeta> tarjetasPage = tarjetaRepository.findAll(criteria, pageable);
-
-        List<TarjetaResponse> tarjetaResponses = tarjetasPage.getContent().stream()
-                .map(tarjetaMapper::toTarjetaResponse)
-                .collect(Collectors.toList());
-
-        return new PageImpl<>(tarjetaResponses, pageable, tarjetasPage.getTotalElements());
+        return tarjetaRepository.findAll(criteria, pageable);
     }
 
 
@@ -89,33 +98,33 @@ public class TarjetaServiceImpl implements TarjetaService {
     }
 
     @Override
+    public TarjetaResponseCVV getCVV(String id) {
+        log.info("Obteniendo CVV de la tarjeta con ID: {}", id);
+        var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
+        return tarjetaMapper.toTarjetaResponseCVV(tarjeta);
+    }
+
+    @Override
     public TarjetaResponse save(TarjetaRequest tarjetaRequest) {
         log.info("Guardando tarjeta: {}", tarjetaRequest);
-        var tarjeta = tarjetaMapper.toTarjeta(tarjetaRequest);
-        tarjeta.setTipoTarjeta(tarjetaRequest.getTipoTarjeta());
-        var savedTarjeta = tarjetaRepository.save(tarjeta);
-        return tarjetaMapper.toTarjetaResponse(savedTarjeta);
+        var tarjeta = tarjetaRepository.save(tarjetaMapper.toTarjeta(tarjetaRequest));
+        return tarjetaMapper.toTarjetaResponse(tarjeta);
     }
 
     @Override
     public TarjetaResponse update(String id, TarjetaRequest tarjetaRequest) {
         log.info("Actualizando tarjeta con id: {}", id);
-        var existingTarjeta = tarjetaRepository.findByGuid(id)
-                .orElseThrow(() -> new TarjetaNotFound(id));
-
-        var tarjeta = tarjetaMapper.toTarjeta(tarjetaRequest);
-        tarjeta.setTipoTarjeta(tarjetaRequest.getTipoTarjeta());
-        tarjeta.setId(existingTarjeta.getId());
-        var updatedTarjeta = tarjetaRepository.save(tarjeta);
-        return tarjetaMapper.toTarjetaResponse(updatedTarjeta);
+        var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(
+                () -> new TarjetaNotFound(id)
+        );
+        var tarjetaUpdated = tarjetaRepository.save(tarjetaMapper.toTarjetaUpdate(tarjetaRequest, tarjeta));
+        return tarjetaMapper.toTarjetaResponse(tarjetaUpdated);
     }
 
     @Override
     public TarjetaResponse deleteById(String id) {
         log.info("Eliminando tarjeta con ID: {}", id);
-        var tarjetaExistente = tarjetaRepository.findByGuid(id)
-                .orElseThrow(() -> new TarjetaNotFound(id));
-
+        var tarjetaExistente = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
         tarjetaRepository.deleteById(tarjetaExistente.getId());
         return tarjetaMapper.toTarjetaResponse(tarjetaExistente);
     }
