@@ -46,7 +46,7 @@ class CuentaServiceImplTest {
     @BeforeEach
     void setUp() {
         tarjetaTest = new Tarjeta();
-        tarjetaTest.setId(UUID.fromString("921f6b86-695d-4361-8905-365d97691024"));
+        tarjetaTest.setId(1L);
         tarjetaTest.setNumeroTarjeta("4242424242424242");
         tarjetaTest.setFechaCaducidad(LocalDate.parse("2025-12-31"));
         tarjetaTest.setCvv(123);
@@ -61,7 +61,7 @@ class CuentaServiceImplTest {
         tipoCuentaTest.setInteres(BigDecimal.valueOf(2.0));
 
         cuentaTest = new Cuenta();
-        cuentaTest.setId("12d45756-3895-49b2-90d3-c4a12d5ee081");
+        cuentaTest.setId(Long.valueOf("12d45756-3895-49b2-90d3-c4a12d5ee081"));
         cuentaTest.setIban("ES9120804243448487618583");
         cuentaTest.setSaldo(BigDecimal.valueOf(1000.0));
         cuentaTest.setTipoCuenta(tipoCuentaTest);
