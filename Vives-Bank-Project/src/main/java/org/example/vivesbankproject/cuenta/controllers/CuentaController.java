@@ -1,10 +1,11 @@
-/*
 package org.example.vivesbankproject.cuenta.controllers;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.cliente.models.Cliente;
+import org.example.vivesbankproject.cuenta.dto.CuentaRequest;
+import org.example.vivesbankproject.cuenta.dto.CuentaRequestUpdate;
+import org.example.vivesbankproject.cuenta.dto.CuentaResponse;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.services.CuentaService;
@@ -20,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -39,45 +41,45 @@ public class CuentaController {
     @GetMapping()
     public ResponseEntity<PageResponse<Cuenta>> getAllPageable(
             @RequestParam(required = false) Optional<String> iban,
-            @RequestParam(required = false) Optional<Double> saldo,
-            @RequestParam(required = false) Optional<TipoCuenta> tipoCuenta,
-            @RequestParam(required = false) Optional<Tarjeta> tarjeta,
+            @RequestParam(required = false) Optional<BigDecimal> saldoMax,
+            @RequestParam(required = false) Optional<BigDecimal> saldoMin,
+            @RequestParam(required = false) Optional<String> tipoCuenta,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String direction,
             HttpServletRequest request
     ){
-        log.info("Buscando todas las cuentas con las siguientes opciones: {}, {}, {}, {}", iban, saldo, tarjeta, tipoCuenta);
+        log.info("Buscando todas las cuentas con las siguientes opciones: {}, {}, {}, {}", iban, saldoMax, saldoMin, tipoCuenta);
         Sort sort = direction.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString());
-        Page<Cuenta> pageResult = cuentaService.getAll(iban, saldo, tarjeta, tipoCuenta, PageRequest.of(page, size, sort));
+        Page<Cuenta> pageResult = cuentaService.getAll(iban, saldoMax, saldoMin, tipoCuenta, PageRequest.of(page, size, sort));
         return ResponseEntity.ok()
                 .header("link", paginationLinksUtils.createLinkHeader(pageResult, uriBuilder))
                 .body(PageResponse.of(pageResult, sortBy, direction));
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Optional<Cuenta>> getById(@PathVariable UUID id) {
+    public ResponseEntity<CuentaResponse> getById(@PathVariable String id) {
         return ResponseEntity.ok(cuentaService.getById(id));
     }
 
     @PostMapping
-    public ResponseEntity<Cuenta> save(@Valid @RequestBody Cuenta cuenta) {
-        var result = cuentaService.save(cuenta);
+    public ResponseEntity<CuentaResponse> save(@Valid @RequestBody CuentaRequest cuentaRequest) {
+        var result = cuentaService.save(cuentaRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<Cuenta> update(@PathVariable UUID id, @Valid @RequestBody Cuenta cuenta) {
-        var result = cuentaService.update(id, cuenta);
+    public ResponseEntity<CuentaResponse> update(@PathVariable String id, @Valid @RequestBody CuentaRequestUpdate cuentaRequestUpdate) {
+        var result = cuentaService.update(id, cuentaRequestUpdate);
         return ResponseEntity.ok(result);
     }
 
     @DeleteMapping("{id}")
-    public ResponseEntity<Cuenta> delete(@PathVariable UUID id) {
+    public ResponseEntity<Cuenta> delete(@PathVariable String id) {
         cuentaService.delete(id);
         return ResponseEntity.noContent().build();
     }
-}*/
+}
