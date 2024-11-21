@@ -16,10 +16,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Data
 @Builder
@@ -67,9 +64,9 @@ public class Cliente {
     @NotBlank(message = "La foto del DNI no puede estar vacía")
     private String fotoDni;
 
-    @OneToMany
-    @JoinColumn(name = "cuentas_id")
-    private Set<Cuenta> cuentas;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "cliente_id", nullable = false)
+    private Set<Cuenta> cuentas = new HashSet<>();
 
     @OneToOne
     @JoinColumn(name = "user_id")
