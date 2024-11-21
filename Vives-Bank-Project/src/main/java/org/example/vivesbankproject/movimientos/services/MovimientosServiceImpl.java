@@ -20,6 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -48,11 +51,11 @@ public class MovimientosServiceImpl implements MovimientosService {
 
 
     @Override
-    @Cacheable(key = "#idMovimiento")
-    public Movimientos getById(ObjectId idMovimiento) {
-        log.info("Encontrando Movimiento por id: {}", idMovimiento);
-        return movimientosRepository.findById(idMovimiento).orElseThrow(
-                () -> new MovimientoNotFound(idMovimiento)
+    @Cacheable(key = "#guidMovimiento")
+    public Movimientos getById(String guidMovimiento) {
+        log.info("Encontrando Movimiento por id: {}", guidMovimiento);
+        return movimientosRepository.findByGuid(guidMovimiento).orElseThrow(
+                () -> new MovimientoNotFound(guidMovimiento)
         );
     }
 
@@ -60,26 +63,32 @@ public class MovimientosServiceImpl implements MovimientosService {
     @Cacheable(key = "#idCliente")
     public Movimientos getByClienteId(String idCliente) {
         log.info("Encontrando Movimientos por idCliente: {}", idCliente);
-        clienteRepository.findById(idCliente).orElseThrow(() -> new ClienteNotFound(idCliente));
+        clienteRepository.findByGuid(idCliente).orElseThrow(() -> new ClienteNotFound(idCliente));
         return movimientosRepository.findMovimientosByClienteId(idCliente)
                 .orElseThrow(() -> new ClienteHasNoMovements(idCliente));
     }
 
     @Override
-    @CachePut(key = "#result.idMovimiento")
+    @CachePut(key = "#result.id")
     public Movimientos save(Movimientos movimiento) {
         log.info("Guardando Movimiento: {}", movimiento);
-        var cliente = clienteRepository.findById(movimiento.getCliente().getId()).orElseThrow(() -> new ClienteNotFound(movimiento.getCliente().getId()));
+        var cliente = clienteRepository.findById(movimiento.getCliente().getId()).orElseThrow(() -> new ClienteNotFound(movimiento.getCliente().getGuid()));
         if (cliente.getIdMovimientos() == null) {
-            cliente.setIdMovimientos(movimiento.getId());
+            Movimientos savedMovimiento = movimientosRepository.save(movimiento);
+            cliente.setIdMovimientos(savedMovimiento.getId());
+            clienteRepository.save(cliente);
             movimiento.setCliente(cliente);
             return movimientosRepository.save(movimiento);
         } else {
-            var savedMovimiento = getById(cliente.getIdMovimientos());
-            movimiento.getTransacciones().forEach(newTransaccion -> {
-                    savedMovimiento.getTransacciones().add(newTransaccion);
-            });
-            return movimientosRepository.save(savedMovimiento);
+            Movimientos existingMovimiento = movimientosRepository.findById(new ObjectId(cliente.getIdMovimientos()))
+                    .orElseThrow(() -> new MovimientoNotFound(movimiento.getGuid()));
+            if (existingMovimiento.getTransacciones() == null) {
+                existingMovimiento.setTransacciones(new ArrayList<>());
+            }
+            existingMovimiento.getTransacciones().addAll(movimiento.getTransacciones());
+            existingMovimiento.setUpdatedAt(LocalDateTime.now());
+            existingMovimiento.setCliente(cliente);
+            return movimientosRepository.save(existingMovimiento);
         }
     }
 }

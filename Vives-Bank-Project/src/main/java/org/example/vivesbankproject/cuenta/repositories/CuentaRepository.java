@@ -6,9 +6,9 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Repository
-public interface CuentaRepository extends JpaRepository<Cuenta, String>, JpaSpecificationExecutor<Cuenta> {
+public interface CuentaRepository extends JpaRepository<Cuenta, Long>, JpaSpecificationExecutor<Cuenta> {
+    Optional<Cuenta> findByGuid(String guid);
     Optional<Cuenta> findByIban(String iban);
 }

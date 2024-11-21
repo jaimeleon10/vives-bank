@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
+import org.example.vivesbankproject.utils.IdGenerator;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -19,8 +20,14 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Tarjeta {
+    private static final Long DEFAULT_ID = 0L;
+
     @Id
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id = DEFAULT_ID;
+
+    @Builder.Default
+    private String guid = IdGenerator.generarId();
 
     @Column(nullable = false, unique = true)
     @NotBlank(message = "El número de tarjeta no puede estar vacío")
@@ -52,9 +59,11 @@ public class Tarjeta {
     @Positive(message = "El límite mensual debe ser un número positivo")
     private BigDecimal limiteMensual;
 
-    @ManyToOne
-    @JoinColumn(name = "tipoTarjeta_id", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @NotNull
     private TipoTarjeta tipoTarjeta;
+
 
     @CreationTimestamp
     @Column(updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")

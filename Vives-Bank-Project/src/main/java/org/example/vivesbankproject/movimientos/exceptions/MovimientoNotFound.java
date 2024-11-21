@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class MovimientoNotFound  extends MovimientosException{
-    public MovimientoNotFound(ObjectId id) {
+    public MovimientoNotFound(String id) {
         super("El movimiento con id " + id + " no existe");
     }
 }

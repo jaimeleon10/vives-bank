@@ -1,5 +1,6 @@
 package org.example.vivesbankproject.cliente.mappers;
 
+import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cliente.dto.ClienteRequest;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdate;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdateAdmin;
@@ -14,7 +15,7 @@ public class ClienteMapper {
 
     public ClienteResponse toClienteResponse(Cliente cliente) {
         return ClienteResponse.builder()
-                .id(cliente.getId())
+                .guid(cliente.getGuid())
                 .dni(cliente.getDni())
                 .nombre(cliente.getNombre())
                 .apellidos(cliente.getApellidos())
@@ -24,7 +25,7 @@ public class ClienteMapper {
                 .fotoDni(cliente.getFotoDni())
                 .cuentas(cliente.getCuentas())
                 .user(cliente.getUser())
-                .idMovimientos(cliente.getIdMovimientos())
+                .idMovimientos(new ObjectId(cliente.getIdMovimientos()))
                 .build();
     }
 

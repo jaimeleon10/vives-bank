@@ -2,14 +2,15 @@ package org.example.vivesbankproject.cuenta.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.example.vivesbankproject.cliente.models.Cliente;
+import org.example.vivesbankproject.cuenta.dto.CuentaRequest;
+import org.example.vivesbankproject.cuenta.dto.CuentaRequestUpdate;
+import org.example.vivesbankproject.cuenta.dto.CuentaResponse;
 import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.services.CuentaService;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.models.Tipo;
-import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.utils.PageResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -36,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
-/*
 @SpringBootTest
 @AutoConfigureMockMvc
 class CuentaControllerTest {
@@ -65,19 +66,19 @@ class CuentaControllerTest {
         tarjetaTest.setFechaCaducidad(LocalDate.parse("2025-12-31"));
         tarjetaTest.setCvv(123);
         tarjetaTest.setPin("1234");
-        tarjetaTest.setLimiteDiario(100.0);
-        tarjetaTest.setLimiteSemanal(200.0);
-        tarjetaTest.setLimiteMensual(500.0);
+        tarjetaTest.setLimiteDiario(BigDecimal.valueOf(100.0));
+        tarjetaTest.setLimiteSemanal(BigDecimal.valueOf(200.0));
+        tarjetaTest.setLimiteMensual(BigDecimal.valueOf(500.0));
         tarjetaTest.setTipoTarjeta(TipoTarjeta.builder().nombre(Tipo.valueOf("DEBITO")).build());
 
         tipoCuentaTest = new TipoCuenta();
         tipoCuentaTest.setNombre("normal");
-        tipoCuentaTest.setInteres(2.0);
+        tipoCuentaTest.setInteres(BigDecimal.valueOf(2.0));
 
         cuentaTest = new Cuenta();
-        cuentaTest.setId(UUID.fromString("12d45756-3895-49b2-90d3-c4a12d5ee081"));
+        cuentaTest.setId("12d45756-3895-49b2-90d3-c4a12d5ee081");
         cuentaTest.setIban("ES9120804243448487618583");
-        cuentaTest.setSaldo(1000.0);
+        cuentaTest.setSaldo(BigDecimal.valueOf(1000.0));
         cuentaTest.setTipoCuenta(tipoCuentaTest);
         cuentaTest.setTarjeta(tarjetaTest);
         cuentaTest.setIsDeleted(false);
@@ -88,17 +89,17 @@ class CuentaControllerTest {
     @Test
     void getAll() throws Exception {
         String iban = "ES9120804243448487618583";
-        Double saldo = 1000.0;
-        Tarjeta tarjeta = tarjetaTest;
-        TipoCuenta tipoCuenta = tipoCuentaTest;
+        BigDecimal saldoMax = BigDecimal.valueOf(1000.0);
+        BigDecimal saldoMin = BigDecimal.valueOf(500.0);
+        String tipoCuenta = String.valueOf(tipoCuentaTest);
 
         PageRequest pageRequest = PageRequest.of(0, 10, Sort.by("id").ascending());
         Page<Cuenta> cuentaPage = new PageImpl<>(List.of(cuentaTest));
 
         when(cuentaService.getAll(
                 Optional.of(iban),
-                Optional.of(saldo),
-                Optional.of(tarjeta),
+                Optional.of(saldoMax),
+                Optional.of(saldoMin),
                 Optional.of(tipoCuenta),
                 pageRequest
         )).thenReturn(cuentaPage);
@@ -106,9 +107,9 @@ class CuentaControllerTest {
         MockHttpServletResponse response = mvc.perform(
                         get(myEndpoint)
                                 .param("iban", iban)
-                                .param("saldo", String.valueOf(saldo))
-                                .param("tarjeta", String.valueOf(tarjeta))
-                                .param("tipoCuenta", String.valueOf(tipoCuenta))
+                                .param("saldoMax", String.valueOf(saldoMax))
+                                .param("saldoMin", String.valueOf(saldoMin))
+                                .param("tipoCuenta", tipoCuenta)
                                 .param("page", "0")
                                 .param("size", "10")
                                 .param("sortBy", "id")
@@ -131,8 +132,8 @@ class CuentaControllerTest {
 
         verify(cuentaService, times(1)).getAll(
                 Optional.of(iban),
-                Optional.of(saldo),
-                Optional.of(tarjeta),
+                Optional.of(saldoMax),
+                Optional.of(saldoMin),
                 Optional.of(tipoCuenta),
                 pageRequest
         );
@@ -140,7 +141,15 @@ class CuentaControllerTest {
 
     @Test
     void getById() throws Exception {
-        when(cuentaService.getById(UUID.fromString("12d45756-3895-49b2-90d3-c4a12d5ee081"))).thenReturn(Optional.of(cuentaTest));
+        CuentaResponse cuentaResponse = new CuentaResponse();
+        cuentaResponse.setId(cuentaTest.getId());
+        cuentaResponse.setIban(cuentaTest.getIban());
+        cuentaResponse.setSaldo(cuentaTest.getSaldo());
+        cuentaResponse.setTarjeta(tarjetaTest);
+        cuentaResponse.setTipoCuenta(tipoCuentaTest);
+        cuentaResponse.setIsDeleted(false);
+
+        when(cuentaService.getById("12d45756-3895-49b2-90d3-c4a12d5ee081")).thenReturn(cuentaResponse);
 
         MockHttpServletResponse response = mvc.perform(
                         get(myEndpoint + "/12d45756-3895-49b2-90d3-c4a12d5ee081")
@@ -158,7 +167,7 @@ class CuentaControllerTest {
                 () -> assertEquals(cuentaTest.getTipoCuenta(), res.getTipoCuenta())
         );
 
-        verify(cuentaService, times(1)).getById(UUID.fromString("12d45756-3895-49b2-90d3-c4a12d5ee081"));
+        verify(cuentaService, times(1)).getById("12d45756-3895-49b2-90d3-c4a12d5ee081");
     }
 
     @Test
@@ -169,23 +178,38 @@ class CuentaControllerTest {
         tarjeta.setFechaCaducidad(LocalDate.parse("2025-12-31"));
         tarjeta.setCvv(987);
         tarjeta.setPin("0987");
-        tarjeta.setLimiteDiario(100.0);
-        tarjeta.setLimiteSemanal(200.0);
-        tarjeta.setLimiteMensual(500.0);
+        tarjeta.setLimiteDiario(BigDecimal.valueOf(100.0));
+        tarjeta.setLimiteSemanal(BigDecimal.valueOf(200.0));
+        tarjeta.setLimiteMensual(BigDecimal.valueOf(500.0));
 
         TipoCuenta tipoCuenta = new TipoCuenta();
         tipoCuenta.setNombre("normal");
-        tipoCuenta.setInteres(2.0);
+        tipoCuenta.setInteres(BigDecimal.valueOf(2.0));
 
         Cuenta cuenta = new Cuenta();
-        cuenta.setId(UUID.fromString("6c257ab6-e588-4cef-a479-c2f8fcd7379a"));
+        cuenta.setId("6c257ab6-e588-4cef-a479-c2f8fcd7379a");
         cuenta.setIban("ES0901869615019736267715");
-        cuenta.setSaldo(1000.0);
+        cuenta.setSaldo(BigDecimal.valueOf(1000.0));
         cuenta.setTipoCuenta(tipoCuenta);
         cuenta.setTarjeta(tarjeta);
         cuenta.setIsDeleted(false);
 
-        when(cuentaService.save(cuenta)).thenReturn(cuentaMapper.toCuentaUpdate(cuenta));
+        CuentaRequest cuentaRequest = new CuentaRequest();
+        cuentaRequest.setIban(cuenta.getIban());
+        cuentaRequest.setSaldo(cuenta.getSaldo());
+        cuentaRequest.setTipoCuenta(tipoCuenta);
+        cuentaRequest.setTarjeta(tarjeta);
+        cuentaRequest.setIsDeleted(false);
+
+        CuentaResponse cuentaResponse = new CuentaResponse();
+        cuentaResponse.setId(cuenta.getId());
+        cuentaResponse.setIban(cuenta.getIban());
+        cuentaResponse.setSaldo(cuenta.getSaldo());
+        cuentaResponse.setTarjeta(tarjeta);
+        cuentaResponse.setTipoCuenta(tipoCuenta);
+        cuentaResponse.setIsDeleted(false);
+
+        when(cuentaService.save(cuentaRequest)).thenReturn(cuentaResponse);
 
         MockHttpServletResponse response = mvc.perform(
                         post(myEndpoint)
@@ -197,50 +221,58 @@ class CuentaControllerTest {
 
         assertAll(
                 () -> assertEquals( HttpStatus.CREATED.value(), response.getStatus()),
-                () -> assertEquals(cuentaMapper.toCuentaUpdate(cuenta).getId(), res.getId()),
+                () -> assertEquals(cuenta.getId(), res.getId()),
                 () -> assertEquals(cuenta.getIban(), res.getIban()),
                 () -> assertEquals(cuenta.getSaldo(), res.getSaldo()),
                 () -> assertEquals(cuenta.getTarjeta(), res.getTarjeta()),
                 () -> assertEquals(cuenta.getTipoCuenta(), res.getTipoCuenta())
         );
 
-        verify(cuentaService, times(1)).save(cuenta);
+        verify(cuentaService, times(1)).save(cuentaRequest);
     }
 
     @Test
     void update() throws Exception {
-        Tarjeta tarjeta = new Tarjeta();
-        tarjeta.setId(UUID.fromString("921f6b86-695d-4361-8905-365d97691024"));
-        tarjeta.setNumeroTarjeta("4009156782194826");
-        tarjeta.setFechaCaducidad(LocalDate.parse("2025-12-31"));
-        tarjeta.setCvv(456);
-        tarjeta.setPin("4567");
-        tarjeta.setLimiteDiario(100.0);
-        tarjeta.setLimiteSemanal(200.0);
-        tarjeta.setLimiteMensual(500.0);
-        tarjeta.setTipoTarjeta(TipoTarjeta.builder().nombre(Tipo.valueOf("DEBITO")).build());
-
-        tipoCuentaTest = new TipoCuenta();
-        tipoCuentaTest.setNombre("ahorro");
-        tipoCuentaTest.setInteres(3.0);
-
         Cuenta cuenta = new Cuenta();
-        cuenta.setId(UUID.fromString("6c257ab6-e588-4cef-a479-c2f8fcd7379a"));
+        cuenta.setId("6c257ab6-e588-4cef-a479-c2f8fcd7379a");
         cuenta.setIban("ES7302413102733585086708");
-        cuenta.setSaldo(1000.0);
-        cuenta.setTarjeta(tarjeta);
+        cuenta.setSaldo(BigDecimal.valueOf(3000.0));
+        cuenta.setTarjeta(tarjetaTest);
+        cuenta.setTipoCuenta(tipoCuentaTest);
         cuenta.setIsDeleted(false);
 
-        when(cuentaService.getById(cuenta.getId())).thenReturn(Optional.of(cuenta));
-        when(cuentaService.save(any(Cuenta.class))).thenReturn(cuenta);
+        CuentaRequest cuentaRequest = new CuentaRequest();
+        cuentaRequest.setIban(cuenta.getIban());
+        cuentaRequest.setSaldo(cuenta.getSaldo());
+        cuentaRequest.setTipoCuenta(cuenta.getTipoCuenta());
+        cuentaRequest.setTarjeta(cuenta.getTarjeta());
+        cuentaRequest.setIsDeleted(false);
+
+        CuentaRequestUpdate cuentaRequestUpdate = new CuentaRequestUpdate();
+        cuentaRequestUpdate.setSaldo(cuentaRequest.getSaldo());
+        cuentaRequestUpdate.setTipoCuenta(cuentaRequest.getTipoCuenta());
+        cuentaRequestUpdate.setTarjeta(cuentaRequest.getTarjeta());
+        cuentaRequestUpdate.setIsDeleted(false);
+
+        CuentaResponse cuentaResponse = new CuentaResponse();
+        cuentaResponse.setId(cuenta.getId());
+        cuentaResponse.setIban(cuenta.getIban());
+        cuentaResponse.setSaldo(cuenta.getSaldo());
+        cuentaResponse.setTarjeta(cuenta.getTarjeta());
+        cuentaResponse.setTipoCuenta(cuenta.getTipoCuenta());
+        cuentaResponse.setIsDeleted(false);
+
+        when(cuentaService.update(cuenta.getId(), cuentaRequestUpdate)).thenReturn(cuentaResponse);
 
         MockHttpServletResponse response = mvc.perform(
                         put(myEndpoint + "/6c257ab6-e588-4cef-a479-c2f8fcd7379a")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(cuenta)))
+                                .content(objectMapper.writeValueAsString(cuentaRequestUpdate)))
                 .andReturn().getResponse();
 
-        Cuenta res = objectMapper.readValue(response.getContentAsString(), Cuenta.class);
+        String responseBody = response.getContentAsString();
+
+        CuentaResponse res = objectMapper.readValue(responseBody, CuentaResponse.class);
 
         assertAll(
                 () -> assertEquals(HttpStatus.OK.value(), response.getStatus()),
@@ -250,9 +282,9 @@ class CuentaControllerTest {
                 () -> assertEquals(cuenta.getTipoCuenta(), res.getTipoCuenta())
         );
 
-        verify(cuentaService).getById(cuenta.getId());
-        verify(cuentaService).save(any(Cuenta.class));
+        verify(cuentaService, times(1)).update(cuenta.getId(), cuentaRequestUpdate);
     }
+
 
     @Test
     void delete() throws Exception {
@@ -262,23 +294,23 @@ class CuentaControllerTest {
         tarjeta.setFechaCaducidad(LocalDate.parse("2025-12-31"));
         tarjeta.setCvv(456);
         tarjeta.setPin("4567");
-        tarjeta.setLimiteDiario(100.0);
-        tarjeta.setLimiteSemanal(200.0);
-        tarjeta.setLimiteMensual(500.0);
+        tarjeta.setLimiteDiario(BigDecimal.valueOf(100.0));
+        tarjeta.setLimiteSemanal(BigDecimal.valueOf(200.0));
+        tarjeta.setLimiteMensual(BigDecimal.valueOf(500.0));
         tarjeta.setTipoTarjeta(TipoTarjeta.builder().nombre(Tipo.valueOf("DEBITO")).build());
 
         tipoCuentaTest = new TipoCuenta();
         tipoCuentaTest.setNombre("ahorro");
-        tipoCuentaTest.setInteres(3.0);
+        tipoCuentaTest.setInteres(BigDecimal.valueOf(3.0));
 
         Cuenta cuenta = new Cuenta();
-        cuenta.setId(UUID.fromString("6c257ab6-e588-4cef-a479-c2f8fcd7379a"));
+        cuenta.setId("6c257ab6-e588-4cef-a479-c2f8fcd7379a");
         cuenta.setIban("ES7302413102733585086708");
-        cuenta.setSaldo(1000.0);
+        cuenta.setSaldo(BigDecimal.valueOf(1000.0));
         cuenta.setTarjeta(tarjeta);
         cuenta.setIsDeleted(false);
 
-        when(cuentaService.delete(UUID.fromString("6c257ab6-e588-4cef-a479-c2f8fcd7379a"))).thenReturn(cuenta);
+        when(cuentaService.delete("6c257ab6-e588-4cef-a479-c2f8fcd7379a")).thenReturn(cuenta);
 
         MockHttpServletResponse response = mvc.perform(
                         MockMvcRequestBuilders.delete(myEndpoint + "/6c257ab6-e588-4cef-a479-c2f8fcd7379a")
@@ -288,8 +320,6 @@ class CuentaControllerTest {
         assertEquals(HttpStatus.NO_CONTENT.value(), response.getStatus());
         assertEquals("", response.getContentAsString());
 
-        verify(cuentaService, times(1)).delete(UUID.fromString("6c257ab6-e588-4cef-a479-c2f8fcd7379a"));
+        verify(cuentaService, times(1)).delete("6c257ab6-e588-4cef-a479-c2f8fcd7379a");
     }
 }
-
- */

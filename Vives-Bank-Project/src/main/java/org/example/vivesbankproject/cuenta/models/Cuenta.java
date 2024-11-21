@@ -3,7 +3,6 @@ package org.example.vivesbankproject.cuenta.models;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.utils.IbanGenerator;
 import org.example.vivesbankproject.utils.IdGenerator;
@@ -12,7 +11,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Data
 @Builder
@@ -21,8 +19,14 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Cuenta {
+    private static final Long DEFAULT_ID = 0L;
+
     @Id
-    private String id = IdGenerator.generarId();
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id = DEFAULT_ID;
+
+    @Builder.Default
+    private String guid = IdGenerator.generarId();
 
     @Column(nullable = false, unique = true)
     @NotBlank(message = "El numero de cuenta (IBAN) no puede estar vacio")

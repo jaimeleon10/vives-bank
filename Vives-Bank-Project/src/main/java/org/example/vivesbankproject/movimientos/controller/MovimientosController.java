@@ -30,7 +30,7 @@ public class MovimientosController {
 
     private final MovimientosService service;
 
-    private PaginationLinksUtils paginationLinksUtils;
+    private final PaginationLinksUtils paginationLinksUtils;
 
     @Autowired
     public MovimientosController(MovimientosServiceImpl service, PaginationLinksUtils paginationLinksUtils) {
@@ -61,7 +61,7 @@ public class MovimientosController {
 
 
     @GetMapping("/id/{id}")
-    public ResponseEntity<Movimientos> getMovimientoById(@PathVariable ObjectId id) {
+    public ResponseEntity<Movimientos> getMovimientoById(@PathVariable String id) {
         log.info("Obteniendo movimiento con id: " + id);
         Movimientos movimiento = service.getById(id);
         return ResponseEntity.ok(movimiento);

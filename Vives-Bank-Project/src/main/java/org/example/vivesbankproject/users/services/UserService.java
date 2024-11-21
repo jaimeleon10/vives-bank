@@ -14,13 +14,13 @@ public interface UserService {
 
     Page<User> getAll(Optional<String> username, Optional<Role> rol, Pageable pageable);
 
-    UserResponse getById(String id);
+    UserResponse getById(String guid);
 
     UserResponse getByUsername(String username);
 
     UserResponse save(UserRequest user);
 
-    UserResponse update(String id, UserRequest user);
+    UserResponse update(String guid, UserRequest user);
 
-    void deleteById(String id);
+    void deleteById(String guid);
 }

@@ -3,21 +3,13 @@ package org.example.vivesbankproject.tarjeta.mappers;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequest;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
-import org.example.vivesbankproject.tarjeta.models.Tipo;
-import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
-import org.example.vivesbankproject.tarjeta.service.TarjetaService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.UUID;
 
 @Component
 public class TarjetaMapper {
 
     public Tarjeta toTarjeta(TarjetaRequest request) {
-
         return Tarjeta.builder()
-                .id(UUID.randomUUID())
                 .numeroTarjeta(request.getNumeroTarjeta())
                 .fechaCaducidad(request.getFechaCaducidad())
                 .cvv(request.getCvv())
@@ -25,23 +17,20 @@ public class TarjetaMapper {
                 .limiteDiario(request.getLimiteDiario())
                 .limiteSemanal(request.getLimiteSemanal())
                 .limiteMensual(request.getLimiteMensual())
+                .tipoTarjeta(request.getTipoTarjeta())
                 .build();
     }
 
     public TarjetaResponse toTarjetaResponse(Tarjeta tarjeta) {
-        if (tarjeta == null) {
-            return null;
-        }
-
         return TarjetaResponse.builder()
-                .id(tarjeta.getId())
+                .guid(tarjeta.getGuid())
                 .numeroTarjeta(tarjeta.getNumeroTarjeta())
                 .fechaCaducidad(tarjeta.getFechaCaducidad())
                 .cvv(tarjeta.getCvv())
                 .limiteDiario(tarjeta.getLimiteDiario())
                 .limiteSemanal(tarjeta.getLimiteSemanal())
                 .limiteMensual(tarjeta.getLimiteMensual())
-                .tipoTarjeta(tarjeta.getTipoTarjeta() != null ? String.valueOf(tarjeta.getTipoTarjeta().getNombre()) : null)
+                .tipoTarjeta(tarjeta.getTipoTarjeta())
                 .createdAt(tarjeta.getCreatedAt())
                 .updatedAt(tarjeta.getUpdatedAt())
                 .build();
@@ -57,7 +46,7 @@ public class TarjetaMapper {
                 .limiteDiario(tarjeta.getLimiteDiario())
                 .limiteSemanal(tarjeta.getLimiteSemanal())
                 .limiteMensual(tarjeta.getLimiteMensual())
-                .tipoTarjeta(tarjeta.getTipoTarjeta().getNombre().name())
+                .tipoTarjeta(tarjeta.getTipoTarjeta())
                 .build();
     }
 }

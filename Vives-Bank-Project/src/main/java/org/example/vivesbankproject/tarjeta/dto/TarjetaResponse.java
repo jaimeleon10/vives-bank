@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -15,14 +16,14 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TarjetaResponse {
-    private UUID id;
+    private String guid;
     private String numeroTarjeta;
     private LocalDate fechaCaducidad;
     private Integer cvv;
     private BigDecimal limiteDiario;
     private BigDecimal limiteSemanal;
     private BigDecimal limiteMensual;
-    private String tipoTarjeta;
+    private TipoTarjeta tipoTarjeta;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

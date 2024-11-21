@@ -1,5 +1,6 @@
 package org.example.vivesbankproject.cliente.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -27,9 +28,14 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Cliente {
+    private static final Long DEFAULT_ID = 0L;
+
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id = DEFAULT_ID;
+
     @Builder.Default
-    private String id = IdGenerator.generarId();
+    private String guid = IdGenerator.generarId();
 
     @Column(nullable = false, unique = true)
     @NotBlank(message = "El DNI no puede estar vacío")
@@ -70,6 +76,7 @@ public class Cliente {
     @NotNull(message = "El usuario no puede ser un campo nulo")
     private User user;
 
+    @Column(name = "id_movimientos")
     private ObjectId idMovimientos;
 
     @CreationTimestamp
@@ -81,4 +88,9 @@ public class Cliente {
     @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @JsonProperty("idMovimientos")
+    public String getIdMovimientos() {
+        return idMovimientos != null ? idMovimientos.toHexString() : null;
+    }
 }

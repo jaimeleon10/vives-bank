@@ -34,7 +34,7 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
-    public Page<ClienteResponse> getAll(Optional<String> dni, Optional<String> nombre, Optional<String> apellidos, Optional<String> email, Optional<String> telefono, Pageable pageable) {
+    public Page<Cliente> getAll(Optional<String> dni, Optional<String> nombre, Optional<String> apellidos, Optional<String> email, Optional<String> telefono, Pageable pageable) {
         Specification<Cliente> specDniCliente = (root, query, criteriaBuilder) ->
                 dni.map(m -> criteriaBuilder.like(criteriaBuilder.lower(root.get("dni")), "%" + m.toLowerCase() + "%"))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
@@ -61,12 +61,12 @@ public class ClienteServiceImpl implements ClienteService {
                 .and(specEmailCliente)
                 .and(specTelefonoCliente);
 
-        return clienteRepository.findAll(criterio, pageable).map(clienteMapper::toClienteResponse);
+        return clienteRepository.findAll(criterio, pageable);
     }
 
 @Override
     public ClienteResponse getById(String id) {
-        var cliente = clienteRepository.findById(id).orElseThrow(() -> new ClienteNotFound(id));
+        var cliente = clienteRepository.findByGuid(id).orElseThrow(() -> new ClienteNotFound(id));
         return clienteMapper.toClienteResponse(cliente);
     }
 
@@ -80,7 +80,7 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     public ClienteResponse update(String id, ClienteRequestUpdate clienteRequestUpdate) {
-        var cliente = clienteRepository.findById(id).orElseThrow(
+        var cliente = clienteRepository.findByGuid(id).orElseThrow(
                 () -> new ClienteNotFound(id)
         );
         var clienteForUpdate = clienteMapper.toClienteUpdate(clienteRequestUpdate, cliente);
@@ -91,7 +91,7 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     public ClienteResponse updateByAdmin(String id, ClienteRequestUpdateAdmin clienteRequestUpdateAdmin) {
-        var cliente = clienteRepository.findById(id).orElseThrow(
+        var cliente = clienteRepository.findByGuid(id).orElseThrow(
                 () -> new ClienteNotFound(id)
         );
         var clienteForUpdate = clienteMapper.toClienteUpdateAdmin(clienteRequestUpdateAdmin, cliente);
@@ -103,10 +103,10 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @Transactional
     public void deleteById(String id) {
-        if (clienteRepository.findById(id).isEmpty()) {
-            throw new ClienteNotFound(id);
-        }
-        clienteRepository.deleteById(id);
+        var cliente = clienteRepository.findByGuid(id).orElseThrow(
+                () -> new ClienteNotFound(id)
+        );
+        clienteRepository.deleteById(cliente.getId());
     }
 
     private void validarClienteExistente(Cliente cliente) {
