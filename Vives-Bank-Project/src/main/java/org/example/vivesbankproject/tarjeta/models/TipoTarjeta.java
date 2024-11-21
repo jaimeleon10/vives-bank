@@ -3,6 +3,7 @@ package org.example.vivesbankproject.tarjeta.models;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.example.vivesbankproject.utils.IdGenerator;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -17,8 +18,14 @@ import java.util.UUID;
 @AllArgsConstructor
 public class TipoTarjeta {
 
+    private static final Long DEFAULT_ID = 0L;
+
     @Id
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id = DEFAULT_ID;
+
+    @Builder.Default
+    private String guid = IdGenerator.generarId();
 
     @Column(nullable = false, unique = true)
     @NotBlank(message = "El nombre del tipo de tarjeta no puede estar vacío")

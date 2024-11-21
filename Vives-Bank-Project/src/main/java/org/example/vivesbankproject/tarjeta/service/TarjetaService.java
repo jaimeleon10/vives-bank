@@ -20,13 +20,13 @@ public interface TarjetaService {
                                  Optional<Double> limiteMensual,
                                  Pageable pageable);
 
-    TarjetaResponse getById(UUID id);
+    TarjetaResponse getById(String id);
 
     TarjetaResponse save(TarjetaRequest tarjetaRequest);
 
-    TarjetaResponse update(UUID id, TarjetaRequest tarjetaRequest);
+    TarjetaResponse update(String id, TarjetaRequest tarjetaRequest);
 
-    TarjetaResponse deleteById(UUID id);
+    TarjetaResponse deleteById(String id);
 
     TipoTarjeta getTipoTarjetaByNombre(Tipo nombre);
 }

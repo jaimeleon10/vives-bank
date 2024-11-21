@@ -86,9 +86,9 @@ public class TarjetaServiceImpl implements TarjetaService {
 
 
     @Override
-    public TarjetaResponse getById(UUID id) {
+    public TarjetaResponse getById(String id) {
         log.info("Obteniendo la tarjeta con ID: {}", id);
-        var tarjeta = tarjetaRepository.findById(id).orElseThrow(() -> new TarjetaNotFound(id));
+        var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
         return tarjetaMapper.toTarjetaResponse(tarjeta);
     }
 
@@ -102,9 +102,9 @@ public class TarjetaServiceImpl implements TarjetaService {
     }
 
     @Override
-    public TarjetaResponse update(UUID id, TarjetaRequest tarjetaRequest) {
+    public TarjetaResponse update(String id, TarjetaRequest tarjetaRequest) {
         log.info("Actualizando tarjeta con id: {}", id);
-        var existingTarjeta = tarjetaRepository.findById(id)
+        var existingTarjeta = tarjetaRepository.findByGuid(id)
                 .orElseThrow(() -> new TarjetaNotFound(id));
 
         var tarjeta = tarjetaMapper.toTarjeta(tarjetaRequest);
@@ -115,12 +115,12 @@ public class TarjetaServiceImpl implements TarjetaService {
     }
 
     @Override
-    public TarjetaResponse deleteById(UUID id) {
+    public TarjetaResponse deleteById(String id) {
         log.info("Eliminando tarjeta con ID: {}", id);
-        var tarjetaExistente = tarjetaRepository.findById(id)
+        var tarjetaExistente = tarjetaRepository.findByGuid(id)
                 .orElseThrow(() -> new TarjetaNotFound(id));
 
-        tarjetaRepository.delete(tarjetaExistente);
+        tarjetaRepository.deleteById(tarjetaExistente.getId());
         return tarjetaMapper.toTarjetaResponse(tarjetaExistente);
     }
 

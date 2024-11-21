@@ -5,10 +5,10 @@ import java.security.SecureRandom;
 
 @UtilityClass
 public class IdGenerator {
-    private static final String caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    private static final SecureRandom random = new SecureRandom();
-
     public String generarId() {
+        final String caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        final SecureRandom random = new SecureRandom();
+
         long nanos = System.nanoTime();
         random.setSeed(random.nextLong() ^ nanos); // Esto genera una semilla para modificar él random con los nanos
 

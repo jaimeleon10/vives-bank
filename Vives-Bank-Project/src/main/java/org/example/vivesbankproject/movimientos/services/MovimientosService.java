@@ -12,7 +12,7 @@ import java.util.UUID;
 public interface MovimientosService {
     Page<Movimientos> getAll(Pageable pageable);
 
-    Movimientos getById(ObjectId idMovimiento);
+    Movimientos getById(String guidMovimiento);
 
     Movimientos getByClienteId(String idCliente);
 

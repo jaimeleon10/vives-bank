@@ -18,8 +18,14 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TipoCuenta {
+    private static final Long DEFAULT_ID = 0L;
+
     @Id
-    private String id = IdGenerator.generarId();
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id = DEFAULT_ID;
+
+    @Builder.Default
+    private String guid = IdGenerator.generarId();
 
     @Column(nullable = false, unique = true)
     @NotBlank(message = "El nombre del tipo de cuenta no puede estar vacío")

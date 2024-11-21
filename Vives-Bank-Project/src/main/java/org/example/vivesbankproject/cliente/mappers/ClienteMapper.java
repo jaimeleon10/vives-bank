@@ -15,7 +15,7 @@ public class ClienteMapper {
 
     public ClienteResponse toClienteResponse(Cliente cliente) {
         return ClienteResponse.builder()
-                .id(cliente.getId())
+                .guid(cliente.getGuid())
                 .dni(cliente.getDni())
                 .nombre(cliente.getNombre())
                 .apellidos(cliente.getApellidos())

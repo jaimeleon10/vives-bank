@@ -66,7 +66,7 @@ public class ClienteServiceImpl implements ClienteService {
 
 @Override
     public ClienteResponse getById(String id) {
-        var cliente = clienteRepository.findById(id).orElseThrow(() -> new ClienteNotFound(id));
+        var cliente = clienteRepository.findByGuid(id).orElseThrow(() -> new ClienteNotFound(id));
         return clienteMapper.toClienteResponse(cliente);
     }
 
@@ -80,7 +80,7 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     public ClienteResponse update(String id, ClienteRequestUpdate clienteRequestUpdate) {
-        var cliente = clienteRepository.findById(id).orElseThrow(
+        var cliente = clienteRepository.findByGuid(id).orElseThrow(
                 () -> new ClienteNotFound(id)
         );
         var clienteForUpdate = clienteMapper.toClienteUpdate(clienteRequestUpdate, cliente);
@@ -91,7 +91,7 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     public ClienteResponse updateByAdmin(String id, ClienteRequestUpdateAdmin clienteRequestUpdateAdmin) {
-        var cliente = clienteRepository.findById(id).orElseThrow(
+        var cliente = clienteRepository.findByGuid(id).orElseThrow(
                 () -> new ClienteNotFound(id)
         );
         var clienteForUpdate = clienteMapper.toClienteUpdateAdmin(clienteRequestUpdateAdmin, cliente);
@@ -103,10 +103,10 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @Transactional
     public void deleteById(String id) {
-        if (clienteRepository.findById(id).isEmpty()) {
-            throw new ClienteNotFound(id);
-        }
-        clienteRepository.deleteById(id);
+        var cliente = clienteRepository.findByGuid(id).orElseThrow(
+                () -> new ClienteNotFound(id)
+        );
+        clienteRepository.deleteById(cliente.getId());
     }
 
     private void validarClienteExistente(Cliente cliente) {

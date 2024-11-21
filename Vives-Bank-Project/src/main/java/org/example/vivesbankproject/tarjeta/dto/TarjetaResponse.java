@@ -16,7 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TarjetaResponse {
-    private UUID id;
+    private String guid;
     private String numeroTarjeta;
     private LocalDate fechaCaducidad;
     private Integer cvv;
