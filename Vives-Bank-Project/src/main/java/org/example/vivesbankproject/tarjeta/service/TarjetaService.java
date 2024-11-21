@@ -2,7 +2,6 @@ package org.example.vivesbankproject.tarjeta.service;
 
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequest;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
-import org.example.vivesbankproject.tarjeta.models.Tipo;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +26,4 @@ public interface TarjetaService {
     TarjetaResponse update(UUID id, TarjetaRequest tarjetaRequest);
 
     TarjetaResponse deleteById(UUID id);
-
-    TipoTarjeta getTipoTarjetaByNombre(Tipo nombre);
 }
