@@ -1,8 +1,7 @@
 package org.example.vivesbankproject.tarjeta.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.cuenta.models.Cuenta;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaRequest;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestSave;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestUpdate;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponseCVV;
@@ -19,10 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -115,9 +111,9 @@ public class TarjetaServiceImpl implements TarjetaService {
     }
 
     @Override
-    public TarjetaResponse save(TarjetaRequest tarjetaRequest) {
-        log.info("Guardando tarjeta: {}", tarjetaRequest);
-        var tarjeta = tarjetaRepository.save(tarjetaMapper.toTarjeta(tarjetaRequest));
+    public TarjetaResponse save(TarjetaRequestSave tarjetaRequestSave) {
+        log.info("Guardando tarjeta: {}", tarjetaRequestSave);
+        var tarjeta = tarjetaRepository.save(tarjetaMapper.toTarjeta(tarjetaRequestSave));
         return tarjetaMapper.toTarjetaResponse(tarjeta);
     }
 
@@ -132,10 +128,9 @@ public class TarjetaServiceImpl implements TarjetaService {
     }
 
     @Override
-    public TarjetaResponse deleteById(String id) {
+    public void deleteById(String id) {
         log.info("Eliminando tarjeta con ID: {}", id);
         var tarjetaExistente = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
         tarjetaRepository.deleteById(tarjetaExistente.getId());
-        return tarjetaMapper.toTarjetaResponse(tarjetaExistente);
     }
 }

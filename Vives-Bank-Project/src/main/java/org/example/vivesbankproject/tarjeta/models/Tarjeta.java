@@ -25,11 +25,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Tarjeta {
-    private static final Long DEFAULT_ID = 0L;
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id = DEFAULT_ID;
+    private Long id;
 
     @Column(unique = true)
     @Builder.Default
@@ -76,4 +74,8 @@ public class Tarjeta {
     @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean isDeleted = false;
 }

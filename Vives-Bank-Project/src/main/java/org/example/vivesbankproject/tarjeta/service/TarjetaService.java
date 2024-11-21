@@ -1,6 +1,6 @@
 package org.example.vivesbankproject.tarjeta.service;
 
-import org.example.vivesbankproject.tarjeta.dto.TarjetaRequest;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestSave;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestUpdate;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponseCVV;
@@ -12,7 +12,6 @@ import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
-import java.util.UUID;
 
 public interface TarjetaService {
 
@@ -31,9 +30,9 @@ public interface TarjetaService {
 
     TarjetaResponseCVV getCVV(String id);
 
-    TarjetaResponse save(TarjetaRequest tarjetaRequest);
+    TarjetaResponse save(TarjetaRequestSave tarjetaRequestSave);
 
     TarjetaResponse update(String id, TarjetaRequestUpdate tarjetaRequestUpdate);
 
-    TarjetaResponse deleteById(String id);
+    void deleteById(String id);
 }
