@@ -19,7 +19,6 @@ public class TarjetaResponse {
     private String guid;
     private String numeroTarjeta;
     private LocalDate fechaCaducidad;
-    private Integer cvv;
     private BigDecimal limiteDiario;
     private BigDecimal limiteSemanal;
     private BigDecimal limiteMensual;
