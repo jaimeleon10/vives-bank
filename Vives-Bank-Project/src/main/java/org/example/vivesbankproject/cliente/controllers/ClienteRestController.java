@@ -4,18 +4,16 @@ package org.example.vivesbankproject.cliente.controllers;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.cliente.dto.ClienteRequest;
+import org.example.vivesbankproject.cliente.dto.ClienteRequestSave;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdate;
 import org.example.vivesbankproject.cliente.dto.ClienteResponse;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.service.ClienteService;
-import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.utils.PageResponse;
 import org.example.vivesbankproject.utils.PaginationLinksUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +25,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 @Slf4j
@@ -76,9 +73,9 @@ public class ClienteRestController {
     }
 
     @PostMapping
-    public ResponseEntity<ClienteResponse> createCliente(@Valid @RequestBody ClienteRequest clienteRequest) {
-        log.info("save: clienteRequest: {}", clienteRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(clienteService.save(clienteRequest));
+    public ResponseEntity<ClienteResponse> createCliente(@Valid @RequestBody ClienteRequestSave clienteRequestSave) {
+        log.info("save: clienteRequest: {}", clienteRequestSave);
+        return ResponseEntity.status(HttpStatus.CREATED).body(clienteService.save(clienteRequestSave));
     }
 
     @PutMapping("{id}")
