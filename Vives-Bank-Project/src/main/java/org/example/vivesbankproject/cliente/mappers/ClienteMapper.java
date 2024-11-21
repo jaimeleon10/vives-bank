@@ -8,6 +8,7 @@ import org.example.vivesbankproject.cliente.dto.ClienteResponse;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Component
@@ -45,6 +46,8 @@ public class ClienteMapper {
 
     public Cliente toClienteUpdate(ClienteRequestUpdate clienteRequestUpdate, Cliente cliente) {
         return Cliente.builder()
+                .id(cliente.getId())
+                .guid(cliente.getGuid())
                 .dni(cliente.getDni())
                 .nombre(clienteRequestUpdate.getNombre())
                 .apellidos(clienteRequestUpdate.getApellidos())
@@ -54,11 +57,15 @@ public class ClienteMapper {
                 .fotoDni(clienteRequestUpdate.getFotoDni())
                 .cuentas(cliente.getCuentas())
                 .user(clienteRequestUpdate.getUser())
+                .createdAt(cliente.getCreatedAt())
+                .updatedAt(LocalDateTime.now())
                 .build();
     }
 
     public Cliente toClienteUpdateAdmin(ClienteRequestUpdateAdmin clienteRequestUpdateAdmin, Cliente cliente) {
         return Cliente.builder()
+                .id(cliente.getId())
+                .guid(cliente.getGuid())
                 .dni(cliente.getDni())
                 .nombre(clienteRequestUpdateAdmin.getNombre())
                 .apellidos(clienteRequestUpdateAdmin.getApellidos())
@@ -68,6 +75,8 @@ public class ClienteMapper {
                 .fotoDni(clienteRequestUpdateAdmin.getFotoDni())
                 .cuentas(clienteRequestUpdateAdmin.getCuentas())
                 .user(clienteRequestUpdateAdmin.getUser())
+                .createdAt(cliente.getCreatedAt())
+                .updatedAt(LocalDateTime.now())
                 .build();
     }
 }

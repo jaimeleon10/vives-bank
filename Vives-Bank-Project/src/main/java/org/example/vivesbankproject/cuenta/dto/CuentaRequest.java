@@ -19,18 +19,9 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CuentaRequest {
-    @NotBlank(message = "El numero de cuenta (IBAN) no puede estar vacio")
-    private String iban;
-
-    @Digits(integer = 8, fraction = 2, message = "El saldo debe ser un numero valido con hasta dos decimales")
-    @PositiveOrZero(message = "El saldo no puede ser negativo")
-    private BigDecimal saldo;
-
     @NotNull(message = "El campo del tipo de cuenta no puede estar vacio")
     private TipoCuenta tipoCuenta;
 
     @NotNull(message = "El campo tarjeta no puede estar vacio")
     private Tarjeta tarjeta;
-
-    private Boolean isDeleted;
 }
