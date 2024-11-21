@@ -13,7 +13,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClienteRequest {
+public class ClienteRequestSave {
 
     @NotBlank(message = "El DNI no puede estar vacío")
     @Pattern(regexp = "^\\d{8}[A-Za-z]$", message = "El DNI debe tener 8 números seguidos de una letra")

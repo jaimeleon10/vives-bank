@@ -85,6 +85,6 @@ public class UserServiceImpl implements UserService {
         var user = userRepository.findByGuid(id).orElseThrow(
                 () -> new UserNotFoundById(id)
         );
-        userRepository.deleteById(user.getId());
+        user.setIsDeleted(true);
     }
 }

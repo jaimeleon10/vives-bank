@@ -22,11 +22,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Cuenta {
-    private static final Long DEFAULT_ID = 0L;
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id = DEFAULT_ID;
+    private Long id;
 
     @Builder.Default
     private String guid = IdGenerator.generarId();

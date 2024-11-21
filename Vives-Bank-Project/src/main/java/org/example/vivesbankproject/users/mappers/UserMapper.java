@@ -15,6 +15,9 @@ public class UserMapper {
                 .username(user.getUsername())
                 .password(user.getPassword())
                 .roles(user.getRoles())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .isDeleted(user.getIsDeleted())
                 .build();
     }
 
@@ -33,6 +36,7 @@ public class UserMapper {
                 .password(userRequest.getPassword())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
+                .isDeleted(userRequest.getIsDeleted())
                 .build();
     }
 }

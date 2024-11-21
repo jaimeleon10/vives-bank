@@ -3,11 +3,7 @@ package org.example.vivesbankproject.tarjeta.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.cuenta.dto.CuentaRequest;
-import org.example.vivesbankproject.cuenta.dto.CuentaRequestUpdate;
-import org.example.vivesbankproject.cuenta.dto.CuentaResponse;
-import org.example.vivesbankproject.cuenta.models.Cuenta;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaRequest;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestSave;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestUpdate;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
@@ -18,9 +14,7 @@ import org.example.vivesbankproject.utils.PaginationLinksUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -33,7 +27,6 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -82,8 +75,8 @@ public class TarjetaRestController {
     }
 
     @PostMapping
-    public ResponseEntity<TarjetaResponse> save(@Valid @RequestBody TarjetaRequest tarjetaRequest) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(tarjetaService.save(tarjetaRequest));
+    public ResponseEntity<TarjetaResponse> save(@Valid @RequestBody TarjetaRequestSave tarjetaRequestSave) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(tarjetaService.save(tarjetaRequestSave));
     }
 
     @PutMapping("{id}")
