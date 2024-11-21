@@ -5,7 +5,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RedisService <K,V> implements Cache<K,V> {
+public class RedisService <K,V> implements CacheRedis<K,V> {
 
     @Autowired
     private RedisTemplate<K, V> redisTemplate;
