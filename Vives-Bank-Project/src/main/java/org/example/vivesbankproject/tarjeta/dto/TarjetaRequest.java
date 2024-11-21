@@ -3,6 +3,7 @@ package org.example.vivesbankproject.tarjeta.dto;
 import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Data;
+import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -36,8 +37,5 @@ public class TarjetaRequest {
     private BigDecimal limiteMensual;
 
     @NotNull(message = "El ID del tipo de tarjeta no puede estar vacío")
-    private String tipoTarjeta;
-
-    @NotNull(message = "El ID de la cuenta no puede estar vacío")
-    private UUID cuentaId;
+    private TipoTarjeta tipoTarjeta;
 }

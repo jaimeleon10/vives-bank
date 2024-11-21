@@ -59,6 +59,11 @@ class TarjetaServiceImplTest {
         tarjeta.setId(tarjetaId);
         tarjeta.setNumeroTarjeta("1234567890123456");
 
+        TipoTarjeta tipoTarjeta = TipoTarjeta.builder()
+                .id(UUID.randomUUID())
+                .nombre(Tipo.CREDITO)
+                .build();
+
         tarjetaRequest = TarjetaRequest.builder()
                 .numeroTarjeta("1234567890123456")
                 .cvv(123)
@@ -67,19 +72,18 @@ class TarjetaServiceImplTest {
                 .limiteDiario(BigDecimal.valueOf(1000))
                 .limiteSemanal(BigDecimal.valueOf(5000))
                 .limiteMensual(BigDecimal.valueOf(20000))
-                .tipoTarjeta("CREDITO")
-                .cuentaId(UUID.randomUUID())
+                .tipoTarjeta(tipoTarjeta)
                 .build();
 
         tarjetaResponse = TarjetaResponse.builder()
                 .id(tarjetaId)
                 .numeroTarjeta("1234567890123456")
-                .tipoTarjeta("CREDITO")
+                .tipoTarjeta(tipoTarjeta)
                 .build();
     }
 
     @Test
-    void testSaveTarjeta() {
+    void SaveTarjeta() {
         when(tarjetaMapper.toTarjeta(tarjetaRequest)).thenReturn(tarjeta);
         when(tarjetaRepository.save(tarjeta)).thenReturn(tarjeta);
         when(tarjetaMapper.toTarjetaResponse(tarjeta)).thenReturn(tarjetaResponse);
@@ -94,7 +98,7 @@ class TarjetaServiceImplTest {
     }
 
     @Test
-    void testGetById() {
+    void GetById() {
         when(tarjetaRepository.findById(tarjetaId)).thenReturn(Optional.of(tarjeta));
         when(tarjetaMapper.toTarjetaResponse(tarjeta)).thenReturn(tarjetaResponse);
 
@@ -105,7 +109,7 @@ class TarjetaServiceImplTest {
     }
 
     @Test
-    void testGetById_NotFound() {
+    void GetById_NotFound() {
         when(tarjetaRepository.findById(tarjetaId)).thenReturn(Optional.empty());
 
         Optional<TarjetaResponse> resultado = tarjetaService.getById(tarjetaId);
@@ -114,7 +118,7 @@ class TarjetaServiceImplTest {
     }
 
     @Test
-    void testUpdateTarjeta() {
+    void UpdateTarjeta() {
         when(tarjetaRepository.findById(tarjetaId)).thenReturn(Optional.of(tarjeta));
         when(tarjetaMapper.toTarjeta(tarjetaRequest)).thenReturn(tarjeta);
         when(tarjetaRepository.save(tarjeta)).thenReturn(tarjeta);
@@ -128,7 +132,7 @@ class TarjetaServiceImplTest {
     }
 
     @Test
-    void testUpdateTarjeta_NotFound() {
+    void UpdateTarjeta_NotFound() {
         when(tarjetaRepository.findById(tarjetaId)).thenReturn(Optional.empty());
 
         assertThrows(TarjetaNotFound.class, () ->
@@ -137,7 +141,7 @@ class TarjetaServiceImplTest {
     }
 
     @Test
-    void testDeleteTarjeta() {
+    void DeleteTarjeta() {
         when(tarjetaRepository.findById(tarjetaId)).thenReturn(Optional.of(tarjeta));
         when(tarjetaMapper.toTarjetaResponse(tarjeta)).thenReturn(tarjetaResponse);
 
@@ -148,7 +152,7 @@ class TarjetaServiceImplTest {
     }
 
     @Test
-    void testDeleteTarjeta_NotFound() {
+    void DeleteTarjeta_NotFound() {
         when(tarjetaRepository.findById(tarjetaId)).thenReturn(Optional.empty());
 
         assertThrows(TarjetaNotFound.class, () ->
@@ -157,7 +161,7 @@ class TarjetaServiceImplTest {
     }
 
     @Test
-    void testGetTipoTarjetaByNombre() {
+    void GetTipoTarjetaByNombre() {
         TipoTarjeta tipoTarjeta = new TipoTarjeta();
         tipoTarjeta.setNombre(Tipo.CREDITO);
 
@@ -171,7 +175,7 @@ class TarjetaServiceImplTest {
     }
 
     @Test
-    void testGetTipoTarjetaByNombre_NotFound() {
+    void GetTipoTarjetaByNombre_NotFound() {
         when(tipoTarjetaRepository.findByNombre(Tipo.CREDITO))
                 .thenReturn(Optional.empty());
 

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -22,7 +23,7 @@ public class TarjetaResponse {
     private BigDecimal limiteDiario;
     private BigDecimal limiteSemanal;
     private BigDecimal limiteMensual;
-    private String tipoTarjeta;
+    private TipoTarjeta tipoTarjeta;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
