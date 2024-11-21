@@ -3,7 +3,6 @@ package org.example.vivesbankproject.tarjeta.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequest;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
-import org.example.vivesbankproject.tarjeta.models.Tipo;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.tarjeta.service.TarjetaService;
 import org.example.vivesbankproject.utils.PaginationLinksUtils;
@@ -82,16 +81,6 @@ public class TarjetaRestController {
             return ResponseEntity.ok(tarjetaEliminada);
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
-        }
-    }
-
-    @GetMapping("/tipo/{nombre}")
-    public ResponseEntity<TipoTarjeta> getTipoTarjetaByNombre(@PathVariable Tipo nombre) {
-        try {
-            TipoTarjeta tipoTarjeta = tarjetaService.getTipoTarjetaByNombre(nombre);
-            return ResponseEntity.ok(tipoTarjeta);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
 }

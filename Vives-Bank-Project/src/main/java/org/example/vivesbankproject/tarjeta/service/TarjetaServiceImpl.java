@@ -6,10 +6,8 @@ import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
 import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
-import org.example.vivesbankproject.tarjeta.models.Tipo;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
-import org.example.vivesbankproject.tarjeta.repositories.TipoTarjetaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
@@ -26,13 +24,11 @@ import java.util.stream.Collectors;
 public class TarjetaServiceImpl implements TarjetaService {
 
     private final TarjetaRepository tarjetaRepository;
-    private final TipoTarjetaRepository tipoTarjetaRepository;
     private final TarjetaMapper tarjetaMapper;
 
     @Autowired
-    public TarjetaServiceImpl(TarjetaRepository tarjetaRepository, TipoTarjetaRepository tipoTarjetaRepository, TarjetaMapper tarjetaMapper) {
+    public TarjetaServiceImpl(TarjetaRepository tarjetaRepository, TarjetaMapper tarjetaMapper) {
         this.tarjetaRepository = tarjetaRepository;
-        this.tipoTarjetaRepository = tipoTarjetaRepository;
         this.tarjetaMapper = tarjetaMapper;
     }
 
@@ -122,12 +118,5 @@ public class TarjetaServiceImpl implements TarjetaService {
 
         tarjetaRepository.delete(tarjetaExistente);
         return tarjetaMapper.toTarjetaResponse(tarjetaExistente);
-    }
-
-    @Override
-    public TipoTarjeta getTipoTarjetaByNombre(Tipo nombre) {
-        log.info("Buscando tipo de tarjeta con nombre: {}", nombre);
-        return tipoTarjetaRepository.findByNombre(nombre)
-                .orElseThrow(() -> new IllegalArgumentException("Tipo de tarjeta no encontrado: " + nombre));
     }
 }

@@ -27,6 +27,4 @@ public interface TarjetaService {
     TarjetaResponse update(UUID id, TarjetaRequest tarjetaRequest);
 
     TarjetaResponse deleteById(UUID id);
-
-    TipoTarjeta getTipoTarjetaByNombre(Tipo nombre);
 }

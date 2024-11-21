@@ -11,7 +11,6 @@ import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.services.CuentaService;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.models.Tipo;
-import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.utils.PageResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
