@@ -20,6 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -66,20 +69,26 @@ public class MovimientosServiceImpl implements MovimientosService {
     }
 
     @Override
-    @CachePut(key = "#result.idMovimiento")
+   // @CachePut(key = "#result.idMovimiento")
     public Movimientos save(Movimientos movimiento) {
         log.info("Guardando Movimiento: {}", movimiento);
         var cliente = clienteRepository.findById(movimiento.getCliente().getId()).orElseThrow(() -> new ClienteNotFound(movimiento.getCliente().getId()));
         if (cliente.getIdMovimientos() == null) {
-            cliente.setIdMovimientos(movimiento.getId());
+            Movimientos savedMovimiento = movimientosRepository.save(movimiento);
+            cliente.setIdMovimientos(savedMovimiento.getId());
+            clienteRepository.save(cliente);
             movimiento.setCliente(cliente);
             return movimientosRepository.save(movimiento);
         } else {
-            var savedMovimiento = getById(cliente.getIdMovimientos());
-            movimiento.getTransacciones().forEach(newTransaccion -> {
-                    savedMovimiento.getTransacciones().add(newTransaccion);
-            });
-            return movimientosRepository.save(savedMovimiento);
+            Movimientos existingMovimiento = movimientosRepository.findById(new ObjectId(cliente.getIdMovimientos()))
+                    .orElseThrow(() -> new MovimientoNotFound(new ObjectId(cliente.getIdMovimientos())));
+            if (existingMovimiento.getTransacciones() == null) {
+                existingMovimiento.setTransacciones(new ArrayList<>());
+            }
+            existingMovimiento.getTransacciones().addAll(movimiento.getTransacciones());
+            existingMovimiento.setUpdatedAt(LocalDateTime.now());
+            existingMovimiento.setCliente(cliente);
+            return movimientosRepository.save(existingMovimiento);
         }
     }
 }
