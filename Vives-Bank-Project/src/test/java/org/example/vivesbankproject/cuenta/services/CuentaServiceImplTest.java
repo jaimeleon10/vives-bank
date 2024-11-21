@@ -113,25 +113,25 @@ class CuentaServiceImplTest {
         cuentaMapped.setTarjeta(tarjetaTest);
         cuentaMapped.setIsDeleted(false);
 
-        when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.of(cuentaMapped));
+        when(cuentaRepository.findById(Long.valueOf(idCuenta))).thenReturn(Optional.of(cuentaMapped));
         when(cuentaMapper.toCuentaResponse(cuentaMapped)).thenReturn(expectedCuenta);
 
         CuentaResponse resultCuenta = cuentaService.getById(idCuenta);
 
         assertEquals(expectedCuenta, resultCuenta);
 
-        verify(cuentaRepository, times(1)).findById(idCuenta);
+        verify(cuentaRepository, times(1)).findById(Long.valueOf(idCuenta));
     }
 
 
     @Test
     void getByIdNotFound() {
         String idCuenta = "4182d617-ec89-4fbc-be95-85e461778700";
-        when(cuentaRepository.findById("4182d617-ec89-4fbc-be95-85e461778700")).thenReturn(Optional.empty());
+        when(cuentaRepository.findById(Long.valueOf(idCuenta))).thenReturn(Optional.empty());
 
         assertThrows(CuentaNotFound.class, () -> cuentaService.getById(idCuenta));
 
-        verify(cuentaRepository).findById(idCuenta);
+        verify(cuentaRepository).findById(Long.valueOf(idCuenta));
     }
 
     @Test
@@ -170,7 +170,6 @@ class CuentaServiceImplTest {
         cuentaResponse.setTarjeta(cuenta.getTarjeta());
         cuentaResponse.setIsDeleted(cuenta.getIsDeleted());
 
-        when(cuentaRepository.findByIban(cuentaRequest.getIban())).thenReturn(Optional.empty());
         when(cuentaRepository.save(any(Cuenta.class))).thenReturn(cuenta);
         when(cuentaMapper.toCuenta(cuentaRequest)).thenReturn(cuenta);
         when(cuentaMapper.toCuentaResponse(cuenta)).thenReturn(cuentaResponse);
@@ -186,7 +185,6 @@ class CuentaServiceImplTest {
                 () -> assertFalse(result.getIsDeleted())
         );
 
-        verify(cuentaRepository, times(1)).findByIban(cuentaRequest.getIban());
         verify(cuentaRepository, times(1)).save(any(Cuenta.class));
         verify(cuentaMapper, times(1)).toCuenta(cuentaRequest);
         verify(cuentaMapper, times(1)).toCuentaResponse(cuenta);
@@ -217,7 +215,7 @@ class CuentaServiceImplTest {
         expectedResponse.setTarjeta(cuentaRequestUpdate.getTarjeta());
         expectedResponse.setIsDeleted(cuenta.getIsDeleted());
 
-        when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.of(cuenta));
+        when(cuentaRepository.findById(Long.valueOf(idCuenta))).thenReturn(Optional.of(cuenta));
         when(cuentaRepository.save(any(Cuenta.class))).thenReturn(cuenta);
         when(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta)).thenReturn(cuenta);
         when(cuentaMapper.toCuentaResponse(cuenta)).thenReturn(expectedResponse);
@@ -226,7 +224,7 @@ class CuentaServiceImplTest {
 
         assertEquals(expectedResponse, result);
 
-        verify(cuentaRepository, times(1)).findById(idCuenta);
+        verify(cuentaRepository, times(1)).findById(Long.valueOf(idCuenta));
         verify(cuentaRepository, times(1)).save(any(Cuenta.class));
         verify(cuentaMapper, times(1)).toCuentaUpdate(cuentaRequestUpdate, cuenta);
         verify(cuentaMapper, times(1)).toCuentaResponse(cuenta);
@@ -236,11 +234,11 @@ class CuentaServiceImplTest {
     void updateNotFound() {
         String idCuenta = "4182d617-ec89-4fbc-be95-85e461778700";
         CuentaRequestUpdate cuentaRequestUpdate = new CuentaRequestUpdate();
-        when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.empty());
+        when(cuentaRepository.findById(Long.valueOf(idCuenta))).thenReturn(Optional.empty());
 
         assertThrows(CuentaNotFound.class, () -> cuentaService.update(idCuenta, cuentaRequestUpdate));
 
-        verify(cuentaRepository).findById(idCuenta);
+        verify(cuentaRepository).findById(Long.valueOf(idCuenta));
         verify(cuentaRepository, never()).save(any(Cuenta.class));
     }
 
@@ -271,21 +269,21 @@ class CuentaServiceImplTest {
         cuentaToDelete.setTipoCuenta(tipoCuenta);
         cuentaToDelete.setIsDeleted(false);
         
-        when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.of(cuentaToDelete));
+        when(cuentaRepository.findById(Long.valueOf(idCuenta))).thenReturn(Optional.of(cuentaToDelete));
 
         cuentaService.delete(idCuenta);
 
-        verify(cuentaRepository, times(1)).findById(idCuenta);
+        verify(cuentaRepository, times(1)).findById(Long.valueOf(idCuenta));
     }
 
     @Test
     void deleteNotFound() {
         String idCuenta = "5f5c2645-a470-4fad-b003-5fefc08fceca";
 
-        when(cuentaRepository.findById(idCuenta)).thenReturn(Optional.empty());
+        when(cuentaRepository.findById(Long.valueOf(idCuenta))).thenReturn(Optional.empty());
 
         assertThrows(CuentaNotFound.class, () -> cuentaService.delete(idCuenta));
 
-        verify(cuentaRepository, times(0)).deleteById(idCuenta);
+        verify(cuentaRepository, times(0)).deleteById(Long.valueOf(idCuenta));
     }
 }
