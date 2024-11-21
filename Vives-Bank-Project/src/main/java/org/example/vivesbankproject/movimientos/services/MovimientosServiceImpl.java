@@ -58,7 +58,7 @@ public class MovimientosServiceImpl implements MovimientosService {
 
     @Override
     @Cacheable(key = "#idCliente")
-    public Movimientos getByClienteId(UUID idCliente) {
+    public Movimientos getByClienteId(String idCliente) {
         log.info("Encontrando Movimientos por idCliente: {}", idCliente);
         clienteRepository.findById(idCliente).orElseThrow(() -> new ClienteNotFound(idCliente));
         return movimientosRepository.findMovimientosByClienteId(idCliente)

@@ -2,6 +2,7 @@ package org.example.vivesbankproject.movimientos.repositories;
 
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.movimientos.models.Movimientos;
+import org.example.vivesbankproject.utils.IdGenerator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,12 +29,12 @@ class MovimientosRepositoryTest {
     @Autowired
     private Environment env;
 
-    private UUID clienteId;
+    private String clienteId;
     private Movimientos movimientos;
 
     @BeforeEach
     void setUp() {
-        clienteId = UUID.randomUUID();
+        clienteId = IdGenerator.generarId();
         Cliente cliente = new Cliente();
         cliente.setId(clienteId);
 
@@ -61,7 +62,7 @@ class MovimientosRepositoryTest {
 
     @Test
     void findMovimientosByClienteId_shouldReturnEmpty_whenClienteDoesNotExist() {
-        UUID nonExistentClienteId = UUID.randomUUID();
+        String nonExistentClienteId = IdGenerator.generarId();
 
         Optional<Movimientos> result = movimientosRepository.findMovimientosByClienteId(nonExistentClienteId);
 

@@ -68,7 +68,7 @@ public class MovimientosController {
     }
 
     @GetMapping("/cliente/{clienteId}")
-    public ResponseEntity<Movimientos> getMovimientoByClienteId(@PathVariable UUID clienteId) {
+    public ResponseEntity<Movimientos> getMovimientoByClienteId(@PathVariable String clienteId) {
         log.info("Obteniendo movimiento con id de cliente: " + clienteId);
         Movimientos movimiento = service.getByClienteId(clienteId);
         return ResponseEntity.ok(movimiento);

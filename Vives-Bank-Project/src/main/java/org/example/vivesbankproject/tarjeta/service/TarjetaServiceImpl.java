@@ -103,6 +103,7 @@ public class TarjetaServiceImpl implements TarjetaService {
     public TarjetaResponse save(TarjetaRequest tarjetaRequest) {
         log.info("Guardando tarjeta: {}", tarjetaRequest);
         var tarjeta = tarjetaMapper.toTarjeta(tarjetaRequest);
+        tarjeta.setTipoTarjeta(getTipoTarjetaByNombre(Tipo.valueOf(tarjetaRequest.getTipoTarjeta())));
         var savedTarjeta = tarjetaRepository.save(tarjeta);
         return tarjetaMapper.toTarjetaResponse(savedTarjeta);
     }
@@ -114,6 +115,7 @@ public class TarjetaServiceImpl implements TarjetaService {
                 .orElseThrow(() -> new TarjetaNotFound(id));
 
         var tarjeta = tarjetaMapper.toTarjeta(tarjetaRequest);
+        tarjeta.setTipoTarjeta(getTipoTarjetaByNombre(Tipo.valueOf(tarjetaRequest.getTipoTarjeta())));
         tarjeta.setId(existingTarjeta.getId());
         var updatedTarjeta = tarjetaRepository.save(tarjeta);
         return tarjetaMapper.toTarjetaResponse(updatedTarjeta);

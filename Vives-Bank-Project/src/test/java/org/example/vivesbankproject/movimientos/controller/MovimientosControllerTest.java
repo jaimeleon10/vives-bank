@@ -9,6 +9,7 @@ import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.movimientos.models.Movimientos;
 import org.example.vivesbankproject.movimientos.services.MovimientosService;
 import org.example.vivesbankproject.users.models.User;
+import org.example.vivesbankproject.utils.IdGenerator;
 import org.example.vivesbankproject.utils.PageResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -73,13 +74,17 @@ class MovimientosControllerTest {
 
     private ObjectId movimientoId;
 
+    private String clienteId;
+
     @BeforeEach
     void setUp() {
 
         movimientoId = new ObjectId();
 
+        clienteId = IdGenerator.generarId();
+
         cliente = Cliente.builder()
-                .id(UUID.fromString("5f8761020988676500000001"))
+                .id(clienteId)
                 .dni("12345678A")
                 .nombre("John")
                 .apellidos("Doe")

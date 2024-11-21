@@ -14,15 +14,7 @@ import java.util.UUID;
 @Component
 public class TarjetaMapper {
 
-    private final TarjetaService tarjetaService;
-
-    @Autowired
-    public TarjetaMapper(TarjetaService tarjetaService) {
-        this.tarjetaService = tarjetaService;
-    }
-
     public Tarjeta toTarjeta(TarjetaRequest request) {
-        TipoTarjeta tipoTarjeta = tarjetaService.getTipoTarjetaByNombre(Tipo.valueOf(request.getTipoTarjeta()));
 
         return Tarjeta.builder()
                 .id(UUID.randomUUID())
@@ -33,7 +25,6 @@ public class TarjetaMapper {
                 .limiteDiario(request.getLimiteDiario())
                 .limiteSemanal(request.getLimiteSemanal())
                 .limiteMensual(request.getLimiteMensual())
-                .tipoTarjeta(tipoTarjeta)
                 .build();
     }
 

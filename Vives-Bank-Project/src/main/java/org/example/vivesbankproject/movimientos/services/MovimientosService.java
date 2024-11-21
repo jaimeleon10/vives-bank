@@ -14,7 +14,7 @@ public interface MovimientosService {
 
     Movimientos getById(ObjectId idMovimiento);
 
-    Movimientos getByClienteId(UUID idCliente);
+    Movimientos getByClienteId(String idCliente);
 
     Movimientos save(Movimientos movimiento);
 

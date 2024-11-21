@@ -13,6 +13,6 @@ import java.util.UUID;
 
 @Repository
 public interface MovimientosRepository extends MongoRepository<Movimientos, ObjectId> {
-    Optional<Movimientos> findMovimientosByClienteId(UUID clienteId);
+    Optional<Movimientos> findMovimientosByClienteId(String clienteId);
 
 }
