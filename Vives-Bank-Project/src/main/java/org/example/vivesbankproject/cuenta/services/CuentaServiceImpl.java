@@ -66,7 +66,7 @@ public class CuentaServiceImpl implements CuentaService{
     @Override
     public CuentaResponse getById(String id) {
         log.info("Obteniendo la cuenta con id: {}", id);
-        var cuenta = cuentaRepository.findById(id).orElseThrow(() -> new CuentaNotFound(id));
+        var cuenta = cuentaRepository.findByGuid(id).orElseThrow(() -> new CuentaNotFound(id));
         return cuentaMapper.toCuentaResponse(cuenta);
     }
 
@@ -83,7 +83,7 @@ public class CuentaServiceImpl implements CuentaService{
     @Override
     public CuentaResponse update(String id, CuentaRequestUpdate cuentaRequestUpdate) {
         log.info("Actualizando cuenta con id {}", id);
-        var cuenta = cuentaRepository.findById(id).orElseThrow(() -> new CuentaNotFound(id));
+        var cuenta = cuentaRepository.findByGuid(id).orElseThrow(() -> new CuentaNotFound(id));
         var cuentaSaved = cuentaRepository.save(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta));
         return cuentaMapper.toCuentaResponse(cuentaSaved);
     }
@@ -91,7 +91,7 @@ public class CuentaServiceImpl implements CuentaService{
     @Override
     public Cuenta delete(String id) {
         log.info("Eliminando cuenta con id {}", id);
-        var cuentaExistente = cuentaRepository.findById(id).orElseThrow(
+        var cuentaExistente = cuentaRepository.findByGuid(id).orElseThrow(
                 () -> new CuentaNotFound(id)
         );
         cuentaExistente.setIsDeleted(true);

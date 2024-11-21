@@ -63,6 +63,8 @@ dependencies {
 
     // Redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation ("org.hibernate:hibernate-core:6.2.8.Final")
+    implementation("org.hibernate:hibernate-redis:6.2.8.Final")
 
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")

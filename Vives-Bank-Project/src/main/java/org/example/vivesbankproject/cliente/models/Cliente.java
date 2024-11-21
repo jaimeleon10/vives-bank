@@ -25,9 +25,14 @@ import java.util.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Cliente {
+    private static final Long DEFAULT_ID = 0L;
+
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id = DEFAULT_ID;
+
     @Builder.Default
-    private String id = IdGenerator.generarId();
+    private String guid = IdGenerator.generarId();
 
     @Column(nullable = false, unique = true)
     @NotBlank(message = "El DNI no puede estar vacío")

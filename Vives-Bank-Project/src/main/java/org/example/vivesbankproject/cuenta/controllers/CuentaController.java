@@ -77,7 +77,7 @@ public class CuentaController {
         return ResponseEntity.ok(result);
     }
 
-    @DeleteMapping("{id}")
+    @PatchMapping("{id}")
     public ResponseEntity<Cuenta> delete(@PathVariable String id) {
         cuentaService.delete(id);
         return ResponseEntity.noContent().build();

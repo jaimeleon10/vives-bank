@@ -7,24 +7,31 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.vivesbankproject.utils.IdGenerator;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.validator.constraints.Length;
-
+import org.hibernate.annotations.Cache;
 import java.time.LocalDateTime;
 import java.util.Set;
-import java.util.UUID;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Entity
 @Table(name = "usuarios")
 public class User {
+
+    private static final Long DEFAULT_ID = 0L;
+
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id = DEFAULT_ID;
+
     @Builder.Default
-    private String id = IdGenerator.generarId();
+    private String guid = IdGenerator.generarId();
 
     @Column(unique = true, nullable = false)
     @NotBlank(message = "Username no puede estar vacío")
