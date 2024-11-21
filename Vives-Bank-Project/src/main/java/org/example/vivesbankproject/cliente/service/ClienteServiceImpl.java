@@ -3,6 +3,8 @@ package org.example.vivesbankproject.cliente.service;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cliente.dto.ClienteRequest;
+import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdate;
+import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdateAdmin;
 import org.example.vivesbankproject.cliente.dto.ClienteResponse;
 import org.example.vivesbankproject.cliente.exceptions.ClienteExistsByDni;
 import org.example.vivesbankproject.cliente.exceptions.ClienteExistsByEmail;
@@ -18,19 +20,16 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-import java.util.UUID;
 
-@Service
 @Slf4j
+@Service
 public class ClienteServiceImpl implements ClienteService {
 
     private final ClienteRepository clienteRepository;
-    private final CuentaRepository cuentaRepository;
     private final ClienteMapper clienteMapper;
 
-    public ClienteServiceImpl(ClienteRepository clienteRepository, CuentaRepository cuentaRepository, ClienteMapper clienteMapper) {
+    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper) {
         this.clienteRepository = clienteRepository;
-        this.cuentaRepository = cuentaRepository;
         this.clienteMapper = clienteMapper;
     }
 
@@ -66,38 +65,51 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
 @Override
-    public ClienteResponse getById(UUID id) {
+    public ClienteResponse getById(String id) {
         var cliente = clienteRepository.findById(id).orElseThrow(() -> new ClienteNotFound(id));
         return clienteMapper.toClienteResponse(cliente);
     }
 
     @Override
     public ClienteResponse save(ClienteRequest clienteRequest) {
-        validarClienteExistente(clienteRequest);
-        var cliente = clienteRepository.save(clienteMapper.toCliente(clienteRequest));
-        return clienteMapper.toClienteResponse(cliente);
+        var clienteForSave = clienteMapper.toCliente(clienteRequest);
+        validarClienteExistente(clienteForSave);
+        var clienteSaved = clienteRepository.save(clienteForSave);
+        return clienteMapper.toClienteResponse(clienteSaved);
     }
 
     @Override
-    public ClienteResponse update(UUID id, ClienteRequest clienteRequest) {
-        if (clienteRepository.findById(id).isEmpty()) {
-            throw new ClienteNotFound(id);
-        }
-        validarClienteExistente(clienteRequest);
-        var cliente = clienteRepository.save(clienteMapper.toCliente(clienteRequest));
-        return clienteMapper.toClienteResponse(cliente);
+    public ClienteResponse update(String id, ClienteRequestUpdate clienteRequestUpdate) {
+        var cliente = clienteRepository.findById(id).orElseThrow(
+                () -> new ClienteNotFound(id)
+        );
+        var clienteForUpdate = clienteMapper.toClienteUpdate(clienteRequestUpdate, cliente);
+        validarClienteExistente(clienteForUpdate);
+        var clienteUpdated = clienteRepository.save(clienteForUpdate);
+        return clienteMapper.toClienteResponse(clienteUpdated);
+    }
+
+    @Override
+    public ClienteResponse updateByAdmin(String id, ClienteRequestUpdateAdmin clienteRequestUpdateAdmin) {
+        var cliente = clienteRepository.findById(id).orElseThrow(
+                () -> new ClienteNotFound(id)
+        );
+        var clienteForUpdate = clienteMapper.toClienteUpdateAdmin(clienteRequestUpdateAdmin, cliente);
+        validarClienteExistente(clienteForUpdate);
+        var clienteUpdated = clienteRepository.save(clienteForUpdate);
+        return clienteMapper.toClienteResponse(clienteUpdated);
     }
 
     @Override
     @Transactional
-    public void deleteById(UUID id) {
+    public void deleteById(String id) {
         if (clienteRepository.findById(id).isEmpty()) {
             throw new ClienteNotFound(id);
         }
         clienteRepository.deleteById(id);
     }
 
-    private void validarClienteExistente(ClienteRequest cliente) {
+    private void validarClienteExistente(Cliente cliente) {
         if (clienteRepository.findByDni(cliente.getDni()).isPresent()) {
             throw new ClienteExistsByDni(cliente.getDni());
         }

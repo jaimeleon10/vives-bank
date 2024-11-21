@@ -5,36 +5,41 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
+import org.example.vivesbankproject.utils.IbanGenerator;
+import org.example.vivesbankproject.utils.IdGenerator;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
 @Builder
 @Entity
-@Table(name = "CUENTAS")
+@Table(name = "cuentas")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Cuenta {
     @Id
-    private UUID id;
+    private String id = IdGenerator.generarId();
 
     @Column(nullable = false, unique = true)
     @NotBlank(message = "El numero de cuenta (IBAN) no puede estar vacio")
-    private String iban;
+    @Builder.Default
+    private String iban = IbanGenerator.generateIban();
 
     @Column(nullable = false)
     @Digits(integer = 8, fraction = 2, message = "El saldo debe ser un numero valido con hasta dos decimales")
     @PositiveOrZero(message = "El saldo no puede ser negativo")
-    private Double saldo;
+    private BigDecimal saldo;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "tipo_cuenta_id", nullable = false, referencedColumnName = "id")
+    @ManyToOne
+    @JoinColumn(name = "tipoCuenta_id", nullable = false, referencedColumnName = "id")
     private TipoCuenta tipoCuenta;
 
-    @OneToOne(mappedBy = "cuenta", cascade = CascadeType.ALL, optional = false, fetch = FetchType.LAZY)
+    @OneToOne
+    @JoinColumn(name = "tarjeta_id")
     private Tarjeta tarjeta;
 
     @CreationTimestamp
@@ -43,7 +48,7 @@ public class Cuenta {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @UpdateTimestamp
-    @Column(updatable = true, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
 

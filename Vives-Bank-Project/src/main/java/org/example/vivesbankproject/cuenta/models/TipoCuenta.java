@@ -3,21 +3,23 @@ package org.example.vivesbankproject.cuenta.models;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.example.vivesbankproject.utils.IdGenerator;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
 @Builder
 @Entity
-@Table(name = "TIPOS_CUENTA")
+@Table(name = "tipoCuenta")
 @NoArgsConstructor
 @AllArgsConstructor
 public class TipoCuenta {
     @Id
-    private UUID id;
+    private String id = IdGenerator.generarId();
 
     @Column(nullable = false, unique = true)
     @NotBlank(message = "El nombre del tipo de cuenta no puede estar vacío")
@@ -26,7 +28,7 @@ public class TipoCuenta {
     @Column(nullable = false)
     @Digits(integer = 3, fraction = 2, message = "El interés debe ser un número válido")
     @PositiveOrZero(message = "El interés no puede ser negativo")
-    private double interes;
+    private BigDecimal interes;
 
     @CreationTimestamp
     @Column(updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
@@ -34,7 +36,7 @@ public class TipoCuenta {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @UpdateTimestamp
-    @Column(updatable = true, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
 }

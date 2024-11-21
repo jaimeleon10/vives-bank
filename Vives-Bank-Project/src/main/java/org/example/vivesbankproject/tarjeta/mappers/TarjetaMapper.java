@@ -1,6 +1,7 @@
 package org.example.vivesbankproject.tarjeta.mappers;
 
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequest;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.models.Tipo;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
@@ -33,7 +34,25 @@ public class TarjetaMapper {
                 .limiteSemanal(request.getLimiteSemanal())
                 .limiteMensual(request.getLimiteMensual())
                 .tipoTarjeta(tipoTarjeta)
-                .cuenta(null)
+                .build();
+    }
+
+    public TarjetaResponse toTarjetaResponse(Tarjeta tarjeta) {
+        if (tarjeta == null) {
+            return null;
+        }
+
+        return TarjetaResponse.builder()
+                .id(tarjeta.getId())
+                .numeroTarjeta(tarjeta.getNumeroTarjeta())
+                .fechaCaducidad(tarjeta.getFechaCaducidad())
+                .cvv(tarjeta.getCvv())
+                .limiteDiario(tarjeta.getLimiteDiario())
+                .limiteSemanal(tarjeta.getLimiteSemanal())
+                .limiteMensual(tarjeta.getLimiteMensual())
+                .tipoTarjeta(tarjeta.getTipoTarjeta() != null ? String.valueOf(tarjeta.getTipoTarjeta().getNombre()) : null)
+                .createdAt(tarjeta.getCreatedAt())
+                .updatedAt(tarjeta.getUpdatedAt())
                 .build();
     }
 
@@ -48,7 +67,6 @@ public class TarjetaMapper {
                 .limiteSemanal(tarjeta.getLimiteSemanal())
                 .limiteMensual(tarjeta.getLimiteMensual())
                 .tipoTarjeta(tarjeta.getTipoTarjeta().getNombre().name())
-                .cuentaId(tarjeta.getCuenta().getId())
                 .build();
     }
 }

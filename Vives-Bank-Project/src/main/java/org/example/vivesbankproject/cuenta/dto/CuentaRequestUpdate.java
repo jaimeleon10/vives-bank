@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 
@@ -17,10 +16,7 @@ import java.math.BigDecimal;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CuentaRequest {
-    @NotBlank(message = "El numero de cuenta (IBAN) no puede estar vacio")
-    private String iban;
-
+public class CuentaRequestUpdate {
     @Digits(integer = 8, fraction = 2, message = "El saldo debe ser un numero valido con hasta dos decimales")
     @PositiveOrZero(message = "El saldo no puede ser negativo")
     private BigDecimal saldo;

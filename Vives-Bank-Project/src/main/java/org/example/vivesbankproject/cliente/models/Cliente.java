@@ -10,6 +10,7 @@ import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.users.models.Role;
 import org.example.vivesbankproject.users.models.User;
+import org.example.vivesbankproject.utils.IdGenerator;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -22,13 +23,13 @@ import java.util.UUID;
 @Data
 @Builder
 @Entity
-@Table(name = "CLIENTES")
+@Table(name = "clientes")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Cliente {
     @Id
     @Builder.Default
-    private UUID id = UUID.randomUUID();
+    private String id = IdGenerator.generarId();
 
     @Column(nullable = false, unique = true)
     @NotBlank(message = "El DNI no puede estar vacío")
@@ -53,19 +54,18 @@ public class Cliente {
     @NotBlank(message = "El teléfono no puede estar vacío")
     private String telefono;
 
-    @Column(name = "FOTO_PERFIL")
     @NotBlank(message = "La foto de perfil no puede estar vacía")
     private String fotoPerfil;
 
-    @Column(name = "FOTO_DNI", nullable = false)
+    @Column(nullable = false)
     @NotBlank(message = "La foto del DNI no puede estar vacía")
     private String fotoDni;
 
-    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "cuentas")
+    @OneToMany
+    @JoinColumn(name = "cuentas_id")
     private Set<Cuenta> cuentas;
 
-    @OneToOne(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne
     @JoinColumn(name = "user_id")
     @NotNull(message = "El usuario no puede ser un campo nulo")
     private User user;

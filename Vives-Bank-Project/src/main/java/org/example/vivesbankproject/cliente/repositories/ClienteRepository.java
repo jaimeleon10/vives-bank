@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface ClienteRepository extends JpaRepository<Cliente, UUID>, JpaSpecificationExecutor<Cliente> {
+public interface ClienteRepository extends JpaRepository<Cliente, String>, JpaSpecificationExecutor<Cliente> {
     Optional<Cliente> findByDni(String dni);
     Optional<Cliente> findByEmail(String email);
     Optional<Cliente> findByTelefono(String telefono);

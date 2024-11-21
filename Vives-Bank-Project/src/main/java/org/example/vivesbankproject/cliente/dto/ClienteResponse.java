@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.users.models.User;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Data
@@ -16,7 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ClienteResponse {
-    private UUID id;
+    private String id;
     private String dni;
     private String nombre;
     private String apellidos;
@@ -25,7 +24,7 @@ public class ClienteResponse {
     private String fotoPerfil;
     private String fotoDni;
     @Builder.Default
-    private List<Cuenta> cuentas = new ArrayList<>();
+    private Set<Cuenta> cuentas = Set.of();
     private User user;
     private ObjectId idMovimientos;
 }
