@@ -31,6 +31,7 @@ public class Movimientos {
     @Builder.Default
     private ObjectId id = new ObjectId();
 
+    @Builder.Default
     private String guid = IdGenerator.generarId();
 
     @NotBlank(message = "El id del usuario no puede ser nulo")
