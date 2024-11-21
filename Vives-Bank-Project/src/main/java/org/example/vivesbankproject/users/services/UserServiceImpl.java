@@ -74,14 +74,14 @@ public class UserServiceImpl implements UserService {
     @Override
     @CachePut(key = "#result.guid")
     public UserResponse update(String id, UserRequest userRequest) {
-        if (userRepository.findByGuid(id).isEmpty()) {
-            throw new UserNotFoundById(id);
-        }
+        var user = userRepository.findByGuid(id).orElseThrow(
+                () -> new UserNotFoundById(id)
+        );
         if (userRepository.findByUsername(userRequest.getUsername()).isPresent()) {
             throw new UserExists(userRequest.getUsername());
         }
-        var user = userRepository.save(userMapper.toUser(userRequest));
-        return userMapper.toUserResponse(user);
+        var userUpdated = userRepository.save(userMapper.toUserUpdate(userRequest, user));
+        return userMapper.toUserResponse(userUpdated);
     }
 
     @Override

@@ -3,6 +3,7 @@ package org.example.vivesbankproject.tarjeta.service;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequest;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestUpdate;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponseCVV;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
@@ -41,7 +42,16 @@ public class TarjetaServiceImpl implements TarjetaService {
     }
 
     @Override
-    public Page<Tarjeta> getAll(Optional<String> numero, Optional<LocalDate> caducidad, Optional<TipoTarjeta> tipoTarjeta, Optional<BigDecimal> minLimiteDiario, Optional<BigDecimal> maxLimiteDiario, Optional<BigDecimal> minLimiteSemanal, Optional<BigDecimal> maxLimiteSemanal, Optional<BigDecimal> minLimiteMensual, Optional<BigDecimal> maxLimiteMensual, Pageable pageable) {
+    public Page<Tarjeta> getAll(Optional<String> numero,
+                                Optional<LocalDate> caducidad,
+                                Optional<TipoTarjeta> tipoTarjeta,
+                                Optional<BigDecimal> minLimiteDiario,
+                                Optional<BigDecimal> maxLimiteDiario,
+                                Optional<BigDecimal> minLimiteSemanal,
+                                Optional<BigDecimal> maxLimiteSemanal,
+                                Optional<BigDecimal> minLimiteMensual,
+                                Optional<BigDecimal> maxLimiteMensual,
+                                Pageable pageable) {
 
         Specification<Tarjeta> specNumero = (root, query, criteriaBuilder) ->
                 numero.map(value -> criteriaBuilder.like(criteriaBuilder.lower(root.get("numeroTarjeta")), "%" + value.toLowerCase() + "%"))
@@ -119,12 +129,12 @@ public class TarjetaServiceImpl implements TarjetaService {
 
     @Override
     @CachePut(key = "#result.guid")
-    public TarjetaResponse update(String id, TarjetaRequest tarjetaRequest) {
+    public TarjetaResponse update(String id, TarjetaRequestUpdate tarjetaRequestUpdate) {
         log.info("Actualizando tarjeta con id: {}", id);
         var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(
                 () -> new TarjetaNotFound(id)
         );
-        var tarjetaUpdated = tarjetaRepository.save(tarjetaMapper.toTarjetaUpdate(tarjetaRequest, tarjeta));
+        var tarjetaUpdated = tarjetaRepository.save(tarjetaMapper.toTarjetaUpdate(tarjetaRequestUpdate, tarjeta));
         return tarjetaMapper.toTarjetaResponse(tarjetaUpdated);
     }
 
