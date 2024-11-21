@@ -1,5 +1,6 @@
 package org.example.vivesbankproject.movimientos.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.validation.constraints.Max;
@@ -37,4 +38,9 @@ public abstract class Transacciones {
     @Pattern(regexp = "^[a-zA-Z\\s]*$", message = "El campo solo puede contener letras y espacios")
     @Size(max = 100, message = "El campo no puede tener más de 100 caracteres")
     private String concepto;
+
+    @JsonProperty("id")
+    public String get_id() {
+        return id.toHexString();
+    }
 }

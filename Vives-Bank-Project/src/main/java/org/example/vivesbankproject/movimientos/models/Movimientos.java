@@ -31,7 +31,7 @@ public class Movimientos {
     private ObjectId id = new ObjectId();
 
     @NotBlank(message = "El id del usuario no puede ser nulo")
-    private UUID idUsuario;
+    private String idUsuario;
 
     @NotBlank(message = "El cliente no puede estar vacio")
     private Cliente cliente;
