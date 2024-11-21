@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Cacheable(key = "#id")
     public UserResponse getById(String id) {
-        var user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundById(id));
+        var user = userRepository.findByGuid(id).orElseThrow(() -> new UserNotFoundById(id));
         return userMapper.toUserResponse(user);
     }
 
@@ -70,7 +70,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse update(String id, UserRequest userRequest) {
-        if (userRepository.findById(id).isEmpty()) {
+        if (userRepository.findByGuid(id).isEmpty()) {
             throw new UserNotFoundById(id);
         }
         if (userRepository.findByUsername(userRequest.getUsername()).isPresent()) {
@@ -82,9 +82,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteById(String id) {
-        if (userRepository.findById(id).isEmpty()) {
-            throw new UserNotFoundById(id);
-        }
-        userRepository.deleteById(id);
+        var user = userRepository.findByGuid(id).orElseThrow(
+                () -> new UserNotFoundById(id)
+        );
+        userRepository.deleteById(user.getId());
     }
 }

@@ -23,7 +23,7 @@ public class TarjetaMapper {
 
     public TarjetaResponse toTarjetaResponse(Tarjeta tarjeta) {
         return TarjetaResponse.builder()
-                .id(tarjeta.getId())
+                .guid(tarjeta.getGuid())
                 .numeroTarjeta(tarjeta.getNumeroTarjeta())
                 .fechaCaducidad(tarjeta.getFechaCaducidad())
                 .cvv(tarjeta.getCvv())

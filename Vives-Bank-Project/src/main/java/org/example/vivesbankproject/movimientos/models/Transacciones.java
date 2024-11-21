@@ -13,6 +13,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.bson.types.ObjectId;
+import org.example.vivesbankproject.utils.IdGenerator;
 
 import java.time.LocalDateTime;
 
@@ -30,6 +31,7 @@ import java.time.LocalDateTime;
 public abstract class Transacciones {
     @Builder.Default
     private ObjectId id = new ObjectId();
+    private String guid = IdGenerator.generarId();
     @Builder.Default
     private LocalDateTime fecha_transaccion = LocalDateTime.now();
     @Min(value = 1, message = "La cantidad debe ser mayor a 1")

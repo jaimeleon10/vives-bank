@@ -15,7 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ClienteResponse {
-    private String id;
+    private String guid;
     private String dni;
     private String nombre;
     private String apellidos;

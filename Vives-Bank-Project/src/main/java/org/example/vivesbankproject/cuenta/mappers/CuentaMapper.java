@@ -11,7 +11,7 @@ public class CuentaMapper {
 
     public CuentaResponse toCuentaResponse(Cuenta cuenta) {
         return CuentaResponse.builder()
-                .id(cuenta.getId())
+                .guid(cuenta.getGuid())
                 .iban(cuenta.getIban())
                 .saldo(cuenta.getSaldo())
                 .tipoCuenta(cuenta.getTipoCuenta())

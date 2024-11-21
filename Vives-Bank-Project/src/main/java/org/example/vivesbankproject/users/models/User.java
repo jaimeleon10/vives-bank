@@ -13,7 +13,6 @@ import org.hibernate.validator.constraints.Length;
 
 import java.time.LocalDateTime;
 import java.util.Set;
-import java.util.UUID;
 
 @Data
 @Builder
@@ -22,9 +21,15 @@ import java.util.UUID;
 @Entity
 @Table(name = "usuarios")
 public class User {
+
+    private static final Long DEFAULT_ID = 0L;
+
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id = DEFAULT_ID;
+
     @Builder.Default
-    private String id = IdGenerator.generarId();
+    private String guid = IdGenerator.generarId();
 
     @Column(unique = true, nullable = false)
     @NotBlank(message = "Username no puede estar vacío")

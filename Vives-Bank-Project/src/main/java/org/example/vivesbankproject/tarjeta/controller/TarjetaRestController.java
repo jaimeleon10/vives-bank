@@ -52,7 +52,7 @@ public class TarjetaRestController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TarjetaResponse> getTarjetaById(@PathVariable UUID id) {
+    public ResponseEntity<TarjetaResponse> getTarjetaById(@PathVariable String id) {
         return ResponseEntity.ok(tarjetaService.getById(id));
     }
 
@@ -63,9 +63,7 @@ public class TarjetaRestController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TarjetaResponse> updateTarjeta(
-            @PathVariable UUID id,
-            @RequestBody TarjetaRequest tarjetaRequest) {
+    public ResponseEntity<TarjetaResponse> updateTarjeta(@PathVariable String id, @RequestBody TarjetaRequest tarjetaRequest) {
         try {
             TarjetaResponse updatedTarjeta = tarjetaService.update(id, tarjetaRequest);
             return ResponseEntity.ok(updatedTarjeta);
@@ -75,7 +73,7 @@ public class TarjetaRestController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<TarjetaResponse> deleteTarjetaById(@PathVariable UUID id) {
+    public ResponseEntity<TarjetaResponse> deleteTarjetaById(@PathVariable String id) {
         try {
             TarjetaResponse tarjetaEliminada = tarjetaService.deleteById(id);
             return ResponseEntity.ok(tarjetaEliminada);

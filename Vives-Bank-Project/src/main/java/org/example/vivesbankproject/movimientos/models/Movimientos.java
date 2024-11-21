@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cliente.models.Cliente;
+import org.example.vivesbankproject.utils.IdGenerator;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -29,6 +30,8 @@ public class Movimientos {
     @Id
     @Builder.Default
     private ObjectId id = new ObjectId();
+
+    private String guid = IdGenerator.generarId();
 
     @NotBlank(message = "El id del usuario no puede ser nulo")
     private String idUsuario;
