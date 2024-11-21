@@ -1,6 +1,6 @@
 package org.example.vivesbankproject.tarjeta.mappers;
 
-import org.example.vivesbankproject.tarjeta.dto.TarjetaRequest;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestSave;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
@@ -25,7 +25,7 @@ class TarjetaMapperTest {
 
     @Test
     void toRequestATarjeta() {
-        TarjetaRequest request = TarjetaRequest.builder()
+        TarjetaRequestSave request = TarjetaRequestSave.builder()
                 .numeroTarjeta("1234567890123456")
                 .fechaCaducidad(LocalDate.of(2025, 12, 31))
                 .cvv(123)
@@ -90,7 +90,7 @@ class TarjetaMapperTest {
                 .tipoTarjeta(TipoTarjeta.CREDITO)
                 .build();
 
-        TarjetaRequest request = tarjetaMapper.toRequest(tarjeta);
+        TarjetaRequestSave request = tarjetaMapper.toRequest(tarjeta);
 
         assertEquals(tarjeta.getNumeroTarjeta(), request.getNumeroTarjeta());
         assertEquals(tarjeta.getFechaCaducidad(), request.getFechaCaducidad());
@@ -104,7 +104,7 @@ class TarjetaMapperTest {
 
     @Test
     void toRequesConNulos() {
-        TarjetaRequest requestNulo = null;
+        TarjetaRequestSave requestNulo = null;
         Tarjeta tarjetaNula = null;
 
         assertThrows(NullPointerException.class, () -> tarjetaMapper.toTarjeta(requestNulo));

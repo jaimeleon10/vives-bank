@@ -29,11 +29,10 @@ import java.util.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Cliente {
-    private static final Long DEFAULT_ID = 0L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id = DEFAULT_ID;
+    private Long id;
 
     @Builder.Default
     private String guid = IdGenerator.generarId();
@@ -70,6 +69,7 @@ public class Cliente {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "cliente_id", nullable = false)
+    @Builder.Default
     private Set<Cuenta> cuentas = new HashSet<>();
 
     @OneToOne
@@ -89,6 +89,10 @@ public class Cliente {
     @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean isDeleted = false;
 
     @JsonProperty("idMovimientos")
     public String getIdMovimientos() {

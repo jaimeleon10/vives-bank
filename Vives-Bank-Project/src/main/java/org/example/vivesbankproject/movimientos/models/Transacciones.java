@@ -31,6 +31,7 @@ import java.time.LocalDateTime;
 public abstract class Transacciones {
     @Builder.Default
     private ObjectId id = new ObjectId();
+    @Builder.Default
     private String guid = IdGenerator.generarId();
     @Builder.Default
     private LocalDateTime fecha_transaccion = LocalDateTime.now();

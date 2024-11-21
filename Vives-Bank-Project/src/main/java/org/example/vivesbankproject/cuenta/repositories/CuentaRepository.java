@@ -10,5 +10,4 @@ import java.util.Optional;
 @Repository
 public interface CuentaRepository extends JpaRepository<Cuenta, Long>, JpaSpecificationExecutor<Cuenta> {
     Optional<Cuenta> findByGuid(String guid);
-    Optional<Cuenta> findByIban(String iban);
 }

@@ -1,6 +1,6 @@
 package org.example.vivesbankproject.tarjeta.service;
 
-import org.example.vivesbankproject.tarjeta.dto.TarjetaRequest;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestSave;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
 import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
@@ -36,7 +36,7 @@ class TarjetaServiceImplTest {
     private TarjetaServiceImpl tarjetaService;
 
     private Tarjeta tarjeta;
-    private TarjetaRequest tarjetaRequest;
+    private TarjetaRequestSave tarjetaRequestSave;
     private TarjetaResponse tarjetaResponse;
     private UUID tarjetaId;
 
@@ -47,7 +47,7 @@ class TarjetaServiceImplTest {
         tarjeta.setId(tarjetaId);
         tarjeta.setNumeroTarjeta("1234567890123456");
 
-        tarjetaRequest = TarjetaRequest.builder()
+        tarjetaRequestSave = TarjetaRequestSave.builder()
                 .numeroTarjeta("1234567890123456")
                 .cvv(123)
                 .pin("1234")
@@ -67,11 +67,11 @@ class TarjetaServiceImplTest {
 
     @Test
     void SaveTarjeta() {
-        when(tarjetaMapper.toTarjeta(tarjetaRequest)).thenReturn(tarjeta);
+        when(tarjetaMapper.toTarjeta(tarjetaRequestSave)).thenReturn(tarjeta);
         when(tarjetaRepository.save(tarjeta)).thenReturn(tarjeta);
         when(tarjetaMapper.toTarjetaResponse(tarjeta)).thenReturn(tarjetaResponse);
 
-        TarjetaResponse resultado = tarjetaService.save(tarjetaRequest);
+        TarjetaResponse resultado = tarjetaService.save(tarjetaRequestSave);
 
         assertNotNull(resultado);
         assertEquals(tarjetaId, resultado.getId());
@@ -103,11 +103,11 @@ class TarjetaServiceImplTest {
     @Test
     void UpdateTarjeta() {
         when(tarjetaRepository.findById(tarjetaId)).thenReturn(Optional.of(tarjeta));
-        when(tarjetaMapper.toTarjeta(tarjetaRequest)).thenReturn(tarjeta);
+        when(tarjetaMapper.toTarjeta(tarjetaRequestSave)).thenReturn(tarjeta);
         when(tarjetaRepository.save(tarjeta)).thenReturn(tarjeta);
         when(tarjetaMapper.toTarjetaResponse(tarjeta)).thenReturn(tarjetaResponse);
 
-        TarjetaResponse resultado = tarjetaService.update(tarjetaId, tarjetaRequest);
+        TarjetaResponse resultado = tarjetaService.update(tarjetaId, tarjetaRequestSave);
 
         assertNotNull(resultado);
         assertEquals(tarjetaId, resultado.getId());
@@ -119,7 +119,7 @@ class TarjetaServiceImplTest {
         when(tarjetaRepository.findById(tarjetaId)).thenReturn(Optional.empty());
 
         assertThrows(TarjetaNotFound.class, () ->
-                tarjetaService.update(tarjetaId, tarjetaRequest)
+                tarjetaService.update(tarjetaId, tarjetaRequestSave)
         );
     }
 

@@ -1,7 +1,7 @@
 package org.example.vivesbankproject.cliente.mappers;
 
 import org.bson.types.ObjectId;
-import org.example.vivesbankproject.cliente.dto.ClienteRequest;
+import org.example.vivesbankproject.cliente.dto.ClienteRequestSave;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdate;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdateAdmin;
 import org.example.vivesbankproject.cliente.dto.ClienteResponse;
@@ -9,7 +9,6 @@ import org.example.vivesbankproject.cliente.models.Cliente;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Component
 public class ClienteMapper {
@@ -27,20 +26,23 @@ public class ClienteMapper {
                 .cuentas(cliente.getCuentas())
                 .user(cliente.getUser())
                 .idMovimientos(new ObjectId(cliente.getIdMovimientos()))
+                .createdAt(cliente.getCreatedAt())
+                .updatedAt(cliente.getUpdatedAt())
+                .isDeleted(cliente.getIsDeleted())
                 .build();
     }
 
-    public Cliente toCliente(ClienteRequest clienteRequest) {
+    public Cliente toCliente(ClienteRequestSave clienteRequestSave) {
         return Cliente.builder()
-                .dni(clienteRequest.getDni())
-                .nombre(clienteRequest.getNombre())
-                .apellidos(clienteRequest.getApellidos())
-                .email(clienteRequest.getEmail())
-                .telefono(clienteRequest.getTelefono())
-                .fotoPerfil(clienteRequest.getFotoPerfil())
-                .fotoDni(clienteRequest.getFotoDni())
-                .cuentas(clienteRequest.getCuentas())
-                .user(clienteRequest.getUser())
+                .dni(clienteRequestSave.getDni())
+                .nombre(clienteRequestSave.getNombre())
+                .apellidos(clienteRequestSave.getApellidos())
+                .email(clienteRequestSave.getEmail())
+                .telefono(clienteRequestSave.getTelefono())
+                .fotoPerfil(clienteRequestSave.getFotoPerfil())
+                .fotoDni(clienteRequestSave.getFotoDni())
+                .cuentas(clienteRequestSave.getCuentas())
+                .user(clienteRequestSave.getUser())
                 .build();
     }
 
@@ -59,6 +61,7 @@ public class ClienteMapper {
                 .user(clienteRequestUpdate.getUser())
                 .createdAt(cliente.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
+                .isDeleted(clienteRequestUpdate.getIsDeleted())
                 .build();
     }
 
@@ -77,6 +80,7 @@ public class ClienteMapper {
                 .user(clienteRequestUpdateAdmin.getUser())
                 .createdAt(cliente.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
+                .isDeleted(clienteRequestUpdateAdmin.getIsDeleted())
                 .build();
     }
 }

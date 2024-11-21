@@ -70,6 +70,6 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
     public void deleteById(String id) {
         log.info("Eliminando tipo de cuenta con id {}", id);
         var tipoCuentaExistente = tipoCuentaRepository.findById(id).orElseThrow(() -> new TipoCuentaNotFound(id));
-        tipoCuentaRepository.delete(tipoCuentaExistente);
+        tipoCuentaExistente.setIsDeleted(true);
     }
 }
