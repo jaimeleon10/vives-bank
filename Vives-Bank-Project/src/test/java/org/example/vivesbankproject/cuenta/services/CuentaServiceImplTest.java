@@ -9,7 +9,7 @@ import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
-import org.example.vivesbankproject.tarjeta.models.Tipo;
+import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,7 +46,7 @@ class CuentaServiceImplTest {
     @BeforeEach
     void setUp() {
         tarjetaTest = new Tarjeta();
-        tarjetaTest.setId(1L);
+        tarjetaTest.setGuid("hola");
         tarjetaTest.setNumeroTarjeta("4242424242424242");
         tarjetaTest.setFechaCaducidad(LocalDate.parse("2025-12-31"));
         tarjetaTest.setCvv(123);
@@ -54,14 +54,14 @@ class CuentaServiceImplTest {
         tarjetaTest.setLimiteDiario(BigDecimal.valueOf(100.0));
         tarjetaTest.setLimiteSemanal(BigDecimal.valueOf(200.0));
         tarjetaTest.setLimiteMensual(BigDecimal.valueOf(500.0));
-        tarjetaTest.setTipoTarjeta(TipoTarjeta.builder().nombre(Tipo.valueOf("DEBITO")).build());
+        tarjetaTest.setTipoTarjeta(TipoTarjeta.valueOf("DEBITO"));
 
         tipoCuentaTest = new TipoCuenta();
         tipoCuentaTest.setNombre("normal");
         tipoCuentaTest.setInteres(BigDecimal.valueOf(2.0));
 
         cuentaTest = new Cuenta();
-        cuentaTest.setId(Long.valueOf("12d45756-3895-49b2-90d3-c4a12d5ee081"));
+        cuentaTest.setGuid("12d45756-3895-49b2-90d3-c4a12d5ee081");
         cuentaTest.setIban("ES9120804243448487618583");
         cuentaTest.setSaldo(BigDecimal.valueOf(1000.0));
         cuentaTest.setTipoCuenta(tipoCuentaTest);
@@ -98,7 +98,7 @@ class CuentaServiceImplTest {
         String idCuenta = "hola";
 
         CuentaResponse expectedCuenta = new CuentaResponse();
-        expectedCuenta.setId(idCuenta);
+        expectedCuenta.setGuid(idCuenta);
         expectedCuenta.setIban("ES9120804243448487618583");
         expectedCuenta.setSaldo(BigDecimal.valueOf(1000.0));
         expectedCuenta.setTipoCuenta(tipoCuentaTest);
@@ -106,7 +106,7 @@ class CuentaServiceImplTest {
         expectedCuenta.setIsDeleted(false);
 
         Cuenta cuentaMapped = new Cuenta();
-        cuentaMapped.setId(idCuenta);
+        cuentaMapped.setGuid(idCuenta);
         cuentaMapped.setIban(expectedCuenta.getIban());
         cuentaMapped.setSaldo(expectedCuenta.getSaldo());
         cuentaMapped.setTipoCuenta(tipoCuentaTest);
@@ -137,7 +137,7 @@ class CuentaServiceImplTest {
     @Test
     void save() {
         Tarjeta tarjeta = new Tarjeta();
-        tarjeta.setId(UUID.fromString("7b498e86-5197-4e05-9361-3da894b62353"));
+        tarjeta.setGuid("7b498e86-5197-4e05-9361-3da894b62353");
         tarjeta.setNumeroTarjeta("4009156782194826");
         tarjeta.setFechaCaducidad(LocalDate.parse("2025-12-31"));
         tarjeta.setCvv(987);
@@ -151,7 +151,7 @@ class CuentaServiceImplTest {
         tipoCuenta.setInteres(BigDecimal.valueOf(2.0));
 
         Cuenta cuenta = new Cuenta();
-        cuenta.setId("6c257ab6-e588-4cef-a479-c2f8fcd7379a");
+        cuenta.setGuid("6c257ab6-e588-4cef-a479-c2f8fcd7379a");
         cuenta.setIban("ES3715447107447741413620");
         cuenta.setSaldo(BigDecimal.valueOf(1000.0));
         cuenta.setTipoCuenta(tipoCuenta);
@@ -159,14 +159,11 @@ class CuentaServiceImplTest {
         cuenta.setIsDeleted(false);
 
         CuentaRequest cuentaRequest = new CuentaRequest();
-        cuentaRequest.setIban(cuenta.getIban());
-        cuentaRequest.setSaldo(cuenta.getSaldo());
         cuentaRequest.setTipoCuenta(cuenta.getTipoCuenta());
         cuentaRequest.setTarjeta(cuenta.getTarjeta());
-        cuentaRequest.setIsDeleted(cuenta.getIsDeleted());
 
         CuentaResponse cuentaResponse = new CuentaResponse();
-        cuentaResponse.setId(cuenta.getId());
+        cuentaResponse.setGuid(cuenta.getGuid());
         cuentaResponse.setIban(cuenta.getIban());
         cuentaResponse.setSaldo(cuenta.getSaldo());
         cuentaResponse.setTipoCuenta(cuenta.getTipoCuenta());
@@ -181,7 +178,7 @@ class CuentaServiceImplTest {
         var result = cuentaService.save(cuentaRequest);
 
         assertAll(
-                () -> assertEquals(cuentaResponse.getId(), result.getId()),
+                () -> assertEquals(cuentaResponse.getGuid(), result.getGuid()),
                 () -> assertEquals(cuentaResponse.getIban(), result.getIban()),
                 () -> assertEquals(cuentaResponse.getSaldo(), result.getSaldo()),
                 () -> assertEquals(cuentaResponse.getTipoCuenta(), result.getTipoCuenta()),
@@ -200,7 +197,7 @@ class CuentaServiceImplTest {
         String idCuenta = "6c257ab6-e588-4cef-a479-c2f8fcd7379a";
 
         Cuenta cuenta = new Cuenta();
-        cuenta.setId(idCuenta);
+        cuenta.setGuid(idCuenta);
         cuenta.setIban("ES1331839032611076912510");
         cuenta.setSaldo(BigDecimal.valueOf(1000.0));
         cuenta.setTipoCuenta(tipoCuentaTest);
@@ -213,7 +210,7 @@ class CuentaServiceImplTest {
         cuentaRequestUpdate.setTarjeta(tarjetaTest);
 
         CuentaResponse expectedResponse = new CuentaResponse();
-        expectedResponse.setId(idCuenta);
+        expectedResponse.setGuid(idCuenta);
         expectedResponse.setIban(cuenta.getIban());
         expectedResponse.setSaldo(cuentaRequestUpdate.getSaldo());
         expectedResponse.setTipoCuenta(cuentaRequestUpdate.getTipoCuenta());
@@ -252,7 +249,7 @@ class CuentaServiceImplTest {
         String idCuenta = "hola";
 
         Tarjeta tarjeta = new Tarjeta();
-        tarjeta.setId(UUID.fromString("921f6b86-695d-4361-8905-365d97691024"));
+        tarjeta.setGuid("921f6b86-695d-4361-8905-365d97691024");
         tarjeta.setNumeroTarjeta("4009156782194826");
         tarjeta.setFechaCaducidad(LocalDate.parse("2025-12-31"));
         tarjeta.setCvv(456);
@@ -260,14 +257,14 @@ class CuentaServiceImplTest {
         tarjeta.setLimiteDiario(BigDecimal.valueOf(100.0));
         tarjeta.setLimiteSemanal(BigDecimal.valueOf(200.0));
         tarjeta.setLimiteMensual(BigDecimal.valueOf(500.0));
-        tarjeta.setTipoTarjeta(TipoTarjeta.builder().nombre(Tipo.valueOf("DEBITO")).build());
+        tarjeta.setTipoTarjeta(TipoTarjeta.valueOf("DEBITO"));
 
         TipoCuenta tipoCuenta = new TipoCuenta();
         tipoCuenta.setNombre("ahorro");
         tipoCuenta.setInteres(BigDecimal.valueOf(3.0));
 
         Cuenta cuentaToDelete = new Cuenta();
-        cuentaToDelete.setId(idCuenta);
+        cuentaToDelete.setGuid(idCuenta);
         cuentaToDelete.setIban("ES7302413102733585086708");
         cuentaToDelete.setSaldo(BigDecimal.valueOf(1000.0));
         cuentaToDelete.setTarjeta(tarjeta);
