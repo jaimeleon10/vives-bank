@@ -52,9 +52,11 @@ public class Tarjeta {
     @Positive(message = "El límite mensual debe ser un número positivo")
     private BigDecimal limiteMensual;
 
-    @ManyToOne
-    @JoinColumn(name = "tipoTarjeta_id", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @NotNull
     private TipoTarjeta tipoTarjeta;
+
 
     @CreationTimestamp
     @Column(updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")

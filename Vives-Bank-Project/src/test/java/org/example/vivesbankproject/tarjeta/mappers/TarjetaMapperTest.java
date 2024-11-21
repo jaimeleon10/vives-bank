@@ -3,7 +3,6 @@ package org.example.vivesbankproject.tarjeta.mappers;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequest;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
-import org.example.vivesbankproject.tarjeta.models.Tipo;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.junit.jupiter.api.Test;
 
@@ -26,11 +25,6 @@ class TarjetaMapperTest {
 
     @Test
     void toRequestATarjeta() {
-        TipoTarjeta tipoTarjeta = TipoTarjeta.builder()
-                .id(UUID.randomUUID())
-                .nombre(Tipo.CREDITO)
-                .build();
-
         TarjetaRequest request = TarjetaRequest.builder()
                 .numeroTarjeta("1234567890123456")
                 .fechaCaducidad(LocalDate.of(2025, 12, 31))
@@ -39,7 +33,7 @@ class TarjetaMapperTest {
                 .limiteDiario(BigDecimal.valueOf(1000))
                 .limiteSemanal(BigDecimal.valueOf(5000))
                 .limiteMensual(BigDecimal.valueOf(20000))
-                .tipoTarjeta(tipoTarjeta)
+                .tipoTarjeta(TipoTarjeta.CREDITO)
                 .build();
 
         Tarjeta tarjeta = tarjetaMapper.toTarjeta(request);
@@ -56,10 +50,6 @@ class TarjetaMapperTest {
 
     @Test
     void toTarjetaAResponse() {
-        TipoTarjeta tipoTarjeta = TipoTarjeta.builder()
-                .id(UUID.randomUUID())
-                .nombre(Tipo.CREDITO)
-                .build();
 
         Tarjeta tarjeta = Tarjeta.builder()
                 .id(UUID.randomUUID())
@@ -69,7 +59,7 @@ class TarjetaMapperTest {
                 .limiteDiario(BigDecimal.valueOf(1000))
                 .limiteSemanal(BigDecimal.valueOf(5000))
                 .limiteMensual(BigDecimal.valueOf(20000))
-                .tipoTarjeta(tipoTarjeta)
+                .tipoTarjeta(TipoTarjeta.CREDITO)
                 .build();
 
         TarjetaResponse response = tarjetaMapper.toTarjetaResponse(tarjeta);
@@ -89,11 +79,6 @@ class TarjetaMapperTest {
     @Test
     void toTarjetaARequest() {
 
-        TipoTarjeta tipoTarjeta = TipoTarjeta.builder()
-                .id(UUID.randomUUID())
-                .nombre(Tipo.CREDITO)
-                .build();
-
         Tarjeta tarjeta = Tarjeta.builder()
                 .numeroTarjeta("1234567890123456")
                 .fechaCaducidad(LocalDate.of(2025, 12, 31))
@@ -102,7 +87,7 @@ class TarjetaMapperTest {
                 .limiteDiario(BigDecimal.valueOf(1000))
                 .limiteSemanal(BigDecimal.valueOf(5000))
                 .limiteMensual(BigDecimal.valueOf(20000))
-                .tipoTarjeta(tipoTarjeta)
+                .tipoTarjeta(TipoTarjeta.CREDITO)
                 .build();
 
         TarjetaRequest request = tarjetaMapper.toRequest(tarjeta);
