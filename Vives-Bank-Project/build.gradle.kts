@@ -25,6 +25,9 @@ repositories {
 }
 
 dependencies {
+    // Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-jackson:2.9.0")
 
     // Negociacion de contenido
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
