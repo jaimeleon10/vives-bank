@@ -40,4 +40,8 @@ public class ClienteRequestUpdate {
 
     @NotNull(message = "El usuario no puede ser un campo nulo")
     private User user;
+
+    @NotNull(message = "El campo de borrado lógico no puede ser nulo")
+    @Builder.Default
+    private Boolean isDeleted = false;
 }
