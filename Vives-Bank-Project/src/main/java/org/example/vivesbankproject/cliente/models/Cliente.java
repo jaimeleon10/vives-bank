@@ -1,5 +1,6 @@
 package org.example.vivesbankproject.cliente.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -70,6 +71,7 @@ public class Cliente {
     @NotNull(message = "El usuario no puede ser un campo nulo")
     private User user;
 
+    @Column(name = "id_movimientos")
     private ObjectId idMovimientos;
 
     @CreationTimestamp
@@ -81,4 +83,9 @@ public class Cliente {
     @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @JsonProperty("idMovimientos")
+    public String getIdMovimientos() {
+        return idMovimientos != null ? idMovimientos.toHexString() : null;
+    }
 }

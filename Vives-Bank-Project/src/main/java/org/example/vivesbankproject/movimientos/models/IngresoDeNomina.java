@@ -1,15 +1,17 @@
 package org.example.vivesbankproject.movimientos.models;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
+@JsonTypeName("INGRESO_DE_NOMINA")
+@AllArgsConstructor
+@NoArgsConstructor
 public class IngresoDeNomina extends Transacciones {
     @Pattern(
             regexp = "^ES\\d{22}$",
