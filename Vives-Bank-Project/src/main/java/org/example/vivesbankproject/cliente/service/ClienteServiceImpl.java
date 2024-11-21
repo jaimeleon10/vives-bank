@@ -14,6 +14,10 @@ import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -23,6 +27,7 @@ import java.util.Optional;
 
 @Slf4j
 @Service
+@CacheConfig(cacheNames={"cliente"})
 public class ClienteServiceImpl implements ClienteService {
 
     private final ClienteRepository clienteRepository;
@@ -64,13 +69,15 @@ public class ClienteServiceImpl implements ClienteService {
         return clienteRepository.findAll(criterio, pageable);
     }
 
-@Override
+    @Override
+    @Cacheable(key = "#id")
     public ClienteResponse getById(String id) {
         var cliente = clienteRepository.findByGuid(id).orElseThrow(() -> new ClienteNotFound(id));
         return clienteMapper.toClienteResponse(cliente);
     }
 
     @Override
+    @CachePut(key = "#result.guid")
     public ClienteResponse save(ClienteRequest clienteRequest) {
         var clienteForSave = clienteMapper.toCliente(clienteRequest);
         validarClienteExistente(clienteForSave);
@@ -79,6 +86,7 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
+    @CachePut(key = "#result.guid")
     public ClienteResponse update(String id, ClienteRequestUpdate clienteRequestUpdate) {
         var cliente = clienteRepository.findByGuid(id).orElseThrow(
                 () -> new ClienteNotFound(id)
@@ -90,6 +98,7 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
+    @CachePut(key = "#result.guid")
     public ClienteResponse updateByAdmin(String id, ClienteRequestUpdateAdmin clienteRequestUpdateAdmin) {
         var cliente = clienteRepository.findByGuid(id).orElseThrow(
                 () -> new ClienteNotFound(id)
@@ -101,6 +110,7 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
+    @CacheEvict(key = "#id")
     @Transactional
     public void deleteById(String id) {
         var cliente = clienteRepository.findByGuid(id).orElseThrow(

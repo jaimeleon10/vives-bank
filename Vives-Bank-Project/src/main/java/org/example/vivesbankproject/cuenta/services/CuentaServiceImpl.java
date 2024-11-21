@@ -12,6 +12,10 @@ import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -23,6 +27,7 @@ import java.util.UUID;
 
 @Service
 @Slf4j
+@CacheConfig(cacheNames = {"cuenta"})
 public class CuentaServiceImpl implements CuentaService{
     private final CuentaRepository cuentaRepository;
     private final CuentaMapper cuentaMapper;
@@ -64,6 +69,7 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
     @Override
+    @Cacheable(key = "#id")
     public CuentaResponse getById(String id) {
         log.info("Obteniendo la cuenta con id: {}", id);
         var cuenta = cuentaRepository.findByGuid(id).orElseThrow(() -> new CuentaNotFound(id));
@@ -71,6 +77,7 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
     @Override
+    @CachePut(key = "#result.guid")
     public CuentaResponse save(CuentaRequest cuentaRequest) {
         log.info("Guardando cuenta: {}", cuentaRequest);
         if (cuentaRepository.findByIban(cuentaRequest.getIban()).isPresent()) {
@@ -81,6 +88,7 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
     @Override
+    @CachePut(key = "#result.guid")
     public CuentaResponse update(String id, CuentaRequestUpdate cuentaRequestUpdate) {
         log.info("Actualizando cuenta con id {}", id);
         var cuenta = cuentaRepository.findByGuid(id).orElseThrow(() -> new CuentaNotFound(id));
@@ -89,6 +97,7 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
     @Override
+    @CacheEvict(key = "#id")
     public Cuenta delete(String id) {
         log.info("Eliminando cuenta con id {}", id);
         var cuentaExistente = cuentaRepository.findByGuid(id).orElseThrow(
