@@ -5,8 +5,10 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.utils.IdGenerator;
+import org.example.vivesbankproject.utils.TarjetaGenerator;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.validator.constraints.Length;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -26,25 +28,23 @@ public class Tarjeta {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id = DEFAULT_ID;
 
+    @Column(unique = true)
     @Builder.Default
     private String guid = IdGenerator.generarId();
 
-    @Column(nullable = false, unique = true)
-    @NotBlank(message = "El número de tarjeta no puede estar vacío")
-    private String numeroTarjeta;
+    @Column(unique = true)
+    @Builder.Default
+    private String numeroTarjeta = TarjetaGenerator.generarTarjeta();
 
-    @Column(nullable = false)
-    @Future(message = "La fecha de caducidad debe estar en el futuro")
-    private LocalDate fechaCaducidad;
+    @Builder.Default
+    private LocalDate fechaCaducidad = LocalDate.now().plusYears(10);
 
-    @Column(nullable = false)
-    @NotNull
-    @Min(value = 100, message = "El CVV debe ser un número de tres dígitos")
-    @Max(value = 999, message = "El CVV debe ser un número de tres dígitos")
-    private Integer cvv;
+    @Builder.Default
+    private Integer cvv = (int) (Math.random() * 900) + 100;
 
     @Column(nullable = false)
     @NotBlank(message = "El PIN no puede estar vacío")
+    @Length(min = 4, max = 4, message = "El PIN debe ser un número de 4 dígitos")
     private String pin;
 
     @Column(nullable = false)
@@ -64,14 +64,13 @@ public class Tarjeta {
     @NotNull
     private TipoTarjeta tipoTarjeta;
 
-
     @CreationTimestamp
     @Column(updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @UpdateTimestamp
-    @Column(updatable = true, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
 }
