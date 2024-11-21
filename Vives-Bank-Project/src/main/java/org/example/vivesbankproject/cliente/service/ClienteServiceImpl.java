@@ -2,7 +2,7 @@ package org.example.vivesbankproject.cliente.service;
 
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.cliente.dto.ClienteRequest;
+import org.example.vivesbankproject.cliente.dto.ClienteRequestSave;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdate;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdateAdmin;
 import org.example.vivesbankproject.cliente.dto.ClienteResponse;
@@ -13,7 +13,6 @@ import org.example.vivesbankproject.cliente.exceptions.ClienteNotFound;
 import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
-import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -71,8 +70,8 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
-    public ClienteResponse save(ClienteRequest clienteRequest) {
-        var clienteForSave = clienteMapper.toCliente(clienteRequest);
+    public ClienteResponse save(ClienteRequestSave clienteRequestSave) {
+        var clienteForSave = clienteMapper.toCliente(clienteRequestSave);
         validarClienteExistente(clienteForSave);
         var clienteSaved = clienteRepository.save(clienteForSave);
         return clienteMapper.toClienteResponse(clienteSaved);
@@ -106,7 +105,8 @@ public class ClienteServiceImpl implements ClienteService {
         var cliente = clienteRepository.findByGuid(id).orElseThrow(
                 () -> new ClienteNotFound(id)
         );
-        clienteRepository.deleteById(cliente.getId());
+        cliente.setIsDeleted(true);
+        clienteRepository.save(cliente);
     }
 
     private void validarClienteExistente(Cliente cliente) {
