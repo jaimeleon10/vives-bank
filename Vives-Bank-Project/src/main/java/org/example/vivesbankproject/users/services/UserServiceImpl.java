@@ -10,6 +10,8 @@ import org.example.vivesbankproject.users.models.Role;
 import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -60,6 +62,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @CachePut(key = "#result.guid")
     public UserResponse save(UserRequest userRequest) {
         if (userRepository.findByUsername(userRequest.getUsername()).isPresent()) {
             throw new UserExists(userRequest.getUsername());
@@ -69,6 +72,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @CachePut(key = "#result.guid")
     public UserResponse update(String id, UserRequest userRequest) {
         if (userRepository.findByGuid(id).isEmpty()) {
             throw new UserNotFoundById(id);
@@ -81,6 +85,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @CacheEvict(key = "#id")
     public void deleteById(String id) {
         var user = userRepository.findByGuid(id).orElseThrow(
                 () -> new UserNotFoundById(id)
