@@ -69,7 +69,7 @@ public class ClienteRestController {
                 .body(PageResponse.of(pageResult, sortBy, direction));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("{id}")
     public ResponseEntity<ClienteResponse> getById(@PathVariable String id) {
         log.info("findById: id: {}", id);
         return ResponseEntity.ok(clienteService.getById(id));
@@ -81,13 +81,13 @@ public class ClienteRestController {
         return ResponseEntity.status(HttpStatus.CREATED).body(clienteService.save(clienteRequest));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("{id}")
     public ResponseEntity<ClienteResponse> updateCliente(@PathVariable String id, @Valid @RequestBody ClienteRequestUpdate clienteRequest) {
         log.info("update: id: {}, clienteRequest: {}", id, clienteRequest);
         return ResponseEntity.ok(clienteService.update(id, clienteRequest));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("{id}")
     public ResponseEntity<Void> deleteCliente(@PathVariable String id) {
         log.info("delete: id: {}", id);
         clienteService.deleteById(id);
