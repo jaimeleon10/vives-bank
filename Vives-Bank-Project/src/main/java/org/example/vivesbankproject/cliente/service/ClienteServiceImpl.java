@@ -34,7 +34,7 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
-    public Page<ClienteResponse> getAll(Optional<String> dni, Optional<String> nombre, Optional<String> apellidos, Optional<String> email, Optional<String> telefono, Pageable pageable) {
+    public Page<Cliente> getAll(Optional<String> dni, Optional<String> nombre, Optional<String> apellidos, Optional<String> email, Optional<String> telefono, Pageable pageable) {
         Specification<Cliente> specDniCliente = (root, query, criteriaBuilder) ->
                 dni.map(m -> criteriaBuilder.like(criteriaBuilder.lower(root.get("dni")), "%" + m.toLowerCase() + "%"))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
@@ -61,7 +61,7 @@ public class ClienteServiceImpl implements ClienteService {
                 .and(specEmailCliente)
                 .and(specTelefonoCliente);
 
-        return clienteRepository.findAll(criterio, pageable).map(clienteMapper::toClienteResponse);
+        return clienteRepository.findAll(criterio, pageable);
     }
 
 @Override
