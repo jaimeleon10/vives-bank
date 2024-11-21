@@ -36,29 +36,25 @@ public class TarjetaRestController {
     @GetMapping
     public ResponseEntity<Page<TarjetaResponse>> getAll(
             @RequestParam Optional<String> numero,
-            @RequestParam Optional<Integer> cvv,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Optional<LocalDate> caducidad,
             @RequestParam Optional<TipoTarjeta> tipoTarjeta,
             @RequestParam Optional<Double> limiteDiario,
             @RequestParam Optional<Double> limiteSemanal,
             @RequestParam Optional<Double> limiteMensual,
-            @RequestParam Optional<UUID> cuentaId,
             Pageable pageable) {
 
         log.info("Recibiendo solicitud para listar tarjetas con filtros proporcionados");
 
         Page<TarjetaResponse> tarjetas = tarjetaService.getAll(
-                numero, cvv, caducidad, tipoTarjeta, limiteDiario,
-                limiteSemanal, limiteMensual, cuentaId, pageable);
+                numero, caducidad, tipoTarjeta, limiteDiario,
+                limiteSemanal, limiteMensual, pageable);
 
         return ResponseEntity.ok(tarjetas);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<TarjetaResponse> getTarjetaById(@PathVariable UUID id) {
-        return tarjetaService.getById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(tarjetaService.getById(id));
     }
 
     @PostMapping
