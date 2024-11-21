@@ -33,7 +33,12 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
                 nombre.map(i -> criteriaBuilder.like(criteriaBuilder.lower(root.get("nombre")), "%" + i.toLowerCase() + "%"))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
-        Specification<TipoCuenta> criterio = Specification.where(specNombreTipoCuenta);
+        Specification<TipoCuenta> specInteresTipoCuenta = (root, query, criteriaBuilder) ->
+                interes.map(s -> criteriaBuilder.lessThanOrEqualTo(root.get("interes"), s))
+                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
+
+        Specification<TipoCuenta> criterio = Specification.where(specNombreTipoCuenta)
+                .and(specInteresTipoCuenta);
 
         return tipoCuentaRepository.findAll(criterio, pageable);
     }
