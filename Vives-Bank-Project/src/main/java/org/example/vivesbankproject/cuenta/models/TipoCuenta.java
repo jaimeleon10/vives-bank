@@ -17,11 +17,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TipoCuenta {
-    private static final Long DEFAULT_ID = 0L;
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id = DEFAULT_ID;
+    private Long id;
 
     @Builder.Default
     private String guid = IdGenerator.generarId();
@@ -44,4 +42,8 @@ public class TipoCuenta {
     @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean isDeleted = false;
 }
