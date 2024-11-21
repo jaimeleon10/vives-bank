@@ -6,8 +6,10 @@ import lombok.*;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.utils.IdGenerator;
 import org.example.vivesbankproject.utils.TarjetaGenerator;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.Cache;
 import org.hibernate.validator.constraints.Length;
 
 import java.math.BigDecimal;
@@ -17,6 +19,7 @@ import java.util.UUID;
 
 @Data
 @Builder
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Entity
 @Table(name = "tarjetas")
 @NoArgsConstructor
