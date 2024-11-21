@@ -1,11 +1,11 @@
 package org.example.vivesbankproject.tarjeta.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import lombok.Builder;
 import lombok.Data;
-import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 
 import java.math.BigDecimal;
 
@@ -24,4 +24,8 @@ public class TarjetaRequestUpdate {
 
     @Positive(message = "El límite mensual debe ser un número positivo")
     private BigDecimal limiteMensual;
+
+    @NotNull(message = "El campo de borrado lógico no puede ser nulo")
+    @Builder.Default
+    private Boolean isDeleted = false;
 }

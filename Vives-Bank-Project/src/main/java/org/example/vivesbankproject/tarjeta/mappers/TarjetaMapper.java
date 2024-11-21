@@ -1,6 +1,6 @@
 package org.example.vivesbankproject.tarjeta.mappers;
 
-import org.example.vivesbankproject.tarjeta.dto.TarjetaRequest;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestSave;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestUpdate;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponseCVV;
@@ -21,16 +21,19 @@ public class TarjetaMapper {
                 .limiteSemanal(tarjeta.getLimiteSemanal())
                 .limiteMensual(tarjeta.getLimiteMensual())
                 .tipoTarjeta(tarjeta.getTipoTarjeta())
+                .createdAt(tarjeta.getCreatedAt())
+                .updatedAt(tarjeta.getUpdatedAt())
+                .isDeleted(tarjeta.getIsDeleted())
                 .build();
     }
 
-    public Tarjeta toTarjeta(TarjetaRequest tarjetaRequest) {
+    public Tarjeta toTarjeta(TarjetaRequestSave tarjetaRequestSave) {
         return Tarjeta.builder()
-                .pin(tarjetaRequest.getPin())
-                .limiteDiario(tarjetaRequest.getLimiteDiario())
-                .limiteSemanal(tarjetaRequest.getLimiteSemanal())
-                .limiteMensual(tarjetaRequest.getLimiteMensual())
-                .tipoTarjeta(tarjetaRequest.getTipoTarjeta())
+                .pin(tarjetaRequestSave.getPin())
+                .limiteDiario(tarjetaRequestSave.getLimiteDiario())
+                .limiteSemanal(tarjetaRequestSave.getLimiteSemanal())
+                .limiteMensual(tarjetaRequestSave.getLimiteMensual())
+                .tipoTarjeta(tarjetaRequestSave.getTipoTarjeta())
                 .build();
     }
 
@@ -48,6 +51,7 @@ public class TarjetaMapper {
                 .tipoTarjeta(tarjeta.getTipoTarjeta())
                 .createdAt(tarjeta.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
+                .isDeleted(tarjetaRequestUpdate.getIsDeleted())
                 .build();
     }
 

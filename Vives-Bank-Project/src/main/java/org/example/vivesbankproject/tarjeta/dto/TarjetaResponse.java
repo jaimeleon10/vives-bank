@@ -25,4 +25,5 @@ public class TarjetaResponse {
     private TipoTarjeta tipoTarjeta;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    public Boolean isDeleted;
 }
