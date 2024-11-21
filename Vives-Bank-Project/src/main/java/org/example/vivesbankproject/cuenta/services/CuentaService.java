@@ -22,5 +22,5 @@ public interface CuentaService {
 
     CuentaResponse update(String id, CuentaRequestUpdate cuentaRequestUpdate);
 
-    void delete(String id);
+    Cuenta delete(String id);
 }
