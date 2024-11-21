@@ -13,6 +13,9 @@ import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -101,6 +104,7 @@ public class TarjetaServiceImpl implements TarjetaService {
 
 
     @Override
+    @Cacheable(key = "#id")
     public TarjetaResponse getById(String id) {
         log.info("Obteniendo la tarjeta con ID: {}", id);
         var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
@@ -108,6 +112,7 @@ public class TarjetaServiceImpl implements TarjetaService {
     }
 
     @Override
+    @Cacheable(key = "#id")
     public TarjetaResponseCVV getCVV(String id) {
         log.info("Obteniendo CVV de la tarjeta con ID: {}", id);
         var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
@@ -115,6 +120,7 @@ public class TarjetaServiceImpl implements TarjetaService {
     }
 
     @Override
+    @CachePut(key = "#result.guid")
     public TarjetaResponse save(TarjetaRequest tarjetaRequest) {
         log.info("Guardando tarjeta: {}", tarjetaRequest);
         var tarjeta = tarjetaRepository.save(tarjetaMapper.toTarjeta(tarjetaRequest));
@@ -122,6 +128,7 @@ public class TarjetaServiceImpl implements TarjetaService {
     }
 
     @Override
+    @CachePut(key = "#result.guid")
     public TarjetaResponse update(String id, TarjetaRequestUpdate tarjetaRequestUpdate) {
         log.info("Actualizando tarjeta con id: {}", id);
         var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(
@@ -132,6 +139,7 @@ public class TarjetaServiceImpl implements TarjetaService {
     }
 
     @Override
+    @CacheEvict(key = "#id")
     public TarjetaResponse deleteById(String id) {
         log.info("Eliminando tarjeta con ID: {}", id);
         var tarjetaExistente = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
