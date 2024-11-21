@@ -6,6 +6,8 @@ import org.example.vivesbankproject.cuenta.dto.CuentaResponse;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 @Component
 public class CuentaMapper {
 
@@ -22,21 +24,21 @@ public class CuentaMapper {
 
     public Cuenta toCuenta(CuentaRequest cuentaRequest) {
         return Cuenta.builder()
-                .iban(cuentaRequest.getIban())
-                .saldo(cuentaRequest.getSaldo())
                 .tipoCuenta(cuentaRequest.getTipoCuenta())
                 .tarjeta(cuentaRequest.getTarjeta())
-                .isDeleted(cuentaRequest.getIsDeleted())
                 .build();
     }
 
     public Cuenta toCuentaUpdate(CuentaRequestUpdate cuentaRequestUpdate, Cuenta cuenta) {
         return Cuenta.builder()
+                .id(cuenta.getId())
                 .guid(cuenta.getGuid())
                 .iban(cuenta.getIban())
                 .saldo(cuentaRequestUpdate.getSaldo())
                 .tipoCuenta(cuentaRequestUpdate.getTipoCuenta())
                 .tarjeta(cuentaRequestUpdate.getTarjeta())
+                .createdAt(cuenta.getCreatedAt())
+                .updatedAt(LocalDateTime.now())
                 .isDeleted(cuenta.getIsDeleted())
                 .build();
     }

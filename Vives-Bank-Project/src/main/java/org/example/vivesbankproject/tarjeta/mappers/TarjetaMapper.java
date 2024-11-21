@@ -36,6 +36,7 @@ public class TarjetaMapper {
 
     public Tarjeta toTarjetaUpdate(TarjetaRequestUpdate tarjetaRequestUpdate, Tarjeta tarjeta) {
         return Tarjeta.builder()
+                .id(tarjeta.getId())
                 .guid(tarjeta.getGuid())
                 .numeroTarjeta(tarjeta.getNumeroTarjeta())
                 .fechaCaducidad(tarjeta.getFechaCaducidad())
