@@ -27,5 +27,7 @@ public class CuentaRequestUpdate {
     @NotNull(message = "El campo tarjeta no puede estar vacio")
     private Tarjeta tarjeta;
 
-    private Boolean isDeleted;
+    @NotNull(message = "El campo de borrado lógico no puede ser nulo")
+    @Builder.Default
+    private Boolean isDeleted = false;
 }
