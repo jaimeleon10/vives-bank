@@ -72,6 +72,11 @@ services:
       - redis-data:/data
     networks:
       - banco-network
+    # command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    # Por si queremos personalizar el comportamiento de Redis. Si no, arranca
+    # con comportamiento por defecto. En este caso "Habilita un volcado a disco
+    # cada 60 segundos si hay cambios". "Reduce el nivel de detalle de los logs
+    # a solo advertencias importantes.
 
 volumes:
   redis-data:
