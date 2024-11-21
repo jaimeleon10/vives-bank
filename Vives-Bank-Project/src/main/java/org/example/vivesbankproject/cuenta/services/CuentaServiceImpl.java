@@ -89,11 +89,12 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
     @Override
-    public void delete(String id) {
+    public Cuenta delete(String id) {
         log.info("Eliminando cuenta con id {}", id);
-        if (cuentaRepository.findById(id).isEmpty()) {
-            throw new CuentaNotFound(id);
-        }
-        cuentaRepository.deleteById(id);
+        var cuentaExistente = cuentaRepository.findById(id).orElseThrow(
+                () -> new CuentaNotFound(id)
+        );
+        cuentaExistente.setIsDeleted(true);
+        return cuentaRepository.save(cuentaExistente);
     }
 }
