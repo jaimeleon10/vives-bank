@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class ClienteHasNoMovements extends MovimientosException{
-    public ClienteHasNoMovements(UUID clienteId) {
+    public ClienteHasNoMovements(String clienteId) {
         super("El cliente con Id" + clienteId + " no tiene movimientos");
     }
 }

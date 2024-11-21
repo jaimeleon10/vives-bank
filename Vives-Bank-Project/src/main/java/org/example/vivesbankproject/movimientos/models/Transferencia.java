@@ -1,15 +1,21 @@
 package org.example.vivesbankproject.movimientos.models;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
+@JsonTypeName("TRANSFERENCIA")
+@AllArgsConstructor
+@NoArgsConstructor
 public class Transferencia extends Transacciones {
     @NotBlank
     @Pattern(

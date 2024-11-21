@@ -58,7 +58,7 @@ public class MovimientosServiceImpl implements MovimientosService {
 
     @Override
     @Cacheable(key = "#idCliente")
-    public Movimientos getByClienteId(UUID idCliente) {
+    public Movimientos getByClienteId(String idCliente) {
         log.info("Encontrando Movimientos por idCliente: {}", idCliente);
         clienteRepository.findById(idCliente).orElseThrow(() -> new ClienteNotFound(idCliente));
         return movimientosRepository.findMovimientosByClienteId(idCliente)
@@ -81,34 +81,5 @@ public class MovimientosServiceImpl implements MovimientosService {
             });
             return movimientosRepository.save(savedMovimiento);
         }
-    }
-
-    /**
-     * MIRAR SI LO BORRAMOS YA QUE UN MOVIMIENTO NUNCA SE DERIA DE ACTUALIZAR
-     * */
-    @Override
-    public Movimientos update(ObjectId idMovimiento, Movimientos Movimiento) {
-        log.info("Actualizando Movimiento: {} con {}", idMovimiento, Movimiento);
-        var savedMovimient = movimientosRepository.findById(idMovimiento);
-        if (savedMovimient.isPresent()) {
-            return movimientosRepository.save(Movimiento);
-        }
-        throw new MovimientoNotFound(idMovimiento);
-    }
-
-    /**
-     * SE PUEDE MIRAR SI EN VED DE ELIMINAR UN MOVIMIENTO ELIMINAMOS EL CLIENTE DEL MOVIMIENTO
-     * */
-    @Override
-    public void delete(ObjectId idMovimiento) {
-
-    }
-
-    /**
-     * SE PUEDE IMPLEMENTAR POR SI EN ALGUN CASO NOS INTERESARA "BORRAR" UN MOVIMIENTO
-     * */
-    @Override
-    public void softDelete(ObjectId idMovimiento) {
-
     }
 }

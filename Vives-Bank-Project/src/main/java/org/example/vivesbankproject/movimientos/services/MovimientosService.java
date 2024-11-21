@@ -14,14 +14,8 @@ public interface MovimientosService {
 
     Movimientos getById(ObjectId idMovimiento);
 
-    Movimientos getByClienteId(UUID idCliente);
+    Movimientos getByClienteId(String idCliente);
 
     Movimientos save(Movimientos movimiento);
-
-    Movimientos update(ObjectId idMovimiento, Movimientos movimiento);
-
-    void delete(ObjectId idMovimiento);
-
-    void softDelete(ObjectId idMovimiento);
 
 }
