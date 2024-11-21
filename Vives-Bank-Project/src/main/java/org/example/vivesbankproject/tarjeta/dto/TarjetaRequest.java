@@ -7,7 +7,6 @@ import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Data
 @Builder
