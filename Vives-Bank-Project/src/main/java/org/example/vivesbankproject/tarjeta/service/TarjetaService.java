@@ -1,6 +1,7 @@
 package org.example.vivesbankproject.tarjeta.service;
 
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequest;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestUpdate;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponseCVV;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
@@ -32,7 +33,7 @@ public interface TarjetaService {
 
     TarjetaResponse save(TarjetaRequest tarjetaRequest);
 
-    TarjetaResponse update(String id, TarjetaRequest tarjetaRequest);
+    TarjetaResponse update(String id, TarjetaRequestUpdate tarjetaRequestUpdate);
 
     TarjetaResponse deleteById(String id);
 }

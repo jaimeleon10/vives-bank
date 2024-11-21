@@ -39,7 +39,7 @@ public class CuentaController {
     }
 
     @GetMapping()
-    public ResponseEntity<PageResponse<Cuenta>> getAllPageable(
+    public ResponseEntity<PageResponse<Cuenta>> getAll(
             @RequestParam(required = false) Optional<String> iban,
             @RequestParam(required = false) Optional<BigDecimal> saldoMax,
             @RequestParam(required = false) Optional<BigDecimal> saldoMin,

@@ -1,6 +1,7 @@
 package org.example.vivesbankproject.tarjeta.mappers;
 
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequest;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestUpdate;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponseCVV;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
@@ -33,17 +34,17 @@ public class TarjetaMapper {
                 .build();
     }
 
-    public Tarjeta toTarjetaUpdate(TarjetaRequest tarjetaRequest, Tarjeta tarjeta) {
+    public Tarjeta toTarjetaUpdate(TarjetaRequestUpdate tarjetaRequestUpdate, Tarjeta tarjeta) {
         return Tarjeta.builder()
                 .guid(tarjeta.getGuid())
                 .numeroTarjeta(tarjeta.getNumeroTarjeta())
                 .fechaCaducidad(tarjeta.getFechaCaducidad())
                 .cvv(tarjeta.getCvv())
                 .pin(tarjeta.getPin())
-                .limiteDiario(tarjetaRequest.getLimiteDiario())
-                .limiteSemanal(tarjetaRequest.getLimiteSemanal())
-                .limiteMensual(tarjetaRequest.getLimiteMensual())
-                .tipoTarjeta(tarjetaRequest.getTipoTarjeta())
+                .limiteDiario(tarjetaRequestUpdate.getLimiteDiario())
+                .limiteSemanal(tarjetaRequestUpdate.getLimiteSemanal())
+                .limiteMensual(tarjetaRequestUpdate.getLimiteMensual())
+                .tipoTarjeta(tarjeta.getTipoTarjeta())
                 .createdAt(tarjeta.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
                 .build();
