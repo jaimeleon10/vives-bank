@@ -2,6 +2,7 @@ package org.example.vivesbankproject.cuenta.dto;
 
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,10 +26,10 @@ public class CuentaRequest {
     @PositiveOrZero(message = "El saldo no puede ser negativo")
     private BigDecimal saldo;
 
-    @NotBlank(message = "El campo del tipo de cuenta no puede estar vacio")
+    @NotNull(message = "El campo del tipo de cuenta no puede estar vacio")
     private TipoCuenta tipoCuenta;
 
-    @NotBlank(message = "El campo tarjeta no puede estar vacio")
+    @NotNull(message = "El campo tarjeta no puede estar vacio")
     private Tarjeta tarjeta;
 
     private Boolean isDeleted;
