@@ -2,12 +2,9 @@ package org.example.vivesbankproject.cuenta.services;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cuenta.exceptions.CuentaExists;
-import org.example.vivesbankproject.cuenta.exceptions.CuentaNotFound;
 import org.example.vivesbankproject.cuenta.exceptions.TipoCuentaNotFound;
-import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.TipoCuentaRepository;
-import org.example.vivesbankproject.tarjeta.models.Tipo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,22 +27,26 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
 
     @Override
     public Page<TipoCuenta> getAll(Optional<String> nombre, Optional<BigDecimal> interes, Pageable pageable) {
-        log.info("Obteniendo todos los tipos de cuenta...");
+        log.info("Obteniendo todos los tipos de cuenta");
 
         Specification<TipoCuenta> specNombreTipoCuenta = (root, query, criteriaBuilder) ->
                 nombre.map(i -> criteriaBuilder.like(criteriaBuilder.lower(root.get("nombre")), "%" + i.toLowerCase() + "%"))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
-        Specification<TipoCuenta> criterio = Specification.where(specNombreTipoCuenta);
+        Specification<TipoCuenta> specInteresTipoCuenta = (root, query, criteriaBuilder) ->
+                interes.map(s -> criteriaBuilder.lessThanOrEqualTo(root.get("interes"), s))
+                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
+
+        Specification<TipoCuenta> criterio = Specification.where(specNombreTipoCuenta)
+                .and(specInteresTipoCuenta);
 
         return tipoCuentaRepository.findAll(criterio, pageable);
     }
 
     @Override
     public TipoCuenta getById(String id) {
-        log.info("Obteniendo tipo de cuenta con id: " + id + "...");
-        var tipoCuenta = tipoCuentaRepository.findById(id).orElseThrow(() -> new TipoCuentaNotFound(id));
-        return tipoCuenta;
+        log.info("Obteniendo tipo de cuenta con id: {}", id);
+        return tipoCuentaRepository.findById(id).orElseThrow(() -> new TipoCuentaNotFound(id));
     }
 
     @Override

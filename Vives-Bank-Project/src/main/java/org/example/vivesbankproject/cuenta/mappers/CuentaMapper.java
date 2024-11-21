@@ -32,6 +32,7 @@ public class CuentaMapper {
 
     public Cuenta toCuentaUpdate(CuentaRequestUpdate cuentaRequestUpdate, Cuenta cuenta) {
         return Cuenta.builder()
+                .guid(cuenta.getGuid())
                 .iban(cuenta.getIban())
                 .saldo(cuentaRequestUpdate.getSaldo())
                 .tipoCuenta(cuentaRequestUpdate.getTipoCuenta())

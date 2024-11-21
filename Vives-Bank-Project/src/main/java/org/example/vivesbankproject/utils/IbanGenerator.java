@@ -1,6 +1,9 @@
 package org.example.vivesbankproject.utils;
 
 import lombok.experimental.UtilityClass;
+import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
+import org.example.vivesbankproject.cuenta.services.CuentaService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigInteger;
 

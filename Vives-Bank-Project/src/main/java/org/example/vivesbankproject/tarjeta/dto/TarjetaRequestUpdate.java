@@ -1,16 +1,17 @@
 package org.example.vivesbankproject.tarjeta.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import lombok.Builder;
 import lombok.Data;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Data
 @Builder
-public class TarjetaRequest {
+public class TarjetaRequestUpdate {
     @NotBlank(message = "El PIN no puede estar vacío")
     @Pattern(regexp = "^[0-9]{3}$", message = "El PIN debe ser un número de 3 dígitos")
     private String pin;
@@ -23,7 +24,4 @@ public class TarjetaRequest {
 
     @Positive(message = "El límite mensual debe ser un número positivo")
     private BigDecimal limiteMensual;
-
-    @NotBlank(message = "El tipo de tarjeta no puede ser un campo vacío")
-    private TipoTarjeta tipoTarjeta;
 }

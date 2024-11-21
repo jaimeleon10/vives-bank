@@ -28,15 +28,15 @@ public class Cuenta {
     @Builder.Default
     private String guid = IdGenerator.generarId();
 
-    @Column(nullable = false, unique = true)
-    @NotBlank(message = "El numero de cuenta (IBAN) no puede estar vacio")
+    @Column(unique = true)
     @Builder.Default
     private String iban = IbanGenerator.generateIban();
 
     @Column(nullable = false)
     @Digits(integer = 8, fraction = 2, message = "El saldo debe ser un numero valido con hasta dos decimales")
     @PositiveOrZero(message = "El saldo no puede ser negativo")
-    private BigDecimal saldo;
+    @Builder.Default
+    private BigDecimal saldo = BigDecimal.valueOf(0);
 
     @ManyToOne
     @JoinColumn(name = "tipoCuenta_id", nullable = false, referencedColumnName = "id")
