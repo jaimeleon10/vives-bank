@@ -50,7 +50,7 @@ public class UserController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String direction,
             HttpServletRequest request) {
-        log.info("Buscando todos los funkos con las siguientes opciones: {}, {}", username, roles);
+        log.info("Buscando todos los usuarios con las siguientes opciones: {}, {}", username, roles);
         Sort sort = direction.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString());
