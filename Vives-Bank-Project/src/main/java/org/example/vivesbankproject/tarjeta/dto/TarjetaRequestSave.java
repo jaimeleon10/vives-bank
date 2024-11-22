@@ -23,6 +23,6 @@ public class TarjetaRequestSave {
     @Positive(message = "El límite mensual debe ser un número positivo")
     private BigDecimal limiteMensual;
 
-    @NotBlank(message = "El tipo de tarjeta no puede ser un campo vacío")
+    @NotNull(message = "El tipo de tarjeta no puede ser un campo nulo")
     private TipoTarjeta tipoTarjeta;
 }

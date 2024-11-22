@@ -2,15 +2,15 @@ package org.example.vivesbankproject.cuenta.services;
 
 import jakarta.persistence.criteria.Join;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.cuenta.dto.CuentaRequest;
-import org.example.vivesbankproject.cuenta.dto.CuentaRequestUpdate;
-import org.example.vivesbankproject.cuenta.dto.CuentaResponse;
-import org.example.vivesbankproject.cuenta.exceptions.CuentaExists;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequest;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequestUpdate;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.exceptions.CuentaNotFound;
 import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
+import org.example.vivesbankproject.users.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @Slf4j
@@ -39,7 +38,7 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
     @Override
-    public Page<Cuenta> getAll(Optional<String> iban, Optional<BigDecimal> saldoMax, Optional<BigDecimal> saldoMin, Optional<String> tipoCuenta, Pageable pageable) {
+    public Page<CuentaResponse> getAll(Optional<String> iban, Optional<BigDecimal> saldoMax, Optional<BigDecimal> saldoMin, Optional<String> tipoCuenta, Pageable pageable) {
         log.info("Obteniendo todas las cuentas");
 
         Specification<Cuenta> specIbanCuenta = (root, query, criteriaBuilder) ->
@@ -65,7 +64,9 @@ public class CuentaServiceImpl implements CuentaService{
                 .and(specSaldoMinCuenta)
                 .and(specTipoCuentaFunko);
 
-        return cuentaRepository.findAll(criterio, pageable);
+        Page<Cuenta> cuentaPage = cuentaRepository.findAll(criterio, pageable);
+
+        return cuentaPage.map(cuentaMapper::toCuentaResponse);
     }
 
     @Override
@@ -95,11 +96,12 @@ public class CuentaServiceImpl implements CuentaService{
 
     @Override
     @CacheEvict(key = "#id")
-    public void delete(String id) {
+    public void deleteById(String id) {
         log.info("Eliminando cuenta con id {}", id);
         var cuentaExistente = cuentaRepository.findByGuid(id).orElseThrow(
                 () -> new CuentaNotFound(id)
         );
         cuentaExistente.setIsDeleted(true);
+        cuentaRepository.save(cuentaExistente);
     }
 }

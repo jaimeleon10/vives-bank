@@ -3,13 +3,11 @@ package org.example.vivesbankproject.cuenta.controllers;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.cuenta.dto.CuentaRequest;
-import org.example.vivesbankproject.cuenta.dto.CuentaRequestUpdate;
-import org.example.vivesbankproject.cuenta.dto.CuentaResponse;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequest;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequestUpdate;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
-import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.services.CuentaService;
-import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.utils.PageResponse;
 import org.example.vivesbankproject.utils.PaginationLinksUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +21,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
 import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("${api.version}/cuentas")
@@ -39,7 +36,7 @@ public class CuentaController {
     }
 
     @GetMapping()
-    public ResponseEntity<PageResponse<Cuenta>> getAll(
+    public ResponseEntity<PageResponse<CuentaResponse>> getAll(
             @RequestParam(required = false) Optional<String> iban,
             @RequestParam(required = false) Optional<BigDecimal> saldoMax,
             @RequestParam(required = false) Optional<BigDecimal> saldoMin,
@@ -54,7 +51,7 @@ public class CuentaController {
         Sort sort = direction.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString());
-        Page<Cuenta> pageResult = cuentaService.getAll(iban, saldoMax, saldoMin, tipoCuenta, PageRequest.of(page, size, sort));
+        Page<CuentaResponse> pageResult = cuentaService.getAll(iban, saldoMax, saldoMin, tipoCuenta, PageRequest.of(page, size, sort));
         return ResponseEntity.ok()
                 .header("link", paginationLinksUtils.createLinkHeader(pageResult, uriBuilder))
                 .body(PageResponse.of(pageResult, sortBy, direction));
@@ -79,7 +76,7 @@ public class CuentaController {
 
     @PatchMapping("{id}")
     public ResponseEntity<Cuenta> delete(@PathVariable String id) {
-        cuentaService.delete(id);
+        cuentaService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 }

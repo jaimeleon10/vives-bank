@@ -1,7 +1,7 @@
 package org.example.vivesbankproject.cuenta.mappers;
 
-import org.example.vivesbankproject.cuenta.dto.CuentaRequest;
-import org.example.vivesbankproject.cuenta.dto.CuentaRequestUpdate;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequest;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequestUpdate;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 

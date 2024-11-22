@@ -64,12 +64,11 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.1")
 
     // Redis
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
-    implementation ("org.hibernate:hibernate-core:6.2.8.Final")
+    // implementation ("org.springframework.boot:spring-boot-starter-data-redis")
+    // implementation ("org.hibernate:hibernate-core:6.2.8.Final")
 
     // Redis Cache con Redisson
-    implementation ("org.redisson:redisson-hibernate-53:3.20.1")
-    implementation ("org.springframework.boot:spring-boot-starter-data-redis")
+    // implementation ("org.redisson:redisson-hibernate-53:3.20.1")
 
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")

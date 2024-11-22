@@ -42,7 +42,7 @@ public class UserController {
     }
 
     @GetMapping()
-    public ResponseEntity<PageResponse<User>> getAllPageable(
+    public ResponseEntity<PageResponse<UserResponse>> getAllPageable(
             @RequestParam(required = false) Optional<String> username,
             @RequestParam(required = false) Optional<Role> roles,
             @RequestParam(defaultValue = "0") int page,
@@ -54,7 +54,7 @@ public class UserController {
         Sort sort = direction.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString());
-        Page<User> pageResult = userService.getAll(username, roles, PageRequest.of(page, size, sort));
+        Page<UserResponse> pageResult = userService.getAll(username, roles, PageRequest.of(page, size, sort));
         return ResponseEntity.ok()
                 .header("link", paginationLinksUtils.createLinkHeader(pageResult, uriBuilder))
                 .body(PageResponse.of(pageResult, sortBy, direction));

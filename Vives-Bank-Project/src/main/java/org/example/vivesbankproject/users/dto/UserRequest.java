@@ -28,7 +28,6 @@ public class UserRequest {
     @Builder.Default
     private Set<Role> roles = Set.of(Role.USER);
 
-    @NotNull(message = "El campo de borrado lógico no puede ser nulo")
     @Builder.Default
     private Boolean isDeleted = false;
 }

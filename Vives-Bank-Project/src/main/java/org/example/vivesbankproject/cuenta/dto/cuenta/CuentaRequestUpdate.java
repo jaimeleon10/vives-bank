@@ -1,4 +1,4 @@
-package org.example.vivesbankproject.cuenta.dto;
+package org.example.vivesbankproject.cuenta.dto.cuenta;
 
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;

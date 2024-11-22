@@ -1,8 +1,8 @@
 package org.example.vivesbankproject.cuenta.mappers;
 
-import org.example.vivesbankproject.cuenta.dto.CuentaRequest;
-import org.example.vivesbankproject.cuenta.dto.CuentaRequestUpdate;
-import org.example.vivesbankproject.cuenta.dto.CuentaResponse;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequest;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequestUpdate;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.springframework.stereotype.Component;
 

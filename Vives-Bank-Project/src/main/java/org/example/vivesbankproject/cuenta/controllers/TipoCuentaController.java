@@ -3,6 +3,8 @@ package org.example.vivesbankproject.cuenta.controllers;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
+import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.services.TipoCuentaService;
 import org.example.vivesbankproject.utils.PageResponse;
@@ -33,7 +35,7 @@ public class TipoCuentaController {
     }
 
     @GetMapping()
-    public ResponseEntity<PageResponse<TipoCuenta>> getAllPageable(
+    public ResponseEntity<PageResponse<TipoCuentaResponse>> getAllPageable(
             @RequestParam(required = false) Optional<String> nombre,
             @RequestParam(required = false) Optional<BigDecimal> interes,
             @RequestParam(defaultValue = "0") int page,
@@ -46,35 +48,35 @@ public class TipoCuentaController {
         Sort sort = direction.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString());
-        Page<TipoCuenta> pageResult = tipoCuentaService.getAll(nombre, interes, PageRequest.of(page, size, sort));
+        Page<TipoCuentaResponse> pageResult = tipoCuentaService.getAll(nombre, interes, PageRequest.of(page, size, sort));
         return ResponseEntity.ok()
                 .header("link", paginationLinksUtils.createLinkHeader(pageResult, uriBuilder))
                 .body(PageResponse.of(pageResult, sortBy, direction));
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<TipoCuenta> getById(@PathVariable String id) {
-        log.info("Buscando el tipo de cuenta con id: " + id + "...");
+    public ResponseEntity<TipoCuentaResponse> getById(@PathVariable String id) {
+        log.info("Buscando el tipo de cuenta con id: {}", id);
         return ResponseEntity.ok(tipoCuentaService.getById(id));
     }
 
     @PostMapping
-    public ResponseEntity<TipoCuenta> save(@Valid @RequestBody TipoCuenta tipoCuenta) {
-        log.info("Creando nuevo tipo de cuenta: " + tipoCuenta + "...");
-        var result = tipoCuentaService.save(tipoCuenta);
+    public ResponseEntity<TipoCuentaResponse> save(@Valid @RequestBody TipoCuentaRequest tipoCuentaRequest) {
+        log.info("Creando nuevo tipo de cuenta: {}", tipoCuentaRequest);
+        var result = tipoCuentaService.save(tipoCuentaRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<TipoCuenta> update(@PathVariable String id, @Valid @RequestBody TipoCuenta tipoCuenta) {
-        log.info("Actualizando tipo de cuenta con id: " + id + "...");
-        var result = tipoCuentaService.update(id, tipoCuenta);
+    public ResponseEntity<TipoCuentaResponse> update(@PathVariable String id, @Valid @RequestBody TipoCuentaRequest tipoCuentaRequest) {
+        log.info("Actualizando tipo de cuenta con id: {}", id);
+        var result = tipoCuentaService.update(id, tipoCuentaRequest);
         return ResponseEntity.ok(result);
     }
 
     @DeleteMapping("{id}")
     public void delete(@PathVariable String id) {
-        log.info("Eliminando tipo de cuenta con id: " + id + "...");
+        log.info("Eliminando tipo de cuenta con id: {}", id);
         tipoCuentaService.deleteById(id);
     }
 }

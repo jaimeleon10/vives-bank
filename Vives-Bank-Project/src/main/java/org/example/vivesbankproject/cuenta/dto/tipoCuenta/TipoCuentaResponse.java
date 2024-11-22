@@ -1,22 +1,20 @@
-package org.example.vivesbankproject.users.dto;
+package org.example.vivesbankproject.cuenta.dto.tipoCuenta;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.vivesbankproject.users.models.Role;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Set;
 
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class UserResponse {
+@NoArgsConstructor
+public class TipoCuentaResponse {
     private String guid;
-    private String username;
-    private String password;
-    private Set<Role> roles;
+    private String nombre;
+    private BigDecimal interes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Boolean isDeleted;
