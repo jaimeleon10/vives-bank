@@ -46,7 +46,7 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
     @Override
     public TipoCuenta getById(String id) {
         log.info("Obteniendo tipo de cuenta con id: {}", id);
-        return tipoCuentaRepository.findById(id).orElseThrow(() -> new TipoCuentaNotFound(id));
+        return tipoCuentaRepository.findByGuid(id).orElseThrow(() -> new TipoCuentaNotFound(id));
     }
 
     @Override
@@ -61,7 +61,7 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
     @Override
     public TipoCuenta update(String id, TipoCuenta tipoCuenta) {
         log.info("Actualizando tipo de cuenta con id {}", id);
-        var tipoCuentaEncontrada = tipoCuentaRepository.findById(id).orElseThrow(() -> new TipoCuentaNotFound(id));
+        var tipoCuentaEncontrada = tipoCuentaRepository.findByGuid(id).orElseThrow(() -> new TipoCuentaNotFound(id));
         tipoCuentaEncontrada.setUpdatedAt(LocalDateTime.now());
         return tipoCuentaRepository.save(tipoCuentaEncontrada);
     }
@@ -69,7 +69,7 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
     @Override
     public void deleteById(String id) {
         log.info("Eliminando tipo de cuenta con id {}", id);
-        var tipoCuentaExistente = tipoCuentaRepository.findById(id).orElseThrow(() -> new TipoCuentaNotFound(id));
+        var tipoCuentaExistente = tipoCuentaRepository.findByGuid(id).orElseThrow(() -> new TipoCuentaNotFound(id));
         tipoCuentaExistente.setIsDeleted(true);
     }
 }

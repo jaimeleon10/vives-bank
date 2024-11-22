@@ -8,4 +8,5 @@ import java.util.Optional;
 
 public interface TipoCuentaRepository extends JpaRepository<TipoCuenta, Long>, JpaSpecificationExecutor<TipoCuenta> {
     Optional<TipoCuenta> findByNombre(String nombre);
+    Optional<TipoCuenta> findByGuid(String guid);
 }
