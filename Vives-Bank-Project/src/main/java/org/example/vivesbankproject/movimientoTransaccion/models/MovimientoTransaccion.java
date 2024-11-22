@@ -1,6 +1,8 @@
 package org.example.vivesbankproject.movimientoTransaccion.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,6 +38,8 @@ public class MovimientoTransaccion {
     @NotBlank(message = "El cliente no puede estar vacio")
     private Cliente cliente;
 
+    @OneToMany
+    @JoinColumn(name = "transacciones_id", nullable = false, referencedColumnName = "id")
     private Transacciones transacciones;
 
     @Builder.Default()
