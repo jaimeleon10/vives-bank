@@ -19,7 +19,7 @@ public class UserResponse {
     private String password;
     @Builder.Default
     private Set<Role> roles = Set.of(Role.USER);
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+   // private LocalDateTime createdAt;
+   // private LocalDateTime updatedAt;
     private Boolean isDeleted;
 }

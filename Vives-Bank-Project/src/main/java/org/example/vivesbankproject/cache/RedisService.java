@@ -1,3 +1,4 @@
+/*
 package org.example.vivesbankproject.cache;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -5,7 +6,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RedisService <K,V> implements CacheRedis<K,V> {
+public class */
+/**//*
+RedisService <K,V> implements CacheRedis<K,V> {
 
     @Autowired
     private RedisTemplate<K, V> redisTemplate;
@@ -26,3 +29,4 @@ public class RedisService <K,V> implements CacheRedis<K,V> {
     }
 
 }
+*/

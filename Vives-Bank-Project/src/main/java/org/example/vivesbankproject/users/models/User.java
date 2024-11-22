@@ -43,15 +43,15 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Set<Role> roles;
 
-    @CreationTimestamp
-    @Column(updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+//    @CreationTimestamp
+//    @Column(updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+//    @Builder.Default
+//    private LocalDateTime createdAt = LocalDateTime.now();
 
-    @UpdateTimestamp
-    @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    @Builder.Default
-    private LocalDateTime updatedAt = LocalDateTime.now();
+//    @UpdateTimestamp
+//    @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+//    @Builder.Default
+//    private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Column(nullable = false)
     @Builder.Default

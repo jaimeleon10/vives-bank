@@ -62,7 +62,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @CachePut(key = "#result.guid")
+    //@CachePut(key = "#result.guid")
     public UserResponse save(UserRequest userRequest) {
         if (userRepository.findByUsername(userRequest.getUsername()).isPresent()) {
             throw new UserExists(userRequest.getUsername());

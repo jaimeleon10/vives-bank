@@ -75,7 +75,7 @@ public class TarjetaRestController {
     }
 
     @PostMapping
-    public ResponseEntity<TarjetaResponse> save(@Valid @RequestBody TarjetaRequestSave tarjetaRequestSave) {
+    public ResponseEntity<TarjetaResponse> save( @RequestBody TarjetaRequestSave tarjetaRequestSave) {
         return ResponseEntity.status(HttpStatus.CREATED).body(tarjetaService.save(tarjetaRequestSave));
     }
 

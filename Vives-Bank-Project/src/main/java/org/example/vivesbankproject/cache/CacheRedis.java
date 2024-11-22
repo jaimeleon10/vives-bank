@@ -1,3 +1,4 @@
+/*
 package org.example.vivesbankproject.cache;
 
 public interface CacheRedis<K, V>{
@@ -5,3 +6,4 @@ public interface CacheRedis<K, V>{
     V find(K key);
     void delete(K key);
 }
+*/
