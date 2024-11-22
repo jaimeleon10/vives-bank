@@ -41,7 +41,7 @@ public class ClienteRestController {
     }
 
     @GetMapping
-    public ResponseEntity<PageResponse<Cliente>> getAll(
+    public ResponseEntity<PageResponse<ClienteResponse>> getAll(
 
             @RequestParam(required = false) Optional<String> dni,
             @RequestParam(required = false) Optional<String> nombre,
@@ -60,7 +60,7 @@ public class ClienteRestController {
         Sort sort = direction.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString());
-        Page<Cliente> pageResult = clienteService.getAll(dni,nombre, apellido, email,telefono, PageRequest.of(page, size, sort));
+        Page<ClienteResponse> pageResult = clienteService.getAll(dni,nombre, apellido, email,telefono, PageRequest.of(page, size, sort));
         return ResponseEntity.ok()
                 .header("link", paginationLinksUtils.createLinkHeader(pageResult, uriBuilder))
                 .body(PageResponse.of(pageResult, sortBy, direction));

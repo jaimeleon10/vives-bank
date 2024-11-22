@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.users.models.User;
+
+import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -16,7 +18,7 @@ import java.util.Set;
 public class ClienteRequestSave {
 
     @NotBlank(message = "El DNI no puede estar vacío")
-    @Pattern(regexp = "^\\d{8}[A-Za-z]$", message = "El DNI debe tener 8 números seguidos de una letra")
+    @Pattern(regexp = "^\\d{8}[TRWAGMYFPDXBNJZSQVHLCKEtrwagmyfpdxbnjzsqvhlcke]$", message = "El DNI debe tener 8 números seguidos de una letra")
     private String dni;
 
     @NotBlank(message = "El nombre no puede estar vacío")
@@ -40,7 +42,7 @@ public class ClienteRequestSave {
     private String fotoDni;
 
     @Builder.Default
-    private Set<Cuenta> cuentas = Set.of();
+    private Set<Cuenta> cuentas = new HashSet<>();
 
     @NotNull(message = "El usuario no puede ser un campo nulo")
     private User user;
