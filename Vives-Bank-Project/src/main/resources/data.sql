@@ -1,18 +1,17 @@
-INSERT INTO public.usuarios (id, guid, username, password, roles, created_at, updated_at, is_deleted)
+INSERT INTO public.usuarios (id, guid, username, password, created_at, updated_at, is_deleted)
 VALUES
     (
         DEFAULT,
         'GUID_GENERADO',
         'admin',
         'admin',
-        '{ROLE_ADMIN}',
         '2024-11-21 09:55:47.903101',
         '2024-11-21 09:55:47.903101',
         false
     );
 
-
-INSERT INTO public.user_roles (roles, user_id) VALUES ('ADMIN', 'GUID_GENERADO');
+INSERT INTO public.user_roles (user_id, role)
+VALUES ((SELECT id FROM public.usuarios WHERE guid = 'GUID_GENERADO'), 'ADMIN');
 
 INSERT INTO public.clientes
 (
@@ -28,7 +27,8 @@ INSERT INTO public.clientes
     nombre,
     telefono,
     user_id,
-    id_movimientos
+    id_movimientos,
+    is_deleted
 )
 VALUES
     (
@@ -43,9 +43,11 @@ VALUES
         DEFAULT,
         'alvaro',
         '656537860',
-        'USER_ID',
-        E'\\xACED00057372002A6F72672E62736F6E2E74797065732E4F626A65637449642453657269616C697A6174696F6E50726F787900000000000000010200015B000562797465737400025B427870757200025B42ACF317F8060854E002000078700000000C673F1569034E2E357248C445' -- El valor hexadecimal de id_movimientos (esto debe ser generado según el valor específico)
+        (SELECT id FROM public.usuarios WHERE guid = 'GUID_GENERADO'),
+        E'\\xACED00057372002A6F72672E62736F6E2E74797065732E4F626A65637449642453657269616C697A6174696F6E50726F787900000000000000010200015B000562797465737400025B427870757200025B42ACF317F8060854E002000078700000000C673F1569034E2E357248C445',
+        false
     );
+
 
 INSERT INTO public.tipo_cuenta (interes, created_at, updated_at, id, nombre, is_deleted)
 VALUES
