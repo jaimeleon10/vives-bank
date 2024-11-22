@@ -4,13 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
-import org.example.vivesbankproject.users.models.User;
-
+import org.example.vivesbankproject.users.dto.UserResponse;
 import java.time.LocalDateTime;
 import java.util.Set;
-import java.util.UUID;
 
 @Data
 @Builder
@@ -25,10 +22,8 @@ public class ClienteResponse {
     private String telefono;
     private String fotoPerfil;
     private String fotoDni;
-    @Builder.Default
-    private Set<Cuenta> cuentas = Set.of();
-    private User user;
-    private ObjectId idMovimientos;
+    private Set<Cuenta> cuentas;
+    private UserResponse user;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private boolean isDeleted;
