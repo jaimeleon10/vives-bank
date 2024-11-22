@@ -34,6 +34,7 @@ public class UserMapper {
                 .guid(user.getGuid())
                 .username(userRequest.getUsername())
                 .password(userRequest.getPassword())
+                .roles(userRequest.getRoles())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
                 .isDeleted(userRequest.getIsDeleted())

@@ -33,7 +33,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<User> getAll(Optional<String> username, Optional<Role> roles, Pageable pageable) {
+    public Page<UserResponse> getAll(Optional<String> username, Optional<Role> roles, Pageable pageable) {
         Specification<User> specUsername = (root, query, criteriaBuilder) ->
                 username.map(u -> criteriaBuilder.like(criteriaBuilder.lower(root.get("nombre")), "%" + u.toLowerCase() + "%"))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
@@ -44,7 +44,9 @@ public class UserServiceImpl implements UserService {
 
         Specification<User> criterio = Specification.where(specUsername).and(specRole);
 
-        return userRepository.findAll(criterio, pageable);
+        Page<User> userPage = userRepository.findAll(criterio, pageable);
+
+        return userPage.map(userMapper::toUserResponse);
     }
 
     @Override
@@ -91,5 +93,6 @@ public class UserServiceImpl implements UserService {
                 () -> new UserNotFoundById(id)
         );
         user.setIsDeleted(true);
+        userRepository.save(user);
     }
 }

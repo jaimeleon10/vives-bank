@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.vivesbankproject.users.models.Role;
-
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -17,8 +16,7 @@ public class UserResponse {
     private String guid;
     private String username;
     private String password;
-    @Builder.Default
-    private Set<Role> roles = Set.of(Role.USER);
+    private Set<Role> roles;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Boolean isDeleted;

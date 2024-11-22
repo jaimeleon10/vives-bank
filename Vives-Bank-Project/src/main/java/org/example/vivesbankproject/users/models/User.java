@@ -41,7 +41,8 @@ public class User {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
-    private Set<Role> roles;
+    @Builder.Default
+    private Set<Role> roles = Set.of(Role.USER);
 
     @CreationTimestamp
     @Column(updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
