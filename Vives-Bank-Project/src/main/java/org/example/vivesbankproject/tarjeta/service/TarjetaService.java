@@ -15,7 +15,7 @@ import java.util.Optional;
 
 public interface TarjetaService {
 
-    Page<Tarjeta> getAll(Optional<String> numero,
+    Page<TarjetaResponse> getAll(Optional<String> numero,
                          Optional<LocalDate> caducidad,
                          Optional<TipoTarjeta> tipoTarjeta,
                          Optional<BigDecimal> minLimiteDiario,

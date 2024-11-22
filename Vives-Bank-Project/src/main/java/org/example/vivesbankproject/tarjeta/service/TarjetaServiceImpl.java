@@ -38,7 +38,7 @@ public class TarjetaServiceImpl implements TarjetaService {
     }
 
     @Override
-    public Page<Tarjeta> getAll(Optional<String> numero,
+    public Page<TarjetaResponse> getAll(Optional<String> numero,
                                 Optional<LocalDate> caducidad,
                                 Optional<TipoTarjeta> tipoTarjeta,
                                 Optional<BigDecimal> minLimiteDiario,
@@ -95,7 +95,9 @@ public class TarjetaServiceImpl implements TarjetaService {
                 .and(specMinLimiteMensual)
                 .and(specMaxLimiteMensual);
 
-        return tarjetaRepository.findAll(criteria, pageable);
+        Page<Tarjeta> tarjetaPage = tarjetaRepository.findAll(criteria, pageable);
+
+        return tarjetaPage.map(tarjetaMapper::toTarjetaResponse);
     }
 
 
@@ -138,7 +140,8 @@ public class TarjetaServiceImpl implements TarjetaService {
     @CacheEvict(key = "#id")
     public void deleteById(String id) {
         log.info("Eliminando tarjeta con ID: {}", id);
-        var tarjetaExistente = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
-        tarjetaRepository.deleteById(tarjetaExistente.getId());
+        var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
+        tarjeta.setIsDeleted(true);
+        tarjetaRepository.save(tarjeta);
     }
 }

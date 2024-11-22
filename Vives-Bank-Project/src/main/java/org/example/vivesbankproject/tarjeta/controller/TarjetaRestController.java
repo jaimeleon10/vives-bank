@@ -43,7 +43,7 @@ public class TarjetaRestController {
     }
 
     @GetMapping
-    public ResponseEntity<PageResponse<Tarjeta>> getAll(
+    public ResponseEntity<PageResponse<TarjetaResponse>> getAll(
             @RequestParam(required = false) Optional<String> numero,
             @RequestParam(required = false) Optional<LocalDate> caducidad,
             @RequestParam(required = false) Optional<TipoTarjeta> tipoTarjeta,
@@ -63,7 +63,7 @@ public class TarjetaRestController {
         Sort sort = direction.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString());
-        Page<Tarjeta> pageResult = tarjetaService.getAll(numero, caducidad, tipoTarjeta, minLimiteDiario, maxLimiteDiario, minLimiteSemanal, maxLimiteSemanal, minLimiteMensual, maxLimiteMensual, PageRequest.of(page, size, sort));
+        Page<TarjetaResponse> pageResult = tarjetaService.getAll(numero, caducidad, tipoTarjeta, minLimiteDiario, maxLimiteDiario, minLimiteSemanal, maxLimiteSemanal, minLimiteMensual, maxLimiteMensual, PageRequest.of(page, size, sort));
         return ResponseEntity.ok()
                 .header("link", paginationLinksUtils.createLinkHeader(pageResult, uriBuilder))
                 .body(PageResponse.of(pageResult, sortBy, direction));

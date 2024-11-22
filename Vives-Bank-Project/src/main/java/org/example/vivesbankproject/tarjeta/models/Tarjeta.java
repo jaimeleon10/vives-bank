@@ -62,7 +62,7 @@ public class Tarjeta {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @NotBlank(message = "El tipo de tarjeta no puede ser un campo vacío")
+    @NotNull(message = "El tipo de tarjeta no puede ser un campo nulo")
     private TipoTarjeta tipoTarjeta;
 
     @CreationTimestamp
