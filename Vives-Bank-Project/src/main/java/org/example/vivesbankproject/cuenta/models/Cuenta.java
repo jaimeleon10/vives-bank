@@ -44,7 +44,7 @@ public class Cuenta {
     private TipoCuenta tipoCuenta;
 
     @OneToOne
-    @JoinColumn(name = "tarjeta_id")
+    @JoinColumn(name = "tarjeta_id", referencedColumnName = "id")
     private Tarjeta tarjeta;
 
     @CreationTimestamp

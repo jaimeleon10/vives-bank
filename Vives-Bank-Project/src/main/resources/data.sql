@@ -91,9 +91,9 @@ VALUES
         10000.00,
         '2024-11-21 12:07:28.734354',
         '2024-11-21 12:07:28.734354',
-        'e7dd8cf6-83dd-41cf-8a4b-bb12b5aca4f4',
-        'asd',
+        (SELECT id FROM public.tarjetas WHERE numero_tarjeta = '1111111111111111'),
+        (SELECT id FROM public.clientes WHERE dni = '50378911X'),
         'ES9121000418450200051332',
         DEFAULT,
-        'tcuenta'
+        (SELECT id FROM public.tipo_cuenta WHERE nombre = 'testTCuenta') 
     );
