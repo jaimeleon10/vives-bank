@@ -29,7 +29,6 @@ import java.util.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Cliente {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -67,7 +66,7 @@ public class Cliente {
     @NotBlank(message = "La foto del DNI no puede estar vacía")
     private String fotoDni;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany
     @JoinColumn(name = "cliente_id", nullable = false)
     @Builder.Default
     private Set<Cuenta> cuentas = new HashSet<>();
