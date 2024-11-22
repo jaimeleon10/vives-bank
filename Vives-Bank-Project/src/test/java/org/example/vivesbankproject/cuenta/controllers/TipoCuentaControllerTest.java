@@ -2,17 +2,9 @@ package org.example.vivesbankproject.cuenta.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.example.vivesbankproject.cuenta.dto.CuentaRequest;
-import org.example.vivesbankproject.cuenta.dto.CuentaRequestUpdate;
-import org.example.vivesbankproject.cuenta.dto.CuentaResponse;
-import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
-import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
-import org.example.vivesbankproject.cuenta.services.CuentaService;
 import org.example.vivesbankproject.cuenta.services.TipoCuentaService;
-import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.utils.PageResponse;
-import org.example.vivesbankproject.websocket.notifications.models.Notification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,10 +22,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;

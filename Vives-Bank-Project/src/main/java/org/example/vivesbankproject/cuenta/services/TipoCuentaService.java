@@ -1,6 +1,7 @@
 package org.example.vivesbankproject.cuenta.services;
 
-import org.example.vivesbankproject.cuenta.models.TipoCuenta;
+import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
+import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -10,9 +11,9 @@ import java.util.Optional;
 
 @Service
 public interface TipoCuentaService {
-    Page<TipoCuenta> getAll(Optional<String> nombre, Optional<BigDecimal> interes, Pageable pageable);
-    TipoCuenta getById(String id);
-    TipoCuenta save(TipoCuenta tipoCuenta);
-    TipoCuenta update(String id, TipoCuenta tipoCuenta);
+    Page<TipoCuentaResponse> getAll(Optional<String> nombre, Optional<BigDecimal> interes, Pageable pageable);
+    TipoCuentaResponse getById(String id);
+    TipoCuentaResponse save(TipoCuentaRequest tipoCuentaRequest);
+    TipoCuentaResponse update(String id, TipoCuentaRequest tipoCuentaRequest);
     void deleteById(String id);
 }

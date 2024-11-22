@@ -1,8 +1,11 @@
 package org.example.vivesbankproject.cuenta.services;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
+import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
 import org.example.vivesbankproject.cuenta.exceptions.CuentaExists;
 import org.example.vivesbankproject.cuenta.exceptions.TipoCuentaNotFound;
+import org.example.vivesbankproject.cuenta.mappers.TipoCuentaMapper;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.TipoCuentaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,23 +13,23 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
 @Slf4j
 public class TipoCuentaServiceImpl implements TipoCuentaService {
     private final TipoCuentaRepository tipoCuentaRepository;
+    private final TipoCuentaMapper tipoCuentaMapper;
 
     @Autowired
-    public TipoCuentaServiceImpl(TipoCuentaRepository tipoCuentaRepository) {
+    public TipoCuentaServiceImpl(TipoCuentaRepository tipoCuentaRepository, TipoCuentaMapper tipoCuentaMapper) {
         this.tipoCuentaRepository = tipoCuentaRepository;
+        this.tipoCuentaMapper = tipoCuentaMapper;
     }
 
     @Override
-    public Page<TipoCuenta> getAll(Optional<String> nombre, Optional<BigDecimal> interes, Pageable pageable) {
+    public Page<TipoCuentaResponse> getAll(Optional<String> nombre, Optional<BigDecimal> interes, Pageable pageable) {
         log.info("Obteniendo todos los tipos de cuenta");
 
         Specification<TipoCuenta> specNombreTipoCuenta = (root, query, criteriaBuilder) ->
@@ -40,30 +43,34 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
         Specification<TipoCuenta> criterio = Specification.where(specNombreTipoCuenta)
                 .and(specInteresTipoCuenta);
 
-        return tipoCuentaRepository.findAll(criterio, pageable);
+        Page<TipoCuenta> tipoCuentaPage = tipoCuentaRepository.findAll(criterio, pageable);
+
+        return tipoCuentaPage.map(tipoCuentaMapper::toTipoCuentaResponse);
     }
 
     @Override
-    public TipoCuenta getById(String id) {
+    public TipoCuentaResponse getById(String id) {
         log.info("Obteniendo tipo de cuenta con id: {}", id);
-        return tipoCuentaRepository.findByGuid(id).orElseThrow(() -> new TipoCuentaNotFound(id));
+        var tipoCuenta = tipoCuentaRepository.findByGuid(id).orElseThrow(() -> new TipoCuentaNotFound(id));
+        return tipoCuentaMapper.toTipoCuentaResponse(tipoCuenta);
     }
 
     @Override
-    public TipoCuenta save(TipoCuenta tipoCuenta) {
-        log.info("Guardando tipo de cuenta: {}", tipoCuenta);
-        if (tipoCuentaRepository.findByNombre(tipoCuenta.getNombre()).isPresent()) {
-            throw new CuentaExists(tipoCuenta.getNombre());
+    public TipoCuentaResponse save(TipoCuentaRequest tipoCuentaRequest) {
+        log.info("Guardando tipo de cuenta: {}", tipoCuentaRequest);
+        if (tipoCuentaRepository.findByNombre(tipoCuentaRequest.getNombre()).isPresent()) {
+            throw new CuentaExists(tipoCuentaRequest.getNombre());
         }
-        return tipoCuentaRepository.save(tipoCuenta);
+        var tipoCuenta = tipoCuentaRepository.save(tipoCuentaMapper.toTipoCuenta(tipoCuentaRequest));
+        return tipoCuentaMapper.toTipoCuentaResponse(tipoCuenta);
     }
 
     @Override
-    public TipoCuenta update(String id, TipoCuenta tipoCuenta) {
+    public TipoCuentaResponse update(String id, TipoCuentaRequest tipoCuentaRequest) {
         log.info("Actualizando tipo de cuenta con id {}", id);
-        var tipoCuentaEncontrada = tipoCuentaRepository.findByGuid(id).orElseThrow(() -> new TipoCuentaNotFound(id));
-        tipoCuentaEncontrada.setUpdatedAt(LocalDateTime.now());
-        return tipoCuentaRepository.save(tipoCuentaEncontrada);
+        var tipoCuenta = tipoCuentaRepository.findByGuid(id).orElseThrow(() -> new TipoCuentaNotFound(id));
+        var tipoCuentaSave = tipoCuentaRepository.save(tipoCuentaMapper.toTipoCuentaUpdate(tipoCuentaRequest, tipoCuenta));
+        return tipoCuentaMapper.toTipoCuentaResponse(tipoCuentaSave);
     }
 
     @Override
@@ -71,5 +78,6 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
         log.info("Eliminando tipo de cuenta con id {}", id);
         var tipoCuentaExistente = tipoCuentaRepository.findByGuid(id).orElseThrow(() -> new TipoCuentaNotFound(id));
         tipoCuentaExistente.setIsDeleted(true);
+        tipoCuentaRepository.save(tipoCuentaExistente);
     }
 }
