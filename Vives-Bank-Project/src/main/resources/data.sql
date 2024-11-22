@@ -60,10 +60,13 @@ VALUES
         FALSE
     );
 
-INSERT INTO public.tipo_tarjetas (nombre, created_at, updated_at, id) VALUES (1, '2024-11-21 12:02:33.602339', '2024-11-21 12:02:33.602339', 'e7dd8cf6-83dd-41cf-8a4b-bb12b5aca4f5');
+INSERT INTO public.tipo_tarjetas (nombre, created_at, updated_at, id)
+VALUES
+    ('CREDITO', '2024-11-21 12:02:33.602339', '2024-11-21 12:02:33.602339', '6716e0b5-9f88-4fd9-b0f0-cc56cd7290b1')
+    ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.tarjetas
-(cvv, fecha_caducidad, limite_diario, limite_mensual, limite_semanal, created_at, updated_at, id, tipo_tarjeta_id, numero_tarjeta, pin, is_deleted)
+(cvv, fecha_caducidad, limite_diario, limite_mensual, limite_semanal, created_at, updated_at, id, numero_tarjeta, pin, tipo_tarjeta, is_deleted)
 VALUES
     (
         111,
@@ -74,9 +77,9 @@ VALUES
         '2024-11-21 12:03:44.141103',
         '2024-11-21 12:03:44.141103',
         DEFAULT,
-        'e7dd8cf6-83dd-41cf-8a4b-bb12b5aca4f5',
         '1111111111111111',
         '123',
+        'CREDITO',
         FALSE
     );
 
