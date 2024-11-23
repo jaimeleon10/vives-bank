@@ -38,7 +38,7 @@ public class Cliente {
 
     @Column(nullable = false, unique = true)
     @NotBlank(message = "El DNI no puede estar vacío")
-    @Pattern(regexp = "^\\d{8}[TRWAGMYFPDXBNJZSQVHLCKEtrwagmyfpdxbnjzsqvhlcke]$", message = "El DNI debe tener 8 números seguidos de una letra")
+    @Pattern(regexp = "^\\d{8}[TRWAGMYFPDXBNJZSQVHLCKE]$", message = "El DNI debe tener 8 números seguidos de una letra en mayúsculas")
     private String dni;
 
     @Column(nullable = false)
@@ -90,7 +90,6 @@ public class Cliente {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Column(nullable = false)
-    @Builder.Default
     private Boolean isDeleted = false;
 
     @JsonProperty("idMovimientos")

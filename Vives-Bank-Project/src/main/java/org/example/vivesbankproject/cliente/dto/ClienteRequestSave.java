@@ -42,8 +42,12 @@ public class ClienteRequestSave {
     private String fotoDni;
 
     @Builder.Default
-    private Set<Cuenta> cuentas = new HashSet<>();
+    private Set<String> cuentasIds = new HashSet<>();
 
-    @NotNull(message = "El usuario no puede ser un campo nulo")
-    private User user;
+    @NotBlank(message = "El id de usuario no puede estar vacío")
+    private String userId;
+
+    @NotNull(message = "El campo de borrado lógico no puede ser nulo")
+    @Builder.Default
+    private Boolean isDeleted = false;
 }

@@ -2,12 +2,12 @@
 package org.example.vivesbankproject.cliente.controllers;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestSave;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdate;
 import org.example.vivesbankproject.cliente.dto.ClienteResponse;
-import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.service.ClienteService;
 import org.example.vivesbankproject.utils.PageResponse;
 import org.example.vivesbankproject.utils.PaginationLinksUtils;
@@ -18,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -27,9 +28,9 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@Slf4j
 @RequestMapping("${api.version}/cliente")
-
+@Validated
+@Slf4j
 public class ClienteRestController {
     private final ClienteService clienteService;
     private final PaginationLinksUtils paginationLinksUtils;
@@ -54,9 +55,6 @@ public class ClienteRestController {
             @RequestParam(defaultValue = "asc") String direction,
             HttpServletRequest request
     ) {
-        log.info("getAll:  dni: {},nombre: {},apellido: {}, email: {}, telefono: {}, page: {}, size: {}, sortBy: {}, direction: {}",
-                 dni,nombre,apellido, email,telefono, page, size, sortBy, direction);
-
         Sort sort = direction.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString());
@@ -68,40 +66,46 @@ public class ClienteRestController {
 
     @GetMapping("{id}")
     public ResponseEntity<ClienteResponse> getById(@PathVariable String id) {
-        log.info("findById: id: {}", id);
         return ResponseEntity.ok(clienteService.getById(id));
     }
 
     @PostMapping
     public ResponseEntity<ClienteResponse> createCliente(@Valid @RequestBody ClienteRequestSave clienteRequestSave) {
-        log.info("save: clienteRequest: {}", clienteRequestSave);
-        return ResponseEntity.status(HttpStatus.CREATED).body(clienteService.save(clienteRequestSave));
+        var result = clienteService.save(clienteRequestSave);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
     @PutMapping("{id}")
     public ResponseEntity<ClienteResponse> updateCliente(@PathVariable String id, @Valid @RequestBody ClienteRequestUpdate clienteRequest) {
-        log.info("update: id: {}, clienteRequest: {}", id, clienteRequest);
-        return ResponseEntity.ok(clienteService.update(id, clienteRequest));
+        var result = clienteService.update(id, clienteRequest);
+        return ResponseEntity.ok(result);
     }
 
     @DeleteMapping("{id}")
     public ResponseEntity<Void> deleteCliente(@PathVariable String id) {
-        log.info("delete: id: {}", id);
         clienteService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
-
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Map<String, String> handleValidationExceptions(
-            MethodArgumentNotValidException ex) {
+    @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
+    public Map<String, String> handleValidationExceptions(Exception ex) {
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
+
+        if (ex instanceof MethodArgumentNotValidException methodArgumentNotValidException) {
+            methodArgumentNotValidException.getBindingResult().getAllErrors().forEach((error) -> {
+                String fieldName = ((FieldError) error).getField();
+                String errorMessage = error.getDefaultMessage();
+                errors.put(fieldName, errorMessage);
+            });
+        } else if (ex instanceof ConstraintViolationException constraintViolationException) {
+            constraintViolationException.getConstraintViolations().forEach(violation -> {
+                String fieldName = violation.getPropertyPath().toString();
+                String errorMessage = violation.getMessage();
+                errors.put(fieldName, errorMessage);
+            });
+        }
+
         return errors;
     }
 }
