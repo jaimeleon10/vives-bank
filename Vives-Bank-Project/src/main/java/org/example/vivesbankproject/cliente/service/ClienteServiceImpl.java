@@ -12,6 +12,7 @@ import org.example.vivesbankproject.cliente.exceptions.ClienteNotFound;
 import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
+import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.mappers.UserMapper;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -69,10 +70,10 @@ public class ClienteServiceImpl implements ClienteService {
 
         Page<Cliente> clientePage = clienteRepository.findAll(criterio, pageable);
 
-        // TODO
-        var user = userMapper(clientePage.getContent().get().getUser());
-
-        return clientePage.map(clienteMapper.toClienteResponse(clientePage.getContent().get(), user));
+        return clientePage.map(cliente -> {
+            UserResponse userResponse = userMapper.toUserResponse(cliente.getUser());
+            return clienteMapper.toClienteResponse(cliente, userResponse);
+        });
     }
 
     @Override
