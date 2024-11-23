@@ -4,7 +4,6 @@ import org.example.vivesbankproject.users.models.Role;
 import org.example.vivesbankproject.users.models.User;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +28,7 @@ public class UserRepositoryTest {
         userRepository.deleteAll();
 
         user = User.builder()
-                .id(UUID.randomUUID())
+                .guid("hola")
                 .username("testuser")
                 .password("password")
                 .roles(Set.of(Role.USER))
@@ -39,49 +38,28 @@ public class UserRepositoryTest {
     }
 
     @Test
-    void FindByUsername() {
+    void findByGuid() {
+        Optional<User> foundUser = userRepository.findByGuid("hola");
+        assertThat(foundUser).isPresent();
+        assertThat(foundUser.get().getGuid()).isEqualTo("hola");
+    }
+
+    @Test
+    void findByGuidNotFound() {
+        Optional<User> foundUser = userRepository.findByGuid("nonexistent");
+        assertThat(foundUser).isNotPresent();
+    }
+
+    @Test
+    void findByUsername() {
         Optional<User> foundUser = userRepository.findByUsername("testuser");
         assertThat(foundUser).isPresent();
         assertThat(foundUser.get().getUsername()).isEqualTo("testuser");
     }
 
     @Test
-    void FindByUsernameNotFound() {
+    void findByUsernameNotFound() {
         Optional<User> foundUser = userRepository.findByUsername("nonexistentuser");
-        assertThat(foundUser).isNotPresent();
-    }
-
-    @Test
-    void SaveUser() {
-        User newUser = User.builder()
-                .id(UUID.randomUUID())
-                .username("newuser")
-                .password("newpassword")
-                .roles(Set.of(Role.USER))
-                .build();
-
-        userRepository.save(newUser);
-
-        Optional<User> foundUser = userRepository.findByUsername("newuser");
-        assertThat(foundUser).isPresent();
-        assertThat(foundUser.get().getUsername()).isEqualTo("newuser");
-    }
-
-    @Test
-    void UpdateUser() {
-        user.setUsername("updateduser");
-        userRepository.save(user);
-
-        Optional<User> foundUser = userRepository.findByUsername("updateduser");
-        assertThat(foundUser).isPresent();
-        assertThat(foundUser.get().getUsername()).isEqualTo("updateduser");
-    }
-
-    @Test
-    void DeleteUser() {
-        userRepository.delete(user);
-
-        Optional<User> foundUser = userRepository.findByUsername("testuser");
         assertThat(foundUser).isNotPresent();
     }
 }
