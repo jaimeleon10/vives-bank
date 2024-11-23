@@ -311,13 +311,13 @@ class CuentaControllerTest {
         cuentaRequestUpdate.setIsDeleted(false);
 
         TarjetaResponse tarjetaResponse = new TarjetaResponse();
-        tarjetaResponse.setGuid("7b498e86-5197-4e05-9361-3da894b62353");
-        tarjetaResponse.setNumeroTarjeta("4009156782194826");
-        tarjetaResponse.setFechaCaducidad(LocalDate.parse("2025-12-31"));
-        tarjetaResponse.setLimiteDiario(BigDecimal.valueOf(100.0));
-        tarjetaResponse.setLimiteSemanal(BigDecimal.valueOf(200.0));
-        tarjetaResponse.setLimiteMensual(BigDecimal.valueOf(500.0));
-        tarjetaResponse.setTipoTarjeta(TipoTarjeta.valueOf("DEBITO"));
+        tarjetaResponse.setGuid(tarjeta.getGuid());
+        tarjetaResponse.setNumeroTarjeta(tarjeta.getNumeroTarjeta());
+        tarjetaResponse.setFechaCaducidad(tarjeta.getFechaCaducidad());
+        tarjetaResponse.setLimiteDiario(tarjeta.getLimiteDiario());
+        tarjetaResponse.setLimiteSemanal(tarjeta.getLimiteSemanal());
+        tarjetaResponse.setLimiteMensual(tarjeta.getLimiteMensual());
+        tarjetaResponse.setTipoTarjeta(tarjeta.getTipoTarjeta());
 
         TipoCuentaResponse tipoCuentaResponse = new TipoCuentaResponse();
         tipoCuentaResponse.setNombre("normal");
@@ -347,8 +347,8 @@ class CuentaControllerTest {
                 () -> assertEquals(HttpStatus.OK.value(), response.getStatus()),
                 () -> assertEquals(cuenta.getIban(), res.getIban()),
                 () -> assertEquals(cuenta.getSaldo(), res.getSaldo()),
-                () -> assertEquals(cuenta.getTarjeta(), res.getTarjeta()),
-                () -> assertEquals(cuenta.getTipoCuenta(), res.getTipoCuenta())
+                () -> assertEquals(tarjetaResponse, res.getTarjeta()),
+                () -> assertEquals(tipoCuentaResponse, res.getTipoCuenta())
         );
 
         verify(cuentaService, times(1)).update(cuenta.getGuid(), cuentaRequestUpdate);
