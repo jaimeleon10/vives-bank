@@ -1,6 +1,9 @@
 package org.example.vivesbankproject.cuenta.services;
 
+import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
+import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
 import org.example.vivesbankproject.cuenta.exceptions.TipoCuentaNotFound;
+import org.example.vivesbankproject.cuenta.mappers.TipoCuentaMapper;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.TipoCuentaRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +29,9 @@ class TipoCuentaServiceImplTest {
     @Mock
     private TipoCuentaRepository tipoCuentaRepository;
 
+    @Mock
+    private TipoCuentaMapper tipoCuentaMapper;
+
     @InjectMocks
     private TipoCuentaServiceImpl tipoCuentaService;
 
@@ -35,6 +41,7 @@ class TipoCuentaServiceImplTest {
     void setUp() {
         tipoCuentaTest = new TipoCuenta();
         tipoCuentaTest.setId(1L);
+        tipoCuentaTest.setGuid("hola");
         tipoCuentaTest.setNombre("normal");
         tipoCuentaTest.setInteres(BigDecimal.valueOf(2.0));
     }
@@ -43,67 +50,99 @@ class TipoCuentaServiceImplTest {
     void getAll() {
         Pageable pageable = PageRequest.of(0, 10, Sort.by("nombre").ascending());
 
-        Page<TipoCuenta> cuentaPage = new PageImpl<>(List.of(tipoCuentaTest), pageable, 1);
+        TipoCuentaResponse tipoCuentaResponseTest = new TipoCuentaResponse();
+        tipoCuentaResponseTest.setGuid(tipoCuentaTest.getGuid());
+        tipoCuentaResponseTest.setNombre(tipoCuentaTest.getNombre());
+        tipoCuentaResponseTest.setInteres(tipoCuentaTest.getInteres());
 
+        Page<TipoCuenta> cuentaPage = new PageImpl<>(List.of(tipoCuentaTest), pageable, 1);
         when(tipoCuentaRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(cuentaPage);
 
-        var result = tipoCuentaService.getAll(Optional.of(tipoCuentaTest.getNombre()), Optional.of(tipoCuentaTest.getInteres()), pageable);
+        when(tipoCuentaMapper.toTipoCuentaResponse(tipoCuentaTest)).thenReturn(tipoCuentaResponseTest);
+
+        var result = tipoCuentaService.getAll(
+                Optional.of(tipoCuentaTest.getNombre()),
+                Optional.of(tipoCuentaTest.getInteres()),
+                pageable
+        );
 
         assertAll(
                 () -> assertNotNull(result),
                 () -> assertEquals(1, result.getContent().size()),
-                () -> assertTrue(result.getContent().contains(tipoCuentaTest)),
-                () -> assertEquals("normal", result.getContent().getFirst().getNombre()),
-                () -> assertEquals(BigDecimal.valueOf(2.0), result.getContent().getFirst().getInteres())
+                () -> assertEquals("normal", result.getContent().get(0).getNombre()),
+                () -> assertEquals(BigDecimal.valueOf(2.0), result.getContent().get(0).getInteres())
         );
 
         verify(tipoCuentaRepository, times(1)).findAll(any(Specification.class), eq(pageable));
+        verify(tipoCuentaMapper, times(1)).toTipoCuentaResponse(tipoCuentaTest);
     }
+
 
     @Test
     void getById() {
         String idTipoCuenta = "test";
 
-        when(tipoCuentaRepository.findById(idTipoCuenta)).thenReturn(Optional.of(tipoCuentaTest));
+        TipoCuentaResponse tipoCuentaResponse = new TipoCuentaResponse();
+        tipoCuentaResponse.setGuid(idTipoCuenta);
+        tipoCuentaResponse.setNombre("normal");
+        tipoCuentaResponse.setInteres(BigDecimal.valueOf(2.0));
 
-        TipoCuenta resultTipoCuenta = tipoCuentaService.getById(idTipoCuenta);
+        when(tipoCuentaRepository.findByGuid(idTipoCuenta)).thenReturn(Optional.of(tipoCuentaTest));
+        when(tipoCuentaMapper.toTipoCuentaResponse(tipoCuentaTest)).thenReturn(tipoCuentaResponse);
 
-        assertEquals(tipoCuentaTest, resultTipoCuenta);
+        TipoCuentaResponse resultTipoCuenta = tipoCuentaService.getById(idTipoCuenta);
 
-        verify(tipoCuentaRepository, times(1)).findById(idTipoCuenta);
+        assertEquals(tipoCuentaResponse, resultTipoCuenta);
+
+        verify(tipoCuentaRepository, times(1)).findByGuid(idTipoCuenta);
+        verify(tipoCuentaMapper, times(1)).toTipoCuentaResponse(tipoCuentaTest);
     }
 
     @Test
     void getByIdNotFound() {
         String idTipoCuenta = "test2";
 
-        when(tipoCuentaRepository.findById("test2")).thenReturn(Optional.empty());
+        when(tipoCuentaRepository.findByGuid("test2")).thenReturn(Optional.empty());
 
         assertThrows(TipoCuentaNotFound.class, () -> tipoCuentaService.getById(idTipoCuenta));
 
-        verify(tipoCuentaRepository).findById(idTipoCuenta);
+        verify(tipoCuentaRepository).findByGuid(idTipoCuenta);
     }
 
     @Test
     void save() {
         TipoCuenta tipoCuenta = new TipoCuenta();
+        tipoCuenta.setGuid("hola");
         tipoCuenta.setNombre("normal");
         tipoCuenta.setInteres(BigDecimal.valueOf(2.0));
 
-        when(tipoCuentaRepository.findByNombre(tipoCuenta.getNombre())).thenReturn(Optional.empty());
-        when(tipoCuentaRepository.save(tipoCuenta)).thenReturn(tipoCuenta);
+        TipoCuentaRequest tipoCuentaRequest = new TipoCuentaRequest();
+        tipoCuentaRequest.setNombre("normal");
+        tipoCuentaRequest.setInteres(BigDecimal.valueOf(2.0));
 
-        var result = tipoCuentaService.save(tipoCuenta);
+        TipoCuentaResponse tipoCuentaResponse = new TipoCuentaResponse();
+        tipoCuentaResponse.setGuid(tipoCuenta.getGuid());
+        tipoCuentaResponse.setNombre("normal");
+        tipoCuentaResponse.setInteres(BigDecimal.valueOf(2.0));
+
+        when(tipoCuentaRepository.findByNombre(tipoCuentaRequest.getNombre())).thenReturn(Optional.empty());
+        when(tipoCuentaRepository.save(any(TipoCuenta.class))).thenReturn(tipoCuenta);
+        when(tipoCuentaMapper.toTipoCuenta(tipoCuentaRequest)).thenReturn(tipoCuenta);
+        when(tipoCuentaMapper.toTipoCuentaResponse(tipoCuenta)).thenReturn(tipoCuentaResponse);
+
+        var result = tipoCuentaService.save(tipoCuentaRequest);
 
         assertAll(
-                () -> assertEquals(tipoCuenta.getId(), result.getId()),
+                () -> assertNotNull(result),
                 () -> assertEquals(tipoCuenta.getGuid(), result.getGuid()),
                 () -> assertEquals(tipoCuenta.getNombre(), result.getNombre()),
                 () -> assertEquals(tipoCuenta.getInteres(), result.getInteres())
         );
 
-        verify(tipoCuentaRepository, times(1)).findByNombre(tipoCuenta.getNombre());
-        verify(tipoCuentaRepository, times(1)).save(tipoCuenta);
+        verify(tipoCuentaRepository, times(1)).findByNombre(tipoCuentaRequest.getNombre());
+        verify(tipoCuentaRepository, times(1)).save(any(TipoCuenta.class));
+        verify(tipoCuentaMapper, times(1)).toTipoCuenta(tipoCuentaRequest);
+        verify(tipoCuentaMapper, times(1)).toTipoCuentaResponse(tipoCuenta);
     }
 
     @Test
@@ -115,27 +154,45 @@ class TipoCuentaServiceImplTest {
         tipoCuenta.setNombre("normal");
         tipoCuenta.setInteres(BigDecimal.valueOf(2.0));
 
-        when(tipoCuentaRepository.findById(idTipoCuenta)).thenReturn(Optional.of(tipoCuenta));
+        TipoCuentaRequest tipoCuentaRequest = new TipoCuentaRequest();
+        tipoCuenta.setGuid(idTipoCuenta);
+        tipoCuenta.setNombre(tipoCuenta.getNombre());
+        tipoCuenta.setInteres(BigDecimal.valueOf(3.0));
+
+        TipoCuentaResponse tipoCuentaResponse = new TipoCuentaResponse();
+        tipoCuenta.setNombre(tipoCuenta.getNombre());
+        tipoCuenta.setInteres(tipoCuenta.getInteres());
+
+        when(tipoCuentaRepository.findByGuid(idTipoCuenta)).thenReturn(Optional.of(tipoCuenta));
         when(tipoCuentaRepository.save(tipoCuenta)).thenReturn(tipoCuenta);
+        when(tipoCuentaMapper.toTipoCuentaUpdate(tipoCuentaRequest, tipoCuenta)).thenReturn(tipoCuenta);
+        when(tipoCuentaMapper.toTipoCuentaResponse(tipoCuenta)).thenReturn(tipoCuentaResponse);
 
-        TipoCuenta result = tipoCuentaService.update(idTipoCuenta, tipoCuenta);
+        TipoCuentaResponse result = tipoCuentaService.update(idTipoCuenta, tipoCuentaRequest);
 
-        assertEquals(tipoCuenta, result);
+        assertEquals(tipoCuentaResponse, result);
 
-        verify(tipoCuentaRepository, times(1)).findById(idTipoCuenta);
+        verify(tipoCuentaRepository, times(1)).findByGuid(idTipoCuenta);
         verify(tipoCuentaRepository, times(1)).save(tipoCuenta);
+        verify(tipoCuentaMapper, times(1)).toTipoCuentaUpdate(tipoCuentaRequest, tipoCuenta);
+        verify(tipoCuentaMapper, times(1)).toTipoCuentaResponse(tipoCuenta);
     }
 
     @Test
     void updateNotFound() {
-        String idCuenta = "4182d617-ec89-4fbc-be95-85e461778700";
+        String idTipoCuenta = "4182d617-ec89-4fbc-be95-85e461778700";
         TipoCuenta tipoCuenta = new TipoCuenta();
 
-        when(tipoCuentaRepository.findById(idCuenta)).thenReturn(Optional.empty());
+        TipoCuentaRequest tipoCuentaRequest = new TipoCuentaRequest();
+        tipoCuenta.setGuid(idTipoCuenta);
+        tipoCuenta.setNombre(tipoCuenta.getNombre());
+        tipoCuenta.setInteres(BigDecimal.valueOf(3.0));
 
-        assertThrows(TipoCuentaNotFound.class, () -> tipoCuentaService.update(idCuenta, tipoCuenta));
+        when(tipoCuentaRepository.findByGuid(idTipoCuenta)).thenReturn(Optional.empty());
 
-        verify(tipoCuentaRepository).findById(idCuenta);
+        assertThrows(TipoCuentaNotFound.class, () -> tipoCuentaService.update(idTipoCuenta, tipoCuentaRequest));
+
+        verify(tipoCuentaRepository).findByGuid(idTipoCuenta);
         verify(tipoCuentaRepository, never()).save(tipoCuenta);
     }
 
@@ -148,10 +205,10 @@ class TipoCuentaServiceImplTest {
         tipoCuenta.setNombre("ahorro");
         tipoCuenta.setInteres(BigDecimal.valueOf(3.0));
 
-        when(tipoCuentaRepository.findById(idCuenta)).thenReturn(Optional.of(tipoCuenta));
+        when(tipoCuentaRepository.findByGuid(idCuenta)).thenReturn(Optional.of(tipoCuenta));
 
         tipoCuentaService.deleteById(idCuenta);
 
-        verify(tipoCuentaRepository, times(1)).findById(idCuenta);
+        verify(tipoCuentaRepository, times(1)).findByGuid(idCuenta);
     }
 }
