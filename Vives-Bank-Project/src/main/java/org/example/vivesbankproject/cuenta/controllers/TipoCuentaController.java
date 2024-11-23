@@ -1,6 +1,7 @@
 package org.example.vivesbankproject.cuenta.controllers;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
@@ -15,15 +16,21 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("${api.version}/tipocuentas")
 @Slf4j
+@Validated
 public class TipoCuentaController {
     private final TipoCuentaService tipoCuentaService;
     private final PaginationLinksUtils paginationLinksUtils;
@@ -78,5 +85,27 @@ public class TipoCuentaController {
     public void delete(@PathVariable String id) {
         log.info("Eliminando tipo de cuenta con id: {}", id);
         tipoCuentaService.deleteById(id);
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
+    public Map<String, String> handleValidationExceptions(Exception ex) {
+        Map<String, String> errors = new HashMap<>();
+
+        if (ex instanceof MethodArgumentNotValidException methodArgumentNotValidException) {
+            methodArgumentNotValidException.getBindingResult().getAllErrors().forEach((error) -> {
+                String fieldName = ((FieldError) error).getField();
+                String errorMessage = error.getDefaultMessage();
+                errors.put(fieldName, errorMessage);
+            });
+        } else if (ex instanceof ConstraintViolationException constraintViolationException) {
+            constraintViolationException.getConstraintViolations().forEach(violation -> {
+                String fieldName = violation.getPropertyPath().toString();
+                String errorMessage = violation.getMessage();
+                errors.put(fieldName, errorMessage);
+            });
+        }
+
+        return errors;
     }
 }
