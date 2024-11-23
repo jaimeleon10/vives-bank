@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.users.models.User;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -38,10 +39,6 @@ public class ClienteRequestUpdate {
     @NotBlank(message = "La foto del DNI no puede estar vacía")
     private String fotoDni;
 
-    @NotNull(message = "El usuario no puede ser un campo nulo")
-    private User user;
-
-    @NotNull(message = "El campo de borrado lógico no puede ser nulo")
-    @Builder.Default
-    private Boolean isDeleted = false;
+    @NotBlank(message = "El id de usuario no puede estar vacío")
+    private String userId;
 }

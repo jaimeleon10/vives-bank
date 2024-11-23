@@ -6,10 +6,17 @@ import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequest;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequestUpdate;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.exceptions.CuentaNotFound;
+import org.example.vivesbankproject.cuenta.exceptions.TipoCuentaNotFound;
 import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
+import org.example.vivesbankproject.cuenta.mappers.TipoCuentaMapper;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
+import org.example.vivesbankproject.cuenta.repositories.TipoCuentaRepository;
+import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
+import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
+import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
+import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
@@ -23,6 +30,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -30,11 +39,19 @@ import java.util.Optional;
 public class CuentaServiceImpl implements CuentaService{
     private final CuentaRepository cuentaRepository;
     private final CuentaMapper cuentaMapper;
+    private final TipoCuentaMapper tipoCuentaMapper;
+    private final TarjetaMapper tarjetaMapper;
+    private final TipoCuentaRepository tipoCuentaRepository;
+    private final TarjetaRepository tarjetaRepository;
 
     @Autowired
-    public CuentaServiceImpl(CuentaRepository cuentaRepository, CuentaMapper cuentaMapper) {
+    public CuentaServiceImpl(CuentaRepository cuentaRepository, CuentaMapper cuentaMapper, TipoCuentaMapper tipoCuentaMapper, TarjetaMapper tarjetaMapper, TipoCuentaRepository tipoCuentaRepository, TarjetaRepository tarjetaRepository) {
         this.cuentaRepository = cuentaRepository;
         this.cuentaMapper = cuentaMapper;
+        this.tipoCuentaMapper = tipoCuentaMapper;
+        this.tarjetaMapper = tarjetaMapper;
+        this.tipoCuentaRepository = tipoCuentaRepository;
+        this.tarjetaRepository = tarjetaRepository;
     }
 
     @Override
@@ -66,7 +83,7 @@ public class CuentaServiceImpl implements CuentaService{
 
         Page<Cuenta> cuentaPage = cuentaRepository.findAll(criterio, pageable);
 
-        return cuentaPage.map(cuentaMapper::toCuentaResponse);
+        return cuentaPage.map(cuenta -> cuentaMapper.toCuentaResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())));
     }
 
     @Override
@@ -74,15 +91,25 @@ public class CuentaServiceImpl implements CuentaService{
     public CuentaResponse getById(String id) {
         log.info("Obteniendo la cuenta con id: {}", id);
         var cuenta = cuentaRepository.findByGuid(id).orElseThrow(() -> new CuentaNotFound(id));
-        return cuentaMapper.toCuentaResponse(cuenta);
+        var tipoCuentaResponse = tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta());
+        var tarjetaResponse = tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta());
+        return cuentaMapper.toCuentaResponse(cuenta, tipoCuentaResponse, tarjetaResponse);
     }
 
     @Override
     @CachePut(key = "#result.guid")
     public CuentaResponse save(CuentaRequest cuentaRequest) {
         log.info("Guardando cuenta: {}", cuentaRequest);
-        var cuenta = cuentaRepository.save(cuentaMapper.toCuenta(cuentaRequest));
-        return cuentaMapper.toCuentaResponse(cuenta);
+        var tipoCuenta = tipoCuentaRepository.findByGuid(cuentaRequest.getTipoCuentaId()).orElseThrow(
+                () -> new TipoCuentaNotFound(cuentaRequest.getTipoCuentaId())
+        );
+        var tarjeta = tarjetaRepository.findByGuid(cuentaRequest.getTarjetaId()).orElseThrow(
+                () -> new TarjetaNotFound(cuentaRequest.getTarjetaId())
+        );
+        var cuenta = cuentaRepository.save(cuentaMapper.toCuenta(tipoCuenta, tarjeta));
+        var tipoCuentaResponse = tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta());
+        var tarjetaResponse = tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta());
+        return cuentaMapper.toCuentaResponse(cuenta, tipoCuentaResponse, tarjetaResponse);
     }
 
     @Override
@@ -90,8 +117,10 @@ public class CuentaServiceImpl implements CuentaService{
     public CuentaResponse update(String id, CuentaRequestUpdate cuentaRequestUpdate) {
         log.info("Actualizando cuenta con id {}", id);
         var cuenta = cuentaRepository.findByGuid(id).orElseThrow(() -> new CuentaNotFound(id));
-        var cuentaSaved = cuentaRepository.save(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta));
-        return cuentaMapper.toCuentaResponse(cuentaSaved);
+        var cuentaSaved = cuentaRepository.save(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta, cuenta.getTipoCuenta(), cuenta.getTarjeta()));
+        var tipoCuentaResponse = tipoCuentaMapper.toTipoCuentaResponse(cuentaSaved.getTipoCuenta());
+        var tarjetaResponse = tarjetaMapper.toTarjetaResponse(cuentaSaved.getTarjeta());
+        return cuentaMapper.toCuentaResponse(cuentaSaved, tipoCuentaResponse, tarjetaResponse);
     }
 
     @Override

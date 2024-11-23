@@ -1,9 +1,9 @@
 package org.example.vivesbankproject.cliente.service;
 
+import org.example.vivesbankproject.cliente.dto.ClienteCuentaRequest;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestSave;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdate;
 import org.example.vivesbankproject.cliente.dto.ClienteResponse;
-import org.example.vivesbankproject.cliente.models.Cliente;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -18,6 +18,10 @@ public interface ClienteService {
     ClienteResponse save(ClienteRequestSave cliente);
 
     ClienteResponse update(String id, ClienteRequestUpdate clienteRequestUpdate);
+
+    ClienteResponse addCuentas(String id, ClienteCuentaRequest clienteCuentaRequest);
+
+    ClienteResponse deleteCuentas(String id, ClienteCuentaRequest clienteCuentaRequest);
 
     void deleteById(String id);
 }
