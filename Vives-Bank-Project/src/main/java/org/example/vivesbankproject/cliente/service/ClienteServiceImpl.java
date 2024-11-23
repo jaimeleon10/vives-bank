@@ -2,10 +2,7 @@ package org.example.vivesbankproject.cliente.service;
 
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.cliente.dto.ClienteCuentaRequest;
-import org.example.vivesbankproject.cliente.dto.ClienteRequestSave;
-import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdate;
-import org.example.vivesbankproject.cliente.dto.ClienteResponse;
+import org.example.vivesbankproject.cliente.dto.*;
 import org.example.vivesbankproject.cliente.exceptions.*;
 import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.models.Cliente;
@@ -302,6 +299,19 @@ public class ClienteServiceImpl implements ClienteService {
         );
         cliente.setIsDeleted(true);
         clienteRepository.save(cliente);
+    }
+
+    @Override
+    public ClienteResponseProductos getProductos(String id) {
+        var cliente = clienteRepository.findByGuid(id).orElseThrow(
+                () -> new ClienteNotFound(id)
+        );
+
+        Set<CuentaResponse> cuentasResponse = cliente.getCuentas().stream()
+                .map(cuenta -> cuentaMapper.toCuentaResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
+                .collect(Collectors.toSet());
+
+        return clienteMapper.toClienteResponseProductos(cliente, cuentasResponse);
     }
 
     private void validarClienteExistente(Cliente cliente) {
