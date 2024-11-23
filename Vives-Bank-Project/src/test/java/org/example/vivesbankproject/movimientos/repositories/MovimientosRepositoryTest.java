@@ -49,11 +49,13 @@ class MovimientosRepositoryTest {
 
     @Test
     void findMovimientosByClienteId_shouldReturnMovimientos_whenClienteExists() {
+        System.out.println("Saved movimientos: " + mongoTemplate.findAll(Movimientos.class));
+
         Optional<Movimientos> result = movimientosRepository.findMovimientosByClienteId(clienteId);
 
         assertAll(
                 () -> assertTrue(result.isPresent(), "El resultado debería estar presente"),
-                () -> assertEquals(clienteId, result.get().getCliente().getId(), "El ID del cliente debería coincidir")
+                () -> assertEquals(clienteId, result.get().getCliente().getGuid(), "El ID del cliente debería coincidir")
         );
     }
 
