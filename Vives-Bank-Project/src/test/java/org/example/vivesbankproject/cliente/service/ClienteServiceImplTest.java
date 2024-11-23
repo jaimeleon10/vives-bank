@@ -3,6 +3,9 @@ package org.example.vivesbankproject.cliente.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -15,9 +18,12 @@ import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
+import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
 import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
+import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.mappers.UserMapper;
 import org.example.vivesbankproject.users.models.Role;
@@ -107,13 +113,30 @@ class ClienteServiceImplTest {
                 .isDeleted(user.getIsDeleted())
                 .build();
 
+        TipoCuentaResponse tipoCuentaResponse = new TipoCuentaResponse();
+        tipoCuentaResponse.setNombre("normal");
+        tipoCuentaResponse.setInteres(BigDecimal.valueOf(2.0));
+
+        TarjetaResponse tarjetaResponse = TarjetaResponse.builder()
+                .guid("GUID")
+                .numeroTarjeta("1234567890123456")
+                .fechaCaducidad(LocalDate.now().plusYears(10))
+                .limiteDiario(new BigDecimal("1000.00"))
+                .limiteSemanal(new BigDecimal("5000.00"))
+                .limiteMensual(new BigDecimal("20000.00"))
+                .tipoTarjeta(TipoTarjeta.DEBITO)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .isDeleted(false)
+                .build();
+
         Set<CuentaResponse> cuentasResponse = Stream.of(cuenta1, cuenta2)
                 .map(cuenta -> CuentaResponse.builder().guid(cuenta.getGuid()).build())
                 .collect(Collectors.toSet());
 
         when(userMapper.toUserResponse(user)).thenReturn(userResponse);
-        when(cuentaMapper.toCuentaResponse(cuenta1)).thenReturn(CuentaResponse.builder().guid(cuenta1.getGuid()).build());
-        when(cuentaMapper.toCuentaResponse(cuenta2)).thenReturn(CuentaResponse.builder().guid(cuenta2.getGuid()).build());
+        when(cuentaMapper.toCuentaResponse(cuenta1, tipoCuentaResponse, tarjetaResponse)).thenReturn(CuentaResponse.builder().guid(cuenta1.getGuid()).build());
+        when(cuentaMapper.toCuentaResponse(cuenta2, tipoCuentaResponse, tarjetaResponse)).thenReturn(CuentaResponse.builder().guid(cuenta2.getGuid()).build());
         when(clienteMapper.toClienteResponse(cliente, userResponse, cuentasResponse)).thenReturn(
                 ClienteResponse.builder()
                         .guid(cliente.getGuid())
