@@ -13,8 +13,10 @@ import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.exceptions.CuentaNotFound;
 import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
+import org.example.vivesbankproject.cuenta.mappers.TipoCuentaMapper;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
+import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.exceptions.UserNotFoundById;
 import org.example.vivesbankproject.users.mappers.UserMapper;
@@ -42,14 +44,18 @@ public class ClienteServiceImpl implements ClienteService {
     private final UserRepository userRepository;
     private final CuentaMapper cuentaMapper;
     private final CuentaRepository cuentaRepository;
+    private final TipoCuentaMapper tipoCuentaMapper;
+    private final TarjetaMapper tarjetaMapper;
 
-    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserMapper userMapper, UserRepository userRepository, CuentaMapper cuentaMapper, CuentaRepository cuentaRepository) {
+    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserMapper userMapper, UserRepository userRepository, CuentaMapper cuentaMapper, CuentaRepository cuentaRepository, TipoCuentaMapper tipoCuentaMapper, TarjetaMapper tarjetaMapper) {
         this.clienteRepository = clienteRepository;
         this.clienteMapper = clienteMapper;
         this.userMapper = userMapper;
         this.userRepository = userRepository;
         this.cuentaMapper = cuentaMapper;
         this.cuentaRepository = cuentaRepository;
+        this.tipoCuentaMapper = tipoCuentaMapper;
+        this.tarjetaMapper = tarjetaMapper;
     }
 
     @Override
@@ -85,7 +91,7 @@ public class ClienteServiceImpl implements ClienteService {
         return clientePage.map(cliente -> {
             UserResponse userResponse = userMapper.toUserResponse(cliente.getUser());
             Set<CuentaResponse> cuentasResponse = cliente.getCuentas().stream()
-                   .map(cuentaMapper::toCuentaResponse)
+                   .map(cuenta -> cuentaMapper.toCuentaResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
                    .collect(Collectors.toSet());
 
             return clienteMapper.toClienteResponse(cliente, userResponse, cuentasResponse);
@@ -98,7 +104,7 @@ public class ClienteServiceImpl implements ClienteService {
         var cliente = clienteRepository.findByGuid(id).orElseThrow(() -> new ClienteNotFound(id));
         var user = userMapper.toUserResponse(cliente.getUser());
         Set<CuentaResponse> cuentasResponse = cliente.getCuentas().stream()
-               .map(cuentaMapper::toCuentaResponse)
+               .map(cuenta -> cuentaMapper.toCuentaResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
                .collect(Collectors.toSet());
 
         return clienteMapper.toClienteResponse(cliente, user, cuentasResponse);
@@ -157,7 +163,7 @@ public class ClienteServiceImpl implements ClienteService {
 
         // Mapeamos el Set<Cuenta> a Set<CuentaResponse>
         Set<CuentaResponse> cuentasResponse = cuentasExistentes.stream()
-                .map(cuentaMapper::toCuentaResponse)
+                .map(cuenta -> cuentaMapper.toCuentaResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
                 .collect(Collectors.toSet());
 
         // Guardamos el cliente y lo mapeamos a response para devolverlo
@@ -196,7 +202,7 @@ public class ClienteServiceImpl implements ClienteService {
 
         // Mapeamos el Set<Cuenta> a Set<CuentaResponse>
         Set<CuentaResponse> cuentasResponse = clienteExistente.getCuentas().stream()
-                .map(cuentaMapper::toCuentaResponse)
+                .map(cuenta -> cuentaMapper.toCuentaResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
                 .collect(Collectors.toSet());
 
         // Guardamos el cliente mapeado a update
@@ -249,7 +255,7 @@ public class ClienteServiceImpl implements ClienteService {
 
         // Mapeamos el Set<Cuenta> a Set<CuentaResponse>
         Set<CuentaResponse> cuentasResponse = clienteExistente.getCuentas().stream()
-                .map(cuentaMapper::toCuentaResponse)
+                .map(cuenta -> cuentaMapper.toCuentaResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
                 .collect(Collectors.toSet());
 
         // Devolvemos el cliente como response mapeando los datos necesarios
@@ -280,7 +286,7 @@ public class ClienteServiceImpl implements ClienteService {
 
         // Mapeamos el Set<Cuenta> a Set<CuentaResponse>
         Set<CuentaResponse> cuentasResponse = clienteExistente.getCuentas().stream()
-                .map(cuentaMapper::toCuentaResponse)
+                .map(cuenta -> cuentaMapper.toCuentaResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
                 .collect(Collectors.toSet());
 
         // Devolvemos el cliente como response mapeando los datos necesarios
