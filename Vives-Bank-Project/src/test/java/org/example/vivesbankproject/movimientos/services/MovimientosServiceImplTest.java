@@ -207,7 +207,7 @@ class MovimientosServiceImplTest {
         verify(movimientosRepository, times(2)).save(any(Movimientos.class));
         verify(clienteRepository, times(1)).findById(cliente.getId());
     }
-    
+
     @Test
     void create_ClienteWithNoMovimientos() {
         cliente.setIdMovimientos(null);
