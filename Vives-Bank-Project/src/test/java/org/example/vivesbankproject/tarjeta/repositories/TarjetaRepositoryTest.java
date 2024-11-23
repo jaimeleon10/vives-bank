@@ -4,9 +4,12 @@ import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,6 +19,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
+@ExtendWith(SpringExtension.class)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class TarjetaRepositoryTest {
 
     @Autowired
@@ -25,23 +30,21 @@ class TarjetaRepositoryTest {
     private TarjetaRepository tarjetaRepository;
 
     private Tarjeta tarjetaMock;
-    private final LocalDateTime NOW = LocalDateTime.now();
-    private final LocalDate CADUCIDAD = LocalDate.now().plusYears(10);
 
     @BeforeEach
     void setUp() {
         tarjetaMock = Tarjeta.builder()
                 .guid("isTest")
                 .numeroTarjeta("1234567890123456")
-                .fechaCaducidad(CADUCIDAD)
+                .fechaCaducidad(LocalDate.now().plusYears(10))
                 .cvv(123)
                 .pin("123")
                 .limiteDiario(new BigDecimal("1000.00"))
                 .limiteSemanal(new BigDecimal("5000.00"))
                 .limiteMensual(new BigDecimal("20000.00"))
                 .tipoTarjeta(TipoTarjeta.DEBITO)
-                .createdAt(NOW)
-                .updatedAt(NOW)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .isDeleted(false)
                 .build();
     }
