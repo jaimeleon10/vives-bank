@@ -10,10 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -36,18 +34,17 @@ class MovimientosRepositoryTest {
     void setUp() {
         clienteId = IdGenerator.generarId();
         Cliente cliente = new Cliente();
-        cliente.setId(clienteId);
+        cliente.setGuid(clienteId);
 
         movimientos = new Movimientos();
         movimientos.setCliente(cliente);
-        // Aquí puedes agregar más configuraciones para el objeto Movimientos si es necesario
 
-        movimientosRepository.save(movimientos);
+        mongoTemplate.insert(movimientos);
     }
 
     @AfterEach
     void tearDown() {
-        movimientosRepository.deleteAll();
+        mongoTemplate.dropCollection(Movimientos.class);
     }
 
     @Test

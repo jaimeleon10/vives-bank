@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.UUID;
+import java.util.List;
 
 import org.example.vivesbankproject.users.dto.UserRequest;
 import org.example.vivesbankproject.users.dto.UserResponse;
@@ -26,10 +26,10 @@ public class UserMapperTest {
     @Test
     void ToUserResponse() {
         User user = User.builder()
-                .id(UUID.randomUUID())
+                .guid("CbATVVJEUZ3")
                 .username("testuser")
                 .password("password")
-                .roles(new HashSet<>(Arrays.asList(Role.USER)))
+                .roles(new HashSet<>(List.of(Role.USER)))
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -37,7 +37,7 @@ public class UserMapperTest {
         UserResponse userResponse = userMapper.toUserResponse(user);
 
         assertNotNull(userResponse);
-        assertEquals(user.getId(), userResponse.getId());
+        assertEquals(user.getGuid(), userResponse.getGuid());
         assertEquals(user.getUsername(), userResponse.getUsername());
         assertEquals(user.getPassword(), userResponse.getPassword());
         assertEquals(user.getRoles(), userResponse.getRoles());
@@ -55,5 +55,31 @@ public class UserMapperTest {
         assertNotNull(user);
         assertEquals(userRequest.getUsername(), user.getUsername());
         assertEquals(userRequest.getPassword(), user.getPassword());
+    }
+
+    @Test
+    void ToUserUpdate() {
+        User user = User.builder()
+                .guid("CbATVVJEUZ3")
+                .username("testuser")
+                .password("password")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .isDeleted(false)
+                .build();
+
+        UserRequest userRequest = UserRequest.builder()
+                .username("testuser_updated")
+                .password("password_updated")
+                .isDeleted(true)
+                .build();
+
+        User userUpdate = userMapper.toUserUpdate(userRequest, user);
+
+        assertAll(
+                () -> assertNotNull(userUpdate),
+                () -> assertEquals(userRequest.getUsername(), userUpdate.getUsername()),
+                () -> assertEquals(userRequest.getPassword(), userUpdate.getPassword())
+        );
     }
 }
