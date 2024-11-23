@@ -3,11 +3,13 @@ package org.example.vivesbankproject.cuenta.services;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequest;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequestUpdate;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
+import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
 import org.example.vivesbankproject.cuenta.exceptions.CuentaNotFound;
 import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +43,8 @@ class CuentaServiceImplTest {
     private Cuenta cuentaTest;
     private Tarjeta tarjetaTest;
     private TipoCuenta tipoCuentaTest;
+    private TarjetaResponse tarjetaResponse;
+    private TipoCuentaResponse tipoCuentaResponse;
 
     @BeforeEach
     void setUp() {
@@ -58,6 +62,22 @@ class CuentaServiceImplTest {
         tipoCuentaTest = new TipoCuenta();
         tipoCuentaTest.setNombre("normal");
         tipoCuentaTest.setInteres(BigDecimal.valueOf(2.0));
+
+        tipoCuentaResponse = TipoCuentaResponse.builder()
+                .guid(tipoCuentaTest.getGuid())
+                .nombre(tipoCuentaTest.getNombre())
+                .interes(tipoCuentaTest.getInteres())
+                .build();
+
+        tarjetaResponse = TarjetaResponse.builder()
+                .guid(tarjetaTest.getGuid())
+                .numeroTarjeta(tarjetaTest.getNumeroTarjeta())
+                .fechaCaducidad(tarjetaTest.getFechaCaducidad())
+                .limiteDiario(tarjetaTest.getLimiteDiario())
+                .limiteSemanal(tarjetaTest.getLimiteSemanal())
+                .limiteMensual(tarjetaTest.getLimiteMensual())
+                .tipoTarjeta(tarjetaTest.getTipoTarjeta())
+                .build();
 
         cuentaTest = new Cuenta();
         cuentaTest.setId(1L);
@@ -77,14 +97,14 @@ class CuentaServiceImplTest {
                 cuentaTest.getGuid(),
                 cuentaTest.getIban(),
                 cuentaTest.getSaldo(),
-                cuentaTest.getTipoCuenta(),
-                cuentaTest.getTarjeta(),
+                tipoCuentaResponse,
+                tarjetaResponse,
                 cuentaTest.getIsDeleted()
         );
 
         Page<Cuenta> cuentaPage = new PageImpl<>(List.of(cuentaTest), pageable, 1);
         when(cuentaRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(cuentaPage);
-        when(cuentaMapper.toCuentaResponse(cuentaTest)).thenReturn(cuentaResponseTest);
+        when(cuentaMapper.toCuentaResponse(cuentaTest, tipoCuentaResponse, tarjetaResponse)).thenReturn(cuentaResponseTest);
 
         var result = cuentaService.getAll(
                 Optional.of(cuentaTest.getIban()),
@@ -109,7 +129,7 @@ class CuentaServiceImplTest {
         );
 
         verify(cuentaRepository, times(1)).findAll(any(Specification.class), eq(pageable));
-        verify(cuentaMapper, times(1)).toCuentaResponse(cuentaTest);
+        verify(cuentaMapper, times(1)).toCuentaResponse(cuentaTest, tipoCuentaResponse, tarjetaResponse);
     }
 
 
@@ -121,12 +141,12 @@ class CuentaServiceImplTest {
         expectedCuenta.setGuid(guidCuenta);
         expectedCuenta.setIban("ES9120804243448487618583");
         expectedCuenta.setSaldo(BigDecimal.valueOf(1000.0));
-        expectedCuenta.setTipoCuenta(tipoCuentaTest);
-        expectedCuenta.setTarjeta(tarjetaTest);
+        expectedCuenta.setTipoCuenta(tipoCuentaResponse);
+        expectedCuenta.setTarjeta(tarjetaResponse);
         expectedCuenta.setIsDeleted(false);
 
         when(cuentaRepository.findByGuid(guidCuenta)).thenReturn(Optional.of(cuentaTest));
-        when(cuentaMapper.toCuentaResponse(cuentaTest)).thenReturn(expectedCuenta);
+        when(cuentaMapper.toCuentaResponse(cuentaTest, tipoCuentaResponse, tarjetaResponse)).thenReturn(expectedCuenta);
 
         CuentaResponse resultCuenta = cuentaService.getById(guidCuenta);
 
@@ -172,20 +192,20 @@ class CuentaServiceImplTest {
         cuenta.setIsDeleted(false);
 
         CuentaRequest cuentaRequest = new CuentaRequest();
-        cuentaRequest.setTipoCuenta(cuenta.getTipoCuenta());
-        cuentaRequest.setTarjeta(cuenta.getTarjeta());
+        cuentaRequest.setTipoCuentaId(cuenta.getTipoCuenta().getGuid());
+        cuentaRequest.setTarjetaId(cuenta.getTarjeta().getGuid());
 
         CuentaResponse cuentaResponse = new CuentaResponse();
         cuentaResponse.setGuid(cuenta.getGuid());
         cuentaResponse.setIban(cuenta.getIban());
         cuentaResponse.setSaldo(cuenta.getSaldo());
-        cuentaResponse.setTipoCuenta(cuenta.getTipoCuenta());
-        cuentaResponse.setTarjeta(cuenta.getTarjeta());
+        cuentaResponse.setTipoCuenta(tipoCuentaResponse);
+        cuentaResponse.setTarjeta(tarjetaResponse);
         cuentaResponse.setIsDeleted(cuenta.getIsDeleted());
 
         when(cuentaRepository.save(any(Cuenta.class))).thenReturn(cuenta);
-        when(cuentaMapper.toCuenta(cuentaRequest)).thenReturn(cuenta);
-        when(cuentaMapper.toCuentaResponse(cuenta)).thenReturn(cuentaResponse);
+        when(cuentaMapper.toCuenta(tipoCuenta, tarjeta)).thenReturn(cuenta);
+        when(cuentaMapper.toCuentaResponse(cuenta, tipoCuentaResponse, tarjetaResponse)).thenReturn(cuentaResponse);
 
         var result = cuentaService.save(cuentaRequest);
 
@@ -199,8 +219,8 @@ class CuentaServiceImplTest {
         );
 
         verify(cuentaRepository, times(1)).save(any(Cuenta.class));
-        verify(cuentaMapper, times(1)).toCuenta(cuentaRequest);
-        verify(cuentaMapper, times(1)).toCuentaResponse(cuenta);
+        verify(cuentaMapper, times(1)).toCuenta(tipoCuenta, tarjeta);
+        verify(cuentaMapper, times(1)).toCuentaResponse(cuenta, tipoCuentaResponse, tarjetaResponse);
     }
 
     @Test
@@ -217,21 +237,21 @@ class CuentaServiceImplTest {
 
         CuentaRequestUpdate cuentaRequestUpdate = new CuentaRequestUpdate();
         cuentaRequestUpdate.setSaldo(BigDecimal.valueOf(1200.0));
-        cuentaRequestUpdate.setTipoCuenta(tipoCuentaTest);
-        cuentaRequestUpdate.setTarjeta(tarjetaTest);
+        cuentaRequestUpdate.setTipoCuentaId(tipoCuentaTest.getGuid());
+        cuentaRequestUpdate.setTarjetaId(tarjetaTest.getGuid());
 
         CuentaResponse expectedResponse = new CuentaResponse();
         expectedResponse.setGuid(idCuenta);
         expectedResponse.setIban(cuenta.getIban());
         expectedResponse.setSaldo(cuentaRequestUpdate.getSaldo());
-        expectedResponse.setTipoCuenta(cuentaRequestUpdate.getTipoCuenta());
-        expectedResponse.setTarjeta(cuentaRequestUpdate.getTarjeta());
+        expectedResponse.setTipoCuenta(tipoCuentaResponse);
+        expectedResponse.setTarjeta(tarjetaResponse);
         expectedResponse.setIsDeleted(cuenta.getIsDeleted());
 
         when(cuentaRepository.findByGuid(idCuenta)).thenReturn(Optional.of(cuenta));
         when(cuentaRepository.save(any(Cuenta.class))).thenReturn(cuenta);
-        when(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta)).thenReturn(cuenta);
-        when(cuentaMapper.toCuentaResponse(cuenta)).thenReturn(expectedResponse);
+        when(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta, tipoCuentaTest, tarjetaTest)).thenReturn(cuenta);
+        when(cuentaMapper.toCuentaResponse(cuenta, tipoCuentaResponse, tarjetaResponse)).thenReturn(expectedResponse);
 
         CuentaResponse result = cuentaService.update(idCuenta, cuentaRequestUpdate);
 
@@ -239,8 +259,8 @@ class CuentaServiceImplTest {
 
         verify(cuentaRepository, times(1)).findByGuid(idCuenta);
         verify(cuentaRepository, times(1)).save(any(Cuenta.class));
-        verify(cuentaMapper, times(1)).toCuentaUpdate(cuentaRequestUpdate, cuenta);
-        verify(cuentaMapper, times(1)).toCuentaResponse(cuenta);
+        verify(cuentaMapper, times(1)).toCuentaUpdate(cuentaRequestUpdate, cuenta, tipoCuentaTest, tarjetaTest);
+        verify(cuentaMapper, times(1)).toCuentaResponse(cuenta, tipoCuentaResponse, tarjetaResponse);
     }
 
     @Test

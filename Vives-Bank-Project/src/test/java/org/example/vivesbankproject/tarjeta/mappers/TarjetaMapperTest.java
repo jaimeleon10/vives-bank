@@ -3,7 +3,7 @@ package org.example.vivesbankproject.tarjeta.mappers;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestSave;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestUpdate;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaResponseCVV;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaResponsePrivado;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.junit.jupiter.api.BeforeEach;
@@ -108,11 +108,11 @@ class TarjetaMapperTest {
 
     @Test
     void toTarjetaResponseCVV() {
-        TarjetaResponseCVV response = tarjetaMapper.toTarjetaResponseCVV(tarjetaMock);
+        TarjetaResponsePrivado response = tarjetaMapper.toTarjetaPrivado(tarjetaMock);
 
         assertNotNull(response);
         assertEquals(tarjetaMock.getGuid(), response.getGuid());
-        assertEquals(tarjetaMock.getNumeroTarjeta(), response.getNumeroTarjeta());
+        assertEquals(tarjetaMock.getPin(), response.getPin());
         assertEquals(tarjetaMock.getCvv(), response.getCvv());
     }
 
@@ -145,7 +145,7 @@ class TarjetaMapperTest {
 
     @Test
     void toTarjetaResponseCVVconNullos() {
-        assertThrows(NullPointerException.class, () -> tarjetaMapper.toTarjetaResponseCVV(null));
+        assertThrows(NullPointerException.class, () -> tarjetaMapper.toTarjetaPrivado(null));
     }
 
 
