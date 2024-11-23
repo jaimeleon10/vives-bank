@@ -16,11 +16,11 @@ public interface ClienteService {
 
     ClienteResponse update(String id, ClienteRequestUpdate clienteRequestUpdate);
 
-    ClienteResponse addCuentas(String id, ClienteCuentaRequest clienteCuentaRequest);
+    // ClienteResponse addCuentas(String id, ClienteCuentaRequest clienteCuentaRequest);
 
-    ClienteResponse deleteCuentas(String id, ClienteCuentaRequest clienteCuentaRequest);
+    // ClienteResponse deleteCuentas(String id, ClienteCuentaRequest clienteCuentaRequest);
 
     void deleteById(String id);
 
-    ClienteResponseProductos getProductos(String id);
+    // ClienteResponseProductos getProductos(String id);
 }
