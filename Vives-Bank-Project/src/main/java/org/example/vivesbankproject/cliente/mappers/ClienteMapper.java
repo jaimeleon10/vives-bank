@@ -5,15 +5,19 @@ import org.example.vivesbankproject.cliente.dto.ClienteRequestSave;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdate;
 import org.example.vivesbankproject.cliente.dto.ClienteResponse;
 import org.example.vivesbankproject.cliente.models.Cliente;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
+import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.users.dto.UserResponse;
+import org.example.vivesbankproject.users.models.User;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Component
 public class ClienteMapper {
 
-    public ClienteResponse toClienteResponse(Cliente cliente, UserResponse user) {
+    public ClienteResponse toClienteResponse(Cliente cliente, UserResponse user, Set<CuentaResponse> cuentas) {
         return ClienteResponse.builder()
                 .guid(cliente.getGuid())
                 .dni(cliente.getDni())
@@ -23,7 +27,7 @@ public class ClienteMapper {
                 .telefono(cliente.getTelefono())
                 .fotoPerfil(cliente.getFotoPerfil())
                 .fotoDni(cliente.getFotoDni())
-                .cuentas(cliente.getCuentas())
+                .cuentas(cuentas)
                 .user(user)
                 .createdAt(cliente.getCreatedAt())
                 .updatedAt(cliente.getUpdatedAt())
@@ -31,7 +35,7 @@ public class ClienteMapper {
                 .build();
     }
 
-    public Cliente toCliente(ClienteRequestSave clienteRequestSave) {
+    public Cliente toCliente(ClienteRequestSave clienteRequestSave, User user, Set<Cuenta> cuentas) {
         return Cliente.builder()
                 .dni(clienteRequestSave.getDni())
                 .nombre(clienteRequestSave.getNombre())
@@ -40,12 +44,13 @@ public class ClienteMapper {
                 .telefono(clienteRequestSave.getTelefono())
                 .fotoPerfil(clienteRequestSave.getFotoPerfil())
                 .fotoDni(clienteRequestSave.getFotoDni())
-                .cuentas(clienteRequestSave.getCuentas())
-                .user(clienteRequestSave.getUser())
+                .cuentas(cuentas)
+                .user(user)
+                .isDeleted(clienteRequestSave.getIsDeleted())
                 .build();
     }
 
-    public Cliente toClienteUpdate(ClienteRequestUpdate clienteRequestUpdate, Cliente cliente) {
+    public Cliente toClienteUpdate(ClienteRequestUpdate clienteRequestUpdate, Cliente cliente, User user) {
         return Cliente.builder()
                 .id(cliente.getId())
                 .guid(cliente.getGuid())
@@ -57,10 +62,10 @@ public class ClienteMapper {
                 .fotoPerfil(clienteRequestUpdate.getFotoPerfil())
                 .fotoDni(clienteRequestUpdate.getFotoDni())
                 .cuentas(cliente.getCuentas())
-                .user(clienteRequestUpdate.getUser())
+                .user(user)
                 .createdAt(cliente.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
-                .isDeleted(clienteRequestUpdate.getIsDeleted())
+                .isDeleted(cliente.getIsDeleted())
                 .build();
     }
 }
