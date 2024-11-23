@@ -79,7 +79,7 @@ class TipoCuentaControllerTest {
 
         MockHttpServletResponse response = mvc.perform(
                         get(myEndpoint)
-                                .param("normal", nombre)
+                                .param("nombre", nombre)
                                 .param("interes", String.valueOf(interes))
                                 .param("page", "0")
                                 .param("size", "10")
@@ -88,17 +88,17 @@ class TipoCuentaControllerTest {
                                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
-        PageResponse<TipoCuenta> pageResponse = objectMapper.readValue(
+        PageResponse<TipoCuentaResponse> pageResponse = objectMapper.readValue(
                 response.getContentAsString(),
-                objectMapper.getTypeFactory().constructParametricType(PageResponse.class, TipoCuenta.class)
+                objectMapper.getTypeFactory().constructParametricType(PageResponse.class, TipoCuentaResponse.class)
         );
 
-        List<TipoCuenta> res = pageResponse.content();
+        List<TipoCuentaResponse> res = pageResponse.content();
 
         assertAll(
                 () -> assertEquals(response.getStatus(), HttpStatus.OK.value()),
                 () -> assertFalse(res.isEmpty()),
-                () -> assertTrue(res.stream().anyMatch(r -> r.getId().equals(tipoCuentaTest.getId())))
+                () -> assertTrue(res.stream().anyMatch(r -> r.getGuid().equals(tipoCuentaTest.getGuid())))
         );
 
         verify(tipoCuentaService, times(1)).getAll(
@@ -221,7 +221,7 @@ class TipoCuentaControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
-        assertEquals(HttpStatus.NO_CONTENT.value(), response.getStatus());
+        assertEquals(HttpStatus.OK.value(), response.getStatus());
         assertEquals("", response.getContentAsString());
 
         verify(tipoCuentaService, times(1)).deleteById("6c257ab6-e588-4cef-a479-c2f8fcd7379a");
