@@ -1,9 +1,6 @@
 package org.example.vivesbankproject.tarjeta.service;
 
-import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestSave;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestUpdate;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaResponseCVV;
+import org.example.vivesbankproject.tarjeta.dto.*;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
 import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
@@ -45,7 +42,8 @@ class TarjetaServiceImplTest {
 
     private Tarjeta tarjeta;
     private TarjetaResponse tarjetaResponse;
-    private TarjetaResponseCVV tarjetaResponseCVV;
+    private TarjetaResponsePrivado tarjetaResponsePrivado;
+    private TarjetaRequestPrivado tarjetaRequestPrivado;
     private final String GUID = "test-guid";
     private final LocalDateTime NOW = LocalDateTime.now();
     private final LocalDate CADUCIDAD = LocalDate.now().plusYears(10);
@@ -81,11 +79,14 @@ class TarjetaServiceImplTest {
                 .isDeleted(false)
                 .build();
 
-        tarjetaResponseCVV = TarjetaResponseCVV.builder()
+        tarjetaResponsePrivado = TarjetaResponsePrivado.builder()
                 .guid(GUID)
-                .numeroTarjeta("1234567890123456")
                 .cvv(123)
                 .build();
+
+        tarjetaRequestPrivado = new TarjetaRequestPrivado();
+        tarjetaRequestPrivado.setUsername("username");
+        tarjetaRequestPrivado.setUserPass("password");
     }
 
     @Test
@@ -136,11 +137,11 @@ class TarjetaServiceImplTest {
     }
 
     @Test
-    void getCVV() {
+    void getPrivado() {
         when(tarjetaRepository.findByGuid(GUID)).thenReturn(Optional.of(tarjeta));
-        when(tarjetaMapper.toTarjetaResponseCVV(tarjeta)).thenReturn(tarjetaResponseCVV);
+        when(tarjetaMapper.toTarjetaPrivado(tarjeta)).thenReturn(tarjetaResponsePrivado);
 
-        TarjetaResponseCVV result = tarjetaService.getCVV(GUID);
+        TarjetaResponsePrivado result = tarjetaService.getPrivateData(GUID, tarjetaRequestPrivado);
 
         assertNotNull(result);
         assertEquals(GUID, result.getGuid());
@@ -149,10 +150,10 @@ class TarjetaServiceImplTest {
     }
 
     @Test
-    void getCVVNotFound() {
+    void getPrivadoNotFound() {
         when(tarjetaRepository.findByGuid(GUID)).thenReturn(Optional.empty());
 
-        assertThrows(TarjetaNotFound.class, () -> tarjetaService.getCVV(GUID));
+        assertThrows(TarjetaNotFound.class, () -> tarjetaService.getPrivateData(GUID, tarjetaRequestPrivado));
         verify(tarjetaRepository).findByGuid(GUID);
     }
 
