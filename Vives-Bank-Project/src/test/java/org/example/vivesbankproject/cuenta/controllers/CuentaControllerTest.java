@@ -90,7 +90,7 @@ class CuentaControllerTest {
 
         CuentaResponse cuentaResponse = new CuentaResponse();
         cuentaResponse.setGuid("12d45756-3895-49b2-90d3-c4a12d5ee081");
-        cuentaResponse.setIban("ES9120804243448487618583");
+        cuentaResponse.setIban(iban);
         cuentaResponse.setSaldo(BigDecimal.valueOf(1000.0));
         cuentaResponse.setTipoCuenta(tipoCuentaTest);
         cuentaResponse.setTarjeta(tarjetaTest);
@@ -130,7 +130,9 @@ class CuentaControllerTest {
         assertAll(
                 () -> assertEquals(response.getStatus(), HttpStatus.OK.value()),
                 () -> assertFalse(res.isEmpty()),
-                () -> assertTrue(res.stream().anyMatch(r -> r.getId().equals(cuentaTest.getId())))
+                () -> assertTrue(res.stream().anyMatch(r -> r.getGuid() != null && r.getGuid().equals(cuentaResponse.getGuid()))),
+                () -> assertEquals(res.size(), 1),
+                () -> assertTrue(res.get(0).getGuid().equals(cuentaResponse.getGuid()))
         );
 
         verify(cuentaService, times(1)).getAll(
