@@ -4,6 +4,7 @@ import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestSave;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdate;
 import org.example.vivesbankproject.cliente.dto.ClienteResponse;
+import org.example.vivesbankproject.cliente.dto.ClienteResponseProductos;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
@@ -66,6 +67,14 @@ public class ClienteMapper {
                 .createdAt(cliente.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
                 .isDeleted(cliente.getIsDeleted())
+                .build();
+    }
+
+    public ClienteResponseProductos toClienteResponseProductos(Cliente cliente, Set<CuentaResponse> cuentaResponses) {
+        return ClienteResponseProductos.builder()
+                .guid(cliente.getGuid())
+                .nombre(cliente.getNombre())
+                .cuentas(cuentaResponses)
                 .build();
     }
 }

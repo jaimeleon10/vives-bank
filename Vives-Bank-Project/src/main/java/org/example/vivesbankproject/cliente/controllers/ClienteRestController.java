@@ -5,10 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.cliente.dto.ClienteCuentaRequest;
-import org.example.vivesbankproject.cliente.dto.ClienteRequestSave;
-import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdate;
-import org.example.vivesbankproject.cliente.dto.ClienteResponse;
+import org.example.vivesbankproject.cliente.dto.*;
 import org.example.vivesbankproject.cliente.service.ClienteService;
 import org.example.vivesbankproject.utils.PageResponse;
 import org.example.vivesbankproject.utils.PaginationLinksUtils;
@@ -68,6 +65,11 @@ public class ClienteRestController {
     @GetMapping("{id}")
     public ResponseEntity<ClienteResponse> getById(@PathVariable String id) {
         return ResponseEntity.ok(clienteService.getById(id));
+    }
+
+    @GetMapping("{id}/productos")
+    public ResponseEntity<ClienteResponseProductos> getProductos(@PathVariable String id) {
+        return ResponseEntity.ok(clienteService.getProductos(id));
     }
 
     @PostMapping
