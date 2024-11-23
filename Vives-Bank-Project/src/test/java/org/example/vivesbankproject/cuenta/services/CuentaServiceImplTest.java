@@ -60,6 +60,7 @@ class CuentaServiceImplTest {
         tipoCuentaTest.setInteres(BigDecimal.valueOf(2.0));
 
         cuentaTest = new Cuenta();
+        cuentaTest.setId(1L);
         cuentaTest.setGuid("12d45756-3895-49b2-90d3-c4a12d5ee081");
         cuentaTest.setIban("ES9120804243448487618583");
         cuentaTest.setSaldo(BigDecimal.valueOf(1000.0));
@@ -72,65 +73,78 @@ class CuentaServiceImplTest {
     void getAll() {
         Pageable pageable = PageRequest.of(0, 10, Sort.by("nombre").ascending());
 
+        CuentaResponse cuentaResponseTest = new CuentaResponse(
+                cuentaTest.getGuid(),
+                cuentaTest.getIban(),
+                cuentaTest.getSaldo(),
+                cuentaTest.getTipoCuenta(),
+                cuentaTest.getTarjeta(),
+                cuentaTest.getIsDeleted()
+        );
+
         Page<Cuenta> cuentaPage = new PageImpl<>(List.of(cuentaTest), pageable, 1);
-
         when(cuentaRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(cuentaPage);
+        when(cuentaMapper.toCuentaResponse(cuentaTest)).thenReturn(cuentaResponseTest);
 
-        var result = cuentaService.getAll(Optional.of(cuentaTest.getIban()), Optional.of(cuentaTest.getSaldo()), Optional.of(cuentaTest.getSaldo()), Optional.of(String.valueOf(cuentaTest.getTipoCuenta())), pageable);
+        var result = cuentaService.getAll(
+                Optional.of(cuentaTest.getIban()),
+                Optional.of(cuentaTest.getSaldo()),
+                Optional.of(cuentaTest.getSaldo()),
+                Optional.of(cuentaTest.getTipoCuenta().getNombre()),
+                pageable
+        );
 
         assertAll(
                 () -> assertNotNull(result),
                 () -> assertEquals(1, result.getContent().size()),
-                () -> assertTrue(result.getContent().contains(cuentaTest)),
-                () -> assertEquals("ES9120804243448487618583", result.getContent().getFirst().getIban()),
-                () -> assertEquals(BigDecimal.valueOf(1000.0), result.getContent().getFirst().getSaldo()),
-                () -> assertEquals(tipoCuentaTest, result.getContent().getFirst().getTipoCuenta()),
-                () -> assertEquals(tarjetaTest, result.getContent().getFirst().getTarjeta()),
-                () -> assertFalse(result.getContent().getFirst().getIsDeleted())
+                () -> {
+                    CuentaResponse response = result.getContent().get(0);
+                    assertNotNull(response);
+                    assertEquals("ES9120804243448487618583", response.getIban());
+                    assertEquals(BigDecimal.valueOf(1000.0), response.getSaldo());
+                    assertEquals(tipoCuentaTest, response.getTipoCuenta());
+                    assertEquals(tarjetaTest, response.getTarjeta());
+                    assertFalse(response.getIsDeleted());
+                }
         );
 
         verify(cuentaRepository, times(1)).findAll(any(Specification.class), eq(pageable));
+        verify(cuentaMapper, times(1)).toCuentaResponse(cuentaTest);
     }
+
 
     @Test
     void getById() {
-        String idCuenta = "hola";
+        String guidCuenta = "1";
 
         CuentaResponse expectedCuenta = new CuentaResponse();
-        expectedCuenta.setGuid(idCuenta);
+        expectedCuenta.setGuid(guidCuenta);
         expectedCuenta.setIban("ES9120804243448487618583");
         expectedCuenta.setSaldo(BigDecimal.valueOf(1000.0));
         expectedCuenta.setTipoCuenta(tipoCuentaTest);
         expectedCuenta.setTarjeta(tarjetaTest);
         expectedCuenta.setIsDeleted(false);
 
-        Cuenta cuentaMapped = new Cuenta();
-        cuentaMapped.setGuid(idCuenta);
-        cuentaMapped.setIban(expectedCuenta.getIban());
-        cuentaMapped.setSaldo(expectedCuenta.getSaldo());
-        cuentaMapped.setTipoCuenta(tipoCuentaTest);
-        cuentaMapped.setTarjeta(tarjetaTest);
-        cuentaMapped.setIsDeleted(false);
+        when(cuentaRepository.findByGuid(guidCuenta)).thenReturn(Optional.of(cuentaTest));
+        when(cuentaMapper.toCuentaResponse(cuentaTest)).thenReturn(expectedCuenta);
 
-        when(cuentaRepository.findById(Long.valueOf(idCuenta))).thenReturn(Optional.of(cuentaMapped));
-        when(cuentaMapper.toCuentaResponse(cuentaMapped)).thenReturn(expectedCuenta);
-
-        CuentaResponse resultCuenta = cuentaService.getById(idCuenta);
+        CuentaResponse resultCuenta = cuentaService.getById(guidCuenta);
 
         assertEquals(expectedCuenta, resultCuenta);
 
-        verify(cuentaRepository, times(1)).findById(Long.valueOf(idCuenta));
+        verify(cuentaRepository, times(1)).findByGuid(guidCuenta);
     }
 
 
     @Test
     void getByIdNotFound() {
         String idCuenta = "4182d617-ec89-4fbc-be95-85e461778700";
-        when(cuentaRepository.findById(Long.valueOf(idCuenta))).thenReturn(Optional.empty());
+
+        when(cuentaRepository.findByGuid(idCuenta)).thenReturn(Optional.empty());
 
         assertThrows(CuentaNotFound.class, () -> cuentaService.getById(idCuenta));
 
-        verify(cuentaRepository).findById(Long.valueOf(idCuenta));
+        verify(cuentaRepository).findByGuid(idCuenta);
     }
 
     @Test
@@ -214,7 +228,7 @@ class CuentaServiceImplTest {
         expectedResponse.setTarjeta(cuentaRequestUpdate.getTarjeta());
         expectedResponse.setIsDeleted(cuenta.getIsDeleted());
 
-        when(cuentaRepository.findById(Long.valueOf(idCuenta))).thenReturn(Optional.of(cuenta));
+        when(cuentaRepository.findByGuid(idCuenta)).thenReturn(Optional.of(cuenta));
         when(cuentaRepository.save(any(Cuenta.class))).thenReturn(cuenta);
         when(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta)).thenReturn(cuenta);
         when(cuentaMapper.toCuentaResponse(cuenta)).thenReturn(expectedResponse);
@@ -223,7 +237,7 @@ class CuentaServiceImplTest {
 
         assertEquals(expectedResponse, result);
 
-        verify(cuentaRepository, times(1)).findById(Long.valueOf(idCuenta));
+        verify(cuentaRepository, times(1)).findByGuid(idCuenta);
         verify(cuentaRepository, times(1)).save(any(Cuenta.class));
         verify(cuentaMapper, times(1)).toCuentaUpdate(cuentaRequestUpdate, cuenta);
         verify(cuentaMapper, times(1)).toCuentaResponse(cuenta);
@@ -233,12 +247,12 @@ class CuentaServiceImplTest {
     void updateNotFound() {
         String idCuenta = "4182d617-ec89-4fbc-be95-85e461778700";
         CuentaRequestUpdate cuentaRequestUpdate = new CuentaRequestUpdate();
-        when(cuentaRepository.findById(Long.valueOf(idCuenta))).thenReturn(Optional.empty());
+        when(cuentaRepository.findByGuid(idCuenta)).thenReturn(Optional.empty());
 
         assertThrows(CuentaNotFound.class, () -> cuentaService.update(idCuenta, cuentaRequestUpdate));
 
-        verify(cuentaRepository).findById(Long.valueOf(idCuenta));
-        verify(cuentaRepository, never()).save(any(Cuenta.class));
+        verify(cuentaRepository).findByGuid(idCuenta);
+        verify(cuentaRepository, times(0)).save(any(Cuenta.class));
     }
 
     @Test
@@ -268,21 +282,21 @@ class CuentaServiceImplTest {
         cuentaToDelete.setTipoCuenta(tipoCuenta);
         cuentaToDelete.setIsDeleted(false);
         
-        when(cuentaRepository.findById(Long.valueOf(idCuenta))).thenReturn(Optional.of(cuentaToDelete));
+        when(cuentaRepository.findByGuid(idCuenta)).thenReturn(Optional.of(cuentaToDelete));
 
-        cuentaService.delete(idCuenta);
+        cuentaService.deleteById(idCuenta);
 
-        verify(cuentaRepository, times(1)).findById(Long.valueOf(idCuenta));
+        verify(cuentaRepository, times(1)).findByGuid(idCuenta);
     }
 
     @Test
     void deleteNotFound() {
         String idCuenta = "5f5c2645-a470-4fad-b003-5fefc08fceca";
 
-        when(cuentaRepository.findById(Long.valueOf(idCuenta))).thenReturn(Optional.empty());
+        when(cuentaRepository.findByGuid(idCuenta)).thenReturn(Optional.empty());
 
-        assertThrows(CuentaNotFound.class, () -> cuentaService.delete(idCuenta));
+        assertThrows(CuentaNotFound.class, () -> cuentaService.deleteById(idCuenta));
 
-        verify(cuentaRepository, times(0)).deleteById(Long.valueOf(idCuenta));
+        verify(cuentaRepository, times(1)).findByGuid(idCuenta);
     }
 }
