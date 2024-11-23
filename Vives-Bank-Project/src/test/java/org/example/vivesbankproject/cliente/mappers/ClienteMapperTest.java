@@ -1,5 +1,12 @@
 package org.example.vivesbankproject.cliente.mappers;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
 import org.example.vivesbankproject.cliente.dto.ClienteRequestSave;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdate;
 import org.example.vivesbankproject.cliente.dto.ClienteResponse;
@@ -9,21 +16,9 @@ import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.models.Role;
 import org.example.vivesbankproject.users.models.User;
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
 public class ClienteMapperTest {
 
     private ClienteMapper clienteMapper;
@@ -50,10 +45,13 @@ public class ClienteMapperTest {
                 .build();
 
         UserResponse userResponse = UserResponse.builder()
-                .id(1L)
+                .guid("unique-guid")
                 .username("testuser")
                 .password("password")
                 .roles(new HashSet<>(Set.of(Role.USER)))
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .isDeleted(false)
                 .build();
 
         Set<CuentaResponse> cuentas = new HashSet<>();
@@ -91,9 +89,13 @@ public class ClienteMapperTest {
 
         User user = User.builder()
                 .id(1L)
+                .guid("unique-guid")
                 .username("testuser")
                 .password("password")
                 .roles(new HashSet<>(Set.of(Role.USER)))
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .isDeleted(false)
                 .build();
 
         Set<Cuenta> cuentas = new HashSet<>();
@@ -141,9 +143,13 @@ public class ClienteMapperTest {
 
         User user = User.builder()
                 .id(1L)
+                .guid("unique-guid")
                 .username("testuser")
                 .password("password")
                 .roles(new HashSet<>(Set.of(Role.USER)))
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .isDeleted(false)
                 .build();
 
         Cliente updatedCliente = clienteMapper.toClienteUpdate(clienteRequestUpdate, cliente, user);
