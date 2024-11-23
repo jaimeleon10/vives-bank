@@ -39,12 +39,12 @@ class MovimientosRepositoryTest {
         movimientos = new Movimientos();
         movimientos.setCliente(cliente);
 
-        movimientosRepository.save(movimientos);
+        mongoTemplate.insert(movimientos);
     }
 
     @AfterEach
     void tearDown() {
-        movimientosRepository.deleteAll();
+        mongoTemplate.dropCollection(Movimientos.class);
     }
 
     @Test
@@ -53,7 +53,7 @@ class MovimientosRepositoryTest {
 
         assertAll(
                 () -> assertTrue(result.isPresent(), "El resultado debería estar presente"),
-                () -> assertEquals(clienteId, result.get().getCliente().getGuid(), "El ID del cliente debería coincidir")
+                () -> assertEquals(clienteId, result.get().getCliente().getId(), "El ID del cliente debería coincidir")
         );
     }
 
