@@ -5,7 +5,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequest;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequestUpdate;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
-import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.services.CuentaService;
@@ -40,17 +39,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @SpringBootTest
 @AutoConfigureMockMvc
 class CuentaControllerTest {
-
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @MockBean
-    CuentaService cuentaService;
-
     @Autowired
-    MockMvc mvc;
+    private MockMvc mvc;
 
-    CuentaMapper cuentaMapper = new CuentaMapper();
-    String myEndpoint = "/v1/cuentas";
+    @MockBean
+    private CuentaService cuentaService;
+
+    private final String myEndpoint = "/v1/cuentas";
 
     private Cuenta cuentaTest;
     private Tarjeta tarjetaTest;
@@ -293,7 +290,7 @@ class CuentaControllerTest {
         doNothing().when(cuentaService).deleteById(cuentaId);
 
         MockHttpServletResponse response = mvc.perform(
-                        MockMvcRequestBuilders.delete(myEndpoint + "/" + cuentaId)
+                        MockMvcRequestBuilders.patch(myEndpoint + "/" + cuentaId)
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
