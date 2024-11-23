@@ -38,7 +38,7 @@ class TarjetaRepositoryTest {
                 .numeroTarjeta("1234567890123456")
                 .fechaCaducidad(LocalDate.now().plusYears(10))
                 .cvv(123)
-                .pin("123")
+                .pin("1234")
                 .limiteDiario(new BigDecimal("1000.00"))
                 .limiteSemanal(new BigDecimal("5000.00"))
                 .limiteMensual(new BigDecimal("20000.00"))
