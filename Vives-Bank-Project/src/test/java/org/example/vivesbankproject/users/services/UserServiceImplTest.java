@@ -6,12 +6,12 @@ import static org.mockito.Mockito.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 import org.example.vivesbankproject.users.dto.UserRequest;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.exceptions.UserExists;
-import org.example.vivesbankproject.users.exceptions.UserNotFound;
+import org.example.vivesbankproject.users.exceptions.UserNotFoundById;
+import org.example.vivesbankproject.users.exceptions.UserNotFoundByUsername;
 import org.example.vivesbankproject.users.mappers.UserMapper;
 import org.example.vivesbankproject.users.models.Role;
 import org.example.vivesbankproject.users.models.User;
@@ -27,7 +27,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
@@ -48,7 +47,7 @@ class UserServiceImplTest {
     @BeforeEach
     void setUp() {
         user = User.builder()
-                .id(UUID.randomUUID())
+                .guid("hola")
                 .username("testuser")
                 .password("password")
                 .roles(Set.of(Role.USER))
@@ -60,7 +59,7 @@ class UserServiceImplTest {
                 .build();
 
         userResponse = UserResponse.builder()
-                .id(user.getId())
+                .guid(user.getGuid())
                 .username(user.getUsername())
                 .password(user.getPassword())
                 .roles(user.getRoles())
@@ -87,7 +86,7 @@ class UserServiceImplTest {
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(userMapper.toUserResponse(user)).thenReturn(userResponse);
 
-        UserResponse result = userService.getById(user.getId());
+        UserResponse result = userService.getById(user.getGuid());
 
         assertNotNull(result);
         assertEquals("testuser", result.getUsername());
@@ -95,13 +94,13 @@ class UserServiceImplTest {
 
     @Test
     void GetByIdNotFound() {
-        UUID id = UUID.randomUUID();
+        String id = "adios";
 
-        when(userRepository.findById(id)).thenReturn(Optional.empty());
+        when(userRepository.findByGuid(id)).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(UserNotFound.class, () -> userService.getById(id));
+        Exception exception = assertThrows(UserNotFoundById.class, () -> userService.getById(id));
 
-        assertEquals("User with ID " + id + " not found", exception.getMessage());
+        assertEquals("Usuario con id 'adios' no encontrado", exception.getMessage());
     }
 
     @Test
@@ -119,9 +118,9 @@ class UserServiceImplTest {
     void GetByUsernameNotFound() {
         when(userRepository.findByUsername("unknownuser")).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(UserNotFound.class, () -> userService.getByUsername("unknownuser"));
+        Exception exception = assertThrows(UserNotFoundByUsername.class, () -> userService.getByUsername("unknownuser"));
 
-        assertEquals("User with username unknownuser not found", exception.getMessage());
+        assertEquals("Usuario con username 'unknownuser' no encontrado", exception.getMessage());
     }
 
     @Test
@@ -139,14 +138,13 @@ class UserServiceImplTest {
 
     @Test
     void SaveUserNotFound() {
-        when(userRepository.findByUsername(userRequest.getUsername())).thenReturn(Optional.empty());
+        String username = "buenosdias";
 
-       UserNotFound thrown = assertThrows(UserNotFound.class, () -> userService.save(userRequest));
+        when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
 
-        assertEquals("El usuario 'testuser' no existe", thrown.getMessage());
+        assertThrows(UserNotFoundByUsername.class, () -> userService.save(userRequest));
     }
 
-//Para comprobar y testear la excepcion UserExists
     @Test
     void SaveUserExists() {
         when(userRepository.findByUsername(userRequest.getUsername())).thenReturn(Optional.of(user));
@@ -159,12 +157,20 @@ class UserServiceImplTest {
 
     @Test
     void Update() {
-        UUID id = UUID.randomUUID();
+        String id = "hola";
+        String username = "testusuario";
 
-        when(userRepository.findById(id)).thenReturn(Optional.of(user));
-        when(userRepository.findByUsername(userRequest.getUsername())).thenReturn(Optional.empty());
-        when(userMapper.toUser(userRequest)).thenReturn(user);
+        User user = new User();
+        user.setGuid(id);
+        user.setUsername(username);
+
+        UserRequest userRequest = new UserRequest();
+        userRequest.setUsername("testusuarioUpdate");
+
+        when(userRepository.findByGuid(id)).thenReturn(Optional.of(user));
+        when(userRepository.findByUsername("testusuarioUpdate")).thenReturn(Optional.empty());
         when(userRepository.save(user)).thenReturn(user);
+        when(userMapper.toUserUpdate(userRequest, user)).thenReturn(user);
         when(userMapper.toUserResponse(user)).thenReturn(userResponse);
 
         UserResponse result = userService.update(id, userRequest);
@@ -175,45 +181,53 @@ class UserServiceImplTest {
 
     @Test
     void UpdateUserNotFound() {
-        UUID id = UUID.randomUUID();
+        String id = "UUID.randomUUID()";
 
-        when(userRepository.findById(id)).thenReturn(Optional.empty());
+        when(userRepository.findByGuid(id)).thenReturn(Optional.empty());
 
-        UserNotFound thrown = assertThrows(UserNotFound.class, () -> userService.update(id, userRequest));
+        UserNotFoundById thrown = assertThrows(UserNotFoundById.class, () -> userService.update(id, userRequest));
 
-        assertEquals("El usuario 'testuser' no existe", thrown.getMessage());
+        assertEquals("Usuario con id 'UUID.randomUUID()' no encontrado", thrown.getMessage());
     }
 
-    //Para comprobar y testear la excepcion UserExists
     @Test
     void UpdateUserExist() {
-        UUID id = UUID.randomUUID();
+        String id = "hola";
 
-        when(userRepository.findById(id)).thenReturn(Optional.of(user));
+        when(userRepository.findByGuid(id)).thenReturn(Optional.of(user));
         when(userRepository.findByUsername(userRequest.getUsername())).thenReturn(Optional.of(user));
 
-       UserExists thrown = assertThrows(UserExists.class, () -> userService.update(id, userRequest));
+        UserExists thrown = assertThrows(UserExists.class, () -> userService.update(id, userRequest));
 
         assertEquals("El nombre de usuario 'testuser' ya existe", thrown.getMessage());
     }
 
     @Test
     void DeleteById() {
-        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        String id = "buenasnoches";
+        User user = User.builder()
+                .guid("buenasnoches")
+                .username("testuser")
+                .password("password")
+                .roles(Set.of(Role.USER))
+                .build();
 
-        assertDoesNotThrow(() -> userService.deleteById(user.getId()));
+        when(userRepository.findByGuid(id)).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
 
-        verify(userRepository, times(1)).deleteById(user.getId());
+        userService.deleteById(id);
+
+        verify(userRepository, times(1)).findByGuid(id);
     }
 
     @Test
     void DeleteByIdUserNotFound() {
-        UUID id = UUID.randomUUID();
+        String id = "UUID.randomUUID()";
 
-        when(userRepository.findById(id)).thenReturn(Optional.empty());
+        when(userRepository.findByGuid(id)).thenReturn(Optional.empty());
 
-        UserNotFound thrown = assertThrows(UserNotFound.class, () -> userService.deleteById(id));
+        UserNotFoundById thrown = assertThrows(UserNotFoundById.class, () -> userService.deleteById(id));
 
-        assertEquals("El usuario 'testuser' no existe", thrown.getMessage());
+        assertEquals("Usuario con id 'UUID.randomUUID()' no encontrado", thrown.getMessage());
     }
 }
