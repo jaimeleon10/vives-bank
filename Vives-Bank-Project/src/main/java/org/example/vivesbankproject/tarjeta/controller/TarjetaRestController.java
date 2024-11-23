@@ -1,6 +1,7 @@
 package org.example.vivesbankproject.tarjeta.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestSave;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -31,6 +33,7 @@ import java.util.Optional;
 @Slf4j
 @RestController
 @RequestMapping("${api.version}/tarjetas")
+@Validated
 public class TarjetaRestController {
 
     private final TarjetaService tarjetaService;
@@ -92,15 +95,24 @@ public class TarjetaRestController {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Map<String, String> handleValidationExceptions(
-            MethodArgumentNotValidException ex) {
+    @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
+    public Map<String, String> handleValidationExceptions(Exception ex) {
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
+
+        if (ex instanceof MethodArgumentNotValidException methodArgumentNotValidException) {
+            methodArgumentNotValidException.getBindingResult().getAllErrors().forEach((error) -> {
+                String fieldName = ((FieldError) error).getField();
+                String errorMessage = error.getDefaultMessage();
+                errors.put(fieldName, errorMessage);
+            });
+        } else if (ex instanceof ConstraintViolationException constraintViolationException) {
+            constraintViolationException.getConstraintViolations().forEach(violation -> {
+                String fieldName = violation.getPropertyPath().toString();
+                String errorMessage = violation.getMessage();
+                errors.put(fieldName, errorMessage);
+            });
+        }
+
         return errors;
     }
 }
