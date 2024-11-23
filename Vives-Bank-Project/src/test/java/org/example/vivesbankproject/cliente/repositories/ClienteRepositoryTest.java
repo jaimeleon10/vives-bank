@@ -6,31 +6,21 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-
-
-import org.example.vivesbankproject.VivesBankProjectApplication;
-
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.users.models.User;
+import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.transaction.annotation.Transactional;
 
 @DataJpaTest
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = VivesBankProjectApplication.class)
-@AutoConfigureTestDatabase(replace = Replace.ANY)
-@Transactional
-@ComponentScan(basePackages = "org.example.vivesbankproject")
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class ClienteRepositoryTest {
 
     @Autowired
@@ -40,9 +30,19 @@ public class ClienteRepositoryTest {
     private Cuenta cuenta1;
     private Cuenta cuenta2;
 
+    private UserRepository userRepository;
+
     @BeforeEach
     void setUp() {
         clienteRepository.deleteAll();
+
+        User user = User.builder()
+                .guid("user-guid")
+                .username("testuser")
+                .password("password")
+                .build();
+
+        userRepository.save(user);
 
         cliente = Cliente.builder()
                 .guid("unique-guid")
@@ -51,11 +51,7 @@ public class ClienteRepositoryTest {
                 .apellidos("Perez")
                 .email("juan.perez@example.com")
                 .telefono("123456789")
-                .user(User.builder()
-                        .guid("user-guid")
-                        .username("testuser")
-                        .password("password")
-                        .build())
+                .user(user)
                 .isDeleted(false)
                 .build();
 
@@ -65,6 +61,7 @@ public class ClienteRepositoryTest {
 
         clienteRepository.save(cliente);
     }
+
 
     @Test
     void FindByGuid() {
