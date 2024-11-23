@@ -53,7 +53,7 @@ class MovimientosRepositoryTest {
 
         assertAll(
                 () -> assertTrue(result.isPresent(), "El resultado debería estar presente"),
-                () -> assertEquals(clienteId, result.get().getCliente().getId(), "El ID del cliente debería coincidir")
+                () -> assertEquals(clienteId, result.get().getCliente().getGuid(), "El ID del cliente debería coincidir")
         );
     }
 
