@@ -1,5 +1,6 @@
 package org.example.vivesbankproject.cuenta.dto.cuenta;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,9 +14,9 @@ import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CuentaRequest {
-    @NotNull(message = "El campo del tipo de cuenta no puede estar vacio")
-    private TipoCuenta tipoCuenta;
+    @NotBlank(message = "El campo del tipo de cuenta no puede estar vacio")
+    private String tipoCuentaId;
 
-    @NotNull(message = "El campo tarjeta no puede estar vacio")
-    private Tarjeta tarjeta;
+    @NotBlank(message = "El campo tarjeta no puede estar vacio")
+    private String tarjetaId;
 }

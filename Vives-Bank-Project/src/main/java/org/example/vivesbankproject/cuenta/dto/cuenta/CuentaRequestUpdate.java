@@ -1,6 +1,7 @@
 package org.example.vivesbankproject.cuenta.dto.cuenta;
 
 import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
@@ -21,11 +22,11 @@ public class CuentaRequestUpdate {
     @PositiveOrZero(message = "El saldo no puede ser negativo")
     private BigDecimal saldo;
 
-    @NotNull(message = "El campo del tipo de cuenta no puede estar vacio")
-    private TipoCuenta tipoCuenta;
+    @NotBlank(message = "El campo del tipo de cuenta no puede estar vacio")
+    private String tipoCuentaId;
 
-    @NotNull(message = "El campo tarjeta no puede estar vacio")
-    private Tarjeta tarjeta;
+    @NotBlank(message = "El campo tarjeta no puede estar vacio")
+    private String tarjetaId;
 
     @NotNull(message = "El campo de borrado lógico no puede ser nulo")
     @Builder.Default
