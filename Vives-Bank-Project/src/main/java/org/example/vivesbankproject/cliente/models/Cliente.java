@@ -66,11 +66,6 @@ public class Cliente {
     @NotBlank(message = "La foto del DNI no puede estar vacía")
     private String fotoDni;
 
-    @OneToMany
-    @JoinColumn(name = "cliente_id", nullable = false)
-    @Builder.Default
-    private Set<Cuenta> cuentas = new HashSet<>();
-
     @OneToOne
     @JoinColumn(name = "user_id")
     @NotNull(message = "El usuario no puede ser un campo nulo")
@@ -90,6 +85,7 @@ public class Cliente {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isDeleted = false;
 
     @JsonProperty("idMovimientos")
