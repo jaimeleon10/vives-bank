@@ -26,5 +26,5 @@ public class ClienteResponse {
     private UserResponse user;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private boolean isDeleted;
+    private Boolean isDeleted;
 }

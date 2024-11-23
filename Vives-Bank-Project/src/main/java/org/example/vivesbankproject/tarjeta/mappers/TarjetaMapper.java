@@ -3,7 +3,7 @@ package org.example.vivesbankproject.tarjeta.mappers;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestSave;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestUpdate;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaResponseCVV;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaResponsePrivado;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.springframework.stereotype.Component;
 
@@ -55,11 +55,11 @@ public class TarjetaMapper {
                 .build();
     }
 
-    public TarjetaResponseCVV toTarjetaResponseCVV(Tarjeta tarjeta) {
-        return TarjetaResponseCVV.builder()
+    public TarjetaResponsePrivado toTarjetaPrivado(Tarjeta tarjeta) {
+        return TarjetaResponsePrivado.builder()
                 .guid(tarjeta.getGuid())
-                .numeroTarjeta(tarjeta.getNumeroTarjeta())
                 .cvv(tarjeta.getCvv())
+                .pin(tarjeta.getPin())
                 .build();
     }
 }

@@ -1,10 +1,6 @@
 package org.example.vivesbankproject.tarjeta.service;
 
-import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestSave;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestUpdate;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaResponseCVV;
-import org.example.vivesbankproject.tarjeta.models.Tarjeta;
+import org.example.vivesbankproject.tarjeta.dto.*;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +24,7 @@ public interface TarjetaService {
 
     TarjetaResponse getById(String id);
 
-    TarjetaResponseCVV getCVV(String id);
+    TarjetaResponsePrivado getPrivateData(String id, TarjetaRequestPrivado tarjetaRequestPrivado);
 
     TarjetaResponse save(TarjetaRequestSave tarjetaRequestSave);
 

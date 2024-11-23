@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TarjetaResponseCVV {
+public class TarjetaResponsePrivado {
     private String guid;
-    private String numeroTarjeta;
     private Integer cvv;
+    private String pin;
 }

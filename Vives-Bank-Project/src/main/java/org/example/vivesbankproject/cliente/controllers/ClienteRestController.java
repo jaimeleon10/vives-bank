@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.example.vivesbankproject.cliente.dto.ClienteCuentaRequest;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestSave;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdate;
 import org.example.vivesbankproject.cliente.dto.ClienteResponse;
@@ -78,6 +79,18 @@ public class ClienteRestController {
     @PutMapping("{id}")
     public ResponseEntity<ClienteResponse> updateCliente(@PathVariable String id, @Valid @RequestBody ClienteRequestUpdate clienteRequest) {
         var result = clienteService.update(id, clienteRequest);
+        return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("{id}/add")
+    public ResponseEntity<ClienteResponse> addCuentas(@PathVariable String id, @Valid @RequestBody ClienteCuentaRequest clienteCuentaRequest) {
+        var result = clienteService.addCuentas(id, clienteCuentaRequest);
+        return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("{id}/delete")
+    public ResponseEntity<ClienteResponse> deleteCuentas(@PathVariable String id, @Valid @RequestBody ClienteCuentaRequest clienteCuentaRequest) {
+        var result = clienteService.deleteCuentas(id, clienteCuentaRequest);
         return ResponseEntity.ok(result);
     }
 
