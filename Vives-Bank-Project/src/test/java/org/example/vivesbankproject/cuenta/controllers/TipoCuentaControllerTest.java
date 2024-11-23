@@ -2,9 +2,12 @@ package org.example.vivesbankproject.cuenta.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
+import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.services.TipoCuentaService;
 import org.example.vivesbankproject.utils.PageResponse;
+import org.example.vivesbankproject.utils.PaginationLinksUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,11 +60,16 @@ class TipoCuentaControllerTest {
 
     @Test
     void getAllPageable() throws Exception {
+        TipoCuentaResponse tipoCuentaResponse = new TipoCuentaResponse();
+        tipoCuentaResponse.setGuid(tipoCuentaTest.getGuid());
+        tipoCuentaResponse.setNombre(tipoCuentaTest.getNombre());
+        tipoCuentaResponse.setInteres(tipoCuentaTest.getInteres());
+
         String nombre = "normal";
         BigDecimal interes = BigDecimal.valueOf(2.0);
 
         PageRequest pageRequest = PageRequest.of(0, 10, Sort.by("id").ascending());
-        Page<TipoCuenta> cuentaPage = new PageImpl<>(List.of(tipoCuentaTest));
+        Page<TipoCuentaResponse> cuentaPage = new PageImpl<>(List.of(tipoCuentaResponse));
 
         when(tipoCuentaService.getAll(
                 Optional.of(nombre),
@@ -102,7 +110,12 @@ class TipoCuentaControllerTest {
 
     @Test
     void getById() throws Exception {
-        when(tipoCuentaService.getById("hola")).thenReturn(tipoCuentaTest);
+        TipoCuentaResponse tipoCuentaResponse = new TipoCuentaResponse();
+        tipoCuentaResponse.setGuid(tipoCuentaTest.getGuid());
+        tipoCuentaResponse.setNombre(tipoCuentaTest.getNombre());
+        tipoCuentaResponse.setInteres(tipoCuentaTest.getInteres());
+
+        when(tipoCuentaService.getById("hola")).thenReturn(tipoCuentaResponse);
 
         MockHttpServletResponse response = mvc.perform(
                         get(myEndpoint + "/hola")
@@ -128,7 +141,16 @@ class TipoCuentaControllerTest {
         tipoCuenta.setNombre("normal");
         tipoCuenta.setInteres(BigDecimal.valueOf(2.0));
 
-        when(tipoCuentaService.save(tipoCuenta)).thenReturn(tipoCuenta);
+        TipoCuentaRequest tipoCuentaRequest = new TipoCuentaRequest();
+        tipoCuentaRequest.setNombre(tipoCuenta.getNombre());
+        tipoCuentaRequest.setInteres(tipoCuenta.getInteres());
+
+        TipoCuentaResponse tipoCuentaResponse = new TipoCuentaResponse();
+        tipoCuentaResponse.setGuid(tipoCuenta.getGuid());
+        tipoCuentaResponse.setNombre(tipoCuenta.getNombre());
+        tipoCuentaResponse.setInteres(tipoCuenta.getInteres());
+
+        when(tipoCuentaService.save(tipoCuentaRequest)).thenReturn(tipoCuentaResponse);
 
         MockHttpServletResponse response = mvc.perform(
                         post(myEndpoint)
@@ -145,7 +167,7 @@ class TipoCuentaControllerTest {
                 () -> assertEquals(tipoCuenta.getInteres(), res.getInteres())
         );
 
-        verify(tipoCuentaService, times(1)).save(tipoCuenta);
+        verify(tipoCuentaService, times(1)).save(tipoCuentaRequest);
     }
 
     @Test
@@ -155,7 +177,16 @@ class TipoCuentaControllerTest {
         tipoCuenta.setNombre("normal");
         tipoCuenta.setInteres(BigDecimal.valueOf(3.0));
 
-        when(tipoCuentaService.update(tipoCuenta.getGuid(), tipoCuenta)).thenReturn(tipoCuenta);
+        TipoCuentaRequest tipoCuentaRequest = new TipoCuentaRequest();
+        tipoCuentaRequest.setNombre(tipoCuenta.getNombre());
+        tipoCuentaRequest.setInteres(tipoCuenta.getInteres());
+
+        TipoCuentaResponse tipoCuentaResponse = new TipoCuentaResponse();
+        tipoCuentaResponse.setGuid(tipoCuenta.getGuid());
+        tipoCuentaResponse.setNombre(tipoCuenta.getNombre());
+        tipoCuentaResponse.setInteres(tipoCuenta.getInteres());
+
+        when(tipoCuentaService.update(tipoCuenta.getGuid(), tipoCuentaRequest)).thenReturn(tipoCuentaResponse);
 
         MockHttpServletResponse response = mvc.perform(
                         put(myEndpoint + "/adios")
@@ -173,7 +204,7 @@ class TipoCuentaControllerTest {
                 () -> assertEquals(tipoCuenta.getInteres(), res.getInteres())
         );
 
-        verify(tipoCuentaService, times(1)).update(tipoCuenta.getGuid(), tipoCuenta);
+        verify(tipoCuentaService, times(1)).update(tipoCuenta.getGuid(), tipoCuentaRequest);
     }
 
     @Test
