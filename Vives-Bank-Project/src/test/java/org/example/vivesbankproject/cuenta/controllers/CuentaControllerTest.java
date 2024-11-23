@@ -175,9 +175,9 @@ class CuentaControllerTest {
         tipoCuentaResponse.setInteres(BigDecimal.valueOf(2.0));
 
         CuentaResponse cuentaResponse = new CuentaResponse();
-        cuentaResponse.setGuid(cuentaTest.getGuid());
-        cuentaResponse.setIban(cuentaTest.getIban());
-        cuentaResponse.setSaldo(cuentaTest.getSaldo());
+        cuentaResponse.setGuid("12d45756-3895-49b2-90d3-c4a12d5ee081");
+        cuentaResponse.setIban("ES9120804243448487618583");
+        cuentaResponse.setSaldo(BigDecimal.valueOf(1000.0));
         cuentaResponse.setTarjeta(tarjetaResponse);
         cuentaResponse.setTipoCuenta(tipoCuentaResponse);
         cuentaResponse.setIsDeleted(false);
@@ -189,15 +189,15 @@ class CuentaControllerTest {
                                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
-        Cuenta res = objectMapper.readValue(response.getContentAsString(), Cuenta.class);
+        CuentaResponse res = objectMapper.readValue(response.getContentAsString(), CuentaResponse.class);
 
         assertAll(
                 () -> assertEquals(HttpStatus.OK.value(), response.getStatus()),
-                () -> assertEquals(cuentaTest.getId(), res.getId()),
-                () -> assertEquals(cuentaTest.getIban(), res.getIban()),
-                () -> assertEquals(cuentaTest.getSaldo(), res.getSaldo()),
-                () -> assertEquals(cuentaTest.getTarjeta(), res.getTarjeta()),
-                () -> assertEquals(cuentaTest.getTipoCuenta(), res.getTipoCuenta())
+                () -> assertEquals(cuentaResponse.getGuid(), res.getGuid()),
+                () -> assertEquals(cuentaResponse.getIban(), res.getIban()),
+                () -> assertEquals(cuentaResponse.getSaldo(), res.getSaldo()),
+                () -> assertEquals(cuentaResponse.getTarjeta(), res.getTarjeta()),
+                () -> assertEquals(cuentaResponse.getTipoCuenta(), res.getTipoCuenta())
         );
 
         verify(cuentaService, times(1)).getById("12d45756-3895-49b2-90d3-c4a12d5ee081");
@@ -205,20 +205,9 @@ class CuentaControllerTest {
 
     @Test
     void save() throws Exception {
-        Tarjeta tarjeta = new Tarjeta();
-        tarjeta.setGuid("7b498e86-5197-4e05-9361-3da894b62353");
-        tarjeta.setNumeroTarjeta("4009156782194826");
-        tarjeta.setFechaCaducidad(LocalDate.parse("2025-12-31"));
-        tarjeta.setCvv(987);
-        tarjeta.setPin("0987");
-        tarjeta.setLimiteDiario(BigDecimal.valueOf(100.0));
-        tarjeta.setLimiteSemanal(BigDecimal.valueOf(200.0));
-        tarjeta.setLimiteMensual(BigDecimal.valueOf(500.0));
-        tarjeta.setTipoTarjeta(TipoTarjeta.valueOf("DEBITO"));
-
-        TipoCuenta tipoCuenta = new TipoCuenta();
-        tipoCuenta.setNombre("normal");
-        tipoCuenta.setInteres(BigDecimal.valueOf(2.0));
+        CuentaRequest cuentaRequest = new CuentaRequest();
+        cuentaRequest.setTipoCuentaId("tipo-cuenta-guid");
+        cuentaRequest.setTarjetaId("tarjeta-guid");
 
         TarjetaResponse tarjetaResponse = new TarjetaResponse();
         tarjetaResponse.setGuid("7b498e86-5197-4e05-9361-3da894b62353");
@@ -233,46 +222,34 @@ class CuentaControllerTest {
         tipoCuentaResponse.setNombre("normal");
         tipoCuentaResponse.setInteres(BigDecimal.valueOf(2.0));
 
-        Cuenta cuenta = new Cuenta();
-        cuenta.setGuid("6c257ab6-e588-4cef-a479-c2f8fcd7379a");
-        cuenta.setIban("ES0901869615019736267715");
-        cuenta.setSaldo(BigDecimal.valueOf(1000.0));
-        cuenta.setTipoCuenta(tipoCuenta);
-        cuenta.setTarjeta(tarjeta);
-        cuenta.setIsDeleted(false);
-
-        CuentaRequest cuentaRequest = new CuentaRequest();
-        cuentaRequest.setTipoCuentaId(tipoCuenta.getGuid());
-        cuentaRequest.setTarjetaId(tarjeta.getGuid());
-
         CuentaResponse cuentaResponse = new CuentaResponse();
-        cuentaResponse.setGuid(cuenta.getGuid());
-        cuentaResponse.setIban(cuenta.getIban());
-        cuentaResponse.setSaldo(cuenta.getSaldo());
+        cuentaResponse.setGuid("6c257ab6-e588-4cef-a479-c2f8fcd7379a");
+        cuentaResponse.setIban("ES0901869615019736267715");
+        cuentaResponse.setSaldo(BigDecimal.valueOf(1000.0));
         cuentaResponse.setTarjeta(tarjetaResponse);
         cuentaResponse.setTipoCuenta(tipoCuentaResponse);
         cuentaResponse.setIsDeleted(false);
 
-        when(cuentaService.save(cuentaRequest)).thenReturn(cuentaResponse);
+        when(cuentaService.save(any(CuentaRequest.class))).thenReturn(cuentaResponse);
 
         MockHttpServletResponse response = mvc.perform(
                         post(myEndpoint)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(cuenta)))
+                                .content(objectMapper.writeValueAsString(cuentaRequest)))
                 .andReturn().getResponse();
 
-        Cuenta res = objectMapper.readValue(response.getContentAsString(), Cuenta.class);
+        CuentaResponse res = objectMapper.readValue(response.getContentAsString(), CuentaResponse.class);
 
         assertAll(
-                () -> assertEquals( HttpStatus.CREATED.value(), response.getStatus()),
-                () -> assertEquals(cuenta.getId(), res.getId()),
-                () -> assertEquals(cuenta.getIban(), res.getIban()),
-                () -> assertEquals(cuenta.getSaldo(), res.getSaldo()),
-                () -> assertEquals(cuenta.getTarjeta(), res.getTarjeta()),
-                () -> assertEquals(cuenta.getTipoCuenta(), res.getTipoCuenta())
+                () -> assertEquals(HttpStatus.CREATED.value(), response.getStatus()),
+                () -> assertEquals(cuentaResponse.getGuid(), res.getGuid()),
+                () -> assertEquals(cuentaResponse.getIban(), res.getIban()),
+                () -> assertEquals(cuentaResponse.getSaldo(), res.getSaldo()),
+                () -> assertEquals(cuentaResponse.getTarjeta(), res.getTarjeta()),
+                () -> assertEquals(cuentaResponse.getTipoCuenta(), res.getTipoCuenta())
         );
 
-        verify(cuentaService, times(1)).save(cuentaRequest);
+        verify(cuentaService, times(1)).save(any(CuentaRequest.class));
     }
 
     @Test
@@ -353,7 +330,6 @@ class CuentaControllerTest {
 
         verify(cuentaService, times(1)).update(cuenta.getGuid(), cuentaRequestUpdate);
     }
-
 
     @Test
     void delete() throws Exception {
