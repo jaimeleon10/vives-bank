@@ -67,7 +67,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void GetAll() {
+    void getAll() {
         Pageable pageable = PageRequest.of(0, 10);
         Page<User> usersPage = new PageImpl<>(List.of(user));
 
@@ -82,8 +82,8 @@ class UserServiceImplTest {
     }
 
     @Test
-    void GetById() {
-        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+    void getById() {
+        when(userRepository.findByGuid(user.getGuid())).thenReturn(Optional.of(user));
         when(userMapper.toUserResponse(user)).thenReturn(userResponse);
 
         UserResponse result = userService.getById(user.getGuid());
@@ -93,7 +93,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void GetByIdNotFound() {
+    void getByIdNotFound() {
         String id = "adios";
 
         when(userRepository.findByGuid(id)).thenReturn(Optional.empty());
@@ -104,7 +104,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void GetByUsername() {
+    void getByUsername() {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
         when(userMapper.toUserResponse(user)).thenReturn(userResponse);
 
@@ -115,7 +115,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void GetByUsernameNotFound() {
+    void getByUsernameNotFound() {
         when(userRepository.findByUsername("unknownuser")).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(UserNotFoundByUsername.class, () -> userService.getByUsername("unknownuser"));
@@ -124,7 +124,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void Save() {
+    void save() {
         when(userRepository.findByUsername(userRequest.getUsername())).thenReturn(Optional.empty());
         when(userMapper.toUser(userRequest)).thenReturn(user);
         when(userRepository.save(user)).thenReturn(user);
@@ -137,16 +137,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void SaveUserNotFound() {
-        String username = "buenosdias";
-
-        when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
-
-        assertThrows(UserNotFoundByUsername.class, () -> userService.save(userRequest));
-    }
-
-    @Test
-    void SaveUserExists() {
+    void saveUserExists() {
         when(userRepository.findByUsername(userRequest.getUsername())).thenReturn(Optional.of(user));
 
         UserExists thrown = assertThrows(UserExists.class, () -> userService.save(userRequest));
@@ -154,9 +145,8 @@ class UserServiceImplTest {
         assertEquals("El nombre de usuario 'testuser' ya existe", thrown.getMessage());
     }
 
-
     @Test
-    void Update() {
+    void update() {
         String id = "hola";
         String username = "testusuario";
 
@@ -180,7 +170,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void UpdateUserNotFound() {
+    void updateUserNotFound() {
         String id = "UUID.randomUUID()";
 
         when(userRepository.findByGuid(id)).thenReturn(Optional.empty());
@@ -191,7 +181,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void UpdateUserExist() {
+    void updateUserExist() {
         String id = "hola";
 
         when(userRepository.findByGuid(id)).thenReturn(Optional.of(user));
@@ -203,7 +193,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void DeleteById() {
+    void deleteById() {
         String id = "buenasnoches";
         User user = User.builder()
                 .guid("buenasnoches")
@@ -221,7 +211,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void DeleteByIdUserNotFound() {
+    void deleteByIdUserNotFound() {
         String id = "UUID.randomUUID()";
 
         when(userRepository.findByGuid(id)).thenReturn(Optional.empty());
