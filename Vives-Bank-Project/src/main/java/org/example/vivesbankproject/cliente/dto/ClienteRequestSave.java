@@ -41,9 +41,6 @@ public class ClienteRequestSave {
     @NotBlank(message = "La foto del DNI no puede estar vacía")
     private String fotoDni;
 
-    @Builder.Default
-    private Set<String> cuentasIds = new HashSet<>();
-
     @NotBlank(message = "El id de usuario no puede estar vacío")
     private String userId;
 

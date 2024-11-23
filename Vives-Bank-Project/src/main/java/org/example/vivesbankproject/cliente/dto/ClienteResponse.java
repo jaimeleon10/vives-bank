@@ -22,7 +22,6 @@ public class ClienteResponse {
     private String telefono;
     private String fotoPerfil;
     private String fotoDni;
-    private Set<CuentaResponse> cuentas;
     private UserResponse user;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
