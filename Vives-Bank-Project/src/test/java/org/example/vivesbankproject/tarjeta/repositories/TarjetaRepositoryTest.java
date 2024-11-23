@@ -1,90 +1,67 @@
 package org.example.vivesbankproject.tarjeta.repositories;
 
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
+import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @DataJpaTest
-public class TarjetaRepositoryTest {
-/*
-    @Mock
+class TarjetaRepositoryTest {
+
+    @Autowired
+    private TestEntityManager entityManager;
+
+    @Autowired
     private TarjetaRepository tarjetaRepository;
 
-    @InjectMocks
-    private Tarjeta tarjeta;
-
-    private UUID tarjetaId;
+    private Tarjeta tarjetaMock;
+    private final LocalDateTime NOW = LocalDateTime.now();
+    private final LocalDate CADUCIDAD = LocalDate.now().plusYears(10);
 
     @BeforeEach
-    public void setUp() {
-        tarjetaId = UUID.randomUUID();
-        tarjeta = new Tarjeta();
-        tarjeta.setId(tarjetaId);
-        tarjeta.setNumeroTarjeta("1234567890123456");
-        tarjeta.setFechaCaducidad(java.time.LocalDate.of(2025, 12, 31));
-        tarjeta.setCvv(123);
-        tarjeta.setPin("1234");
-        tarjeta.setLimiteDiario(5000.0);
-        tarjeta.setLimiteSemanal(20000.0);
-        tarjeta.setLimiteMensual(50000.0);
-        tarjeta.setTipoTarjeta(new org.example.vivesbankproject.tarjeta.models.TipoTarjeta());
+    void setUp() {
+        tarjetaMock = Tarjeta.builder()
+                .guid("isTest")
+                .numeroTarjeta("1234567890123456")
+                .fechaCaducidad(CADUCIDAD)
+                .cvv(123)
+                .pin("123")
+                .limiteDiario(new BigDecimal("1000.00"))
+                .limiteSemanal(new BigDecimal("5000.00"))
+                .limiteMensual(new BigDecimal("20000.00"))
+                .tipoTarjeta(TipoTarjeta.DEBITO)
+                .createdAt(NOW)
+                .updatedAt(NOW)
+                .isDeleted(false)
+                .build();
     }
 
     @Test
-    public void testFindById() {
-        when(tarjetaRepository.findById(tarjetaId)).thenReturn(Optional.of(tarjeta));
+    void findByGuid() {
+        entityManager.persist(tarjetaMock);
+        entityManager.flush();
 
-        Optional<Tarjeta> foundTarjeta = tarjetaRepository.findById(tarjetaId);
+        Optional<Tarjeta> found = tarjetaRepository.findByGuid("isTest");
 
-        assertTrue(foundTarjeta.isPresent());
-        assertEquals(tarjetaId, foundTarjeta.get().getId());
+        assertTrue(found.isPresent());
+        assertEquals("isTest", found.get().getGuid());
+        assertEquals(tarjetaMock.getNumeroTarjeta(), found.get().getNumeroTarjeta());
     }
 
     @Test
-    public void testFindByIdNotFound() {
-        when(tarjetaRepository.findById(tarjetaId)).thenReturn(Optional.empty());
+    void findByGuidTarjetaNotFound() {
+        Optional<Tarjeta> found = tarjetaRepository.findByGuid("NoExisteId");
 
-        Optional<Tarjeta> foundTarjeta = tarjetaRepository.findById(tarjetaId);
-
-        assertFalse(foundTarjeta.isPresent());
+        assertTrue(found.isEmpty());
     }
-
-    @Test
-    public void testSave() {
-        when(tarjetaRepository.save(tarjeta)).thenReturn(tarjeta);
-
-        Tarjeta savedTarjeta = tarjetaRepository.save(tarjeta);
-
-        assertNotNull(savedTarjeta);
-        assertEquals(tarjeta.getId(), savedTarjeta.getId());
-    }
-
-    @Test
-    public void testDelete() {
-        doNothing().when(tarjetaRepository).deleteById(tarjetaId);
-
-        tarjetaRepository.deleteById(tarjetaId);
-
-        verify(tarjetaRepository, times(1)).deleteById(tarjetaId);
-    }
-
-    @Test
-    public void testDeleteNotFound() {
-        doThrow(EmptyResultDataAccessException.class).when(tarjetaRepository).deleteById(tarjetaId);
-
-        assertThrows(EmptyResultDataAccessException.class, () -> {
-            tarjetaRepository.deleteById(tarjetaId);
-        });
-    }*/
 }
