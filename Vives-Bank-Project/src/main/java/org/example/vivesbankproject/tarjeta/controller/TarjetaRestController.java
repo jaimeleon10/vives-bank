@@ -4,10 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestSave;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestUpdate;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
-import org.example.vivesbankproject.tarjeta.models.Tarjeta;
+import org.example.vivesbankproject.tarjeta.dto.*;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.tarjeta.service.TarjetaService;
 import org.example.vivesbankproject.utils.PageResponse;
@@ -75,6 +72,11 @@ public class TarjetaRestController {
     @GetMapping("{id}")
     public ResponseEntity<TarjetaResponse> getById(@PathVariable String id) {
         return ResponseEntity.ok(tarjetaService.getById(id));
+    }
+
+    @GetMapping("{id}/private")
+    public ResponseEntity<TarjetaResponsePrivado> getPrivateData(@PathVariable String id, @RequestBody TarjetaRequestPrivado tarjetaRequestPrivado) {
+        return ResponseEntity.ok(tarjetaService.getPrivateData(id, tarjetaRequestPrivado));
     }
 
     @PostMapping

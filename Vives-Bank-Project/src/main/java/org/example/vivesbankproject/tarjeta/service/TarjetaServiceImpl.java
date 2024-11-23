@@ -1,15 +1,16 @@
 package org.example.vivesbankproject.tarjeta.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestSave;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestUpdate;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaResponseCVV;
+import org.example.vivesbankproject.tarjeta.dto.*;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
+import org.example.vivesbankproject.tarjeta.exceptions.TarjetaUserPasswordNotValid;
 import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
+import org.example.vivesbankproject.users.exceptions.UserNotFoundById;
+import org.example.vivesbankproject.users.exceptions.UserNotFoundByUsername;
+import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -30,11 +31,13 @@ public class TarjetaServiceImpl implements TarjetaService {
 
     private final TarjetaRepository tarjetaRepository;
     private final TarjetaMapper tarjetaMapper;
+    private final UserRepository userRepository;
 
     @Autowired
-    public TarjetaServiceImpl(TarjetaRepository tarjetaRepository, TarjetaMapper tarjetaMapper) {
+    public TarjetaServiceImpl(TarjetaRepository tarjetaRepository, TarjetaMapper tarjetaMapper, UserRepository userRepository) {
         this.tarjetaRepository = tarjetaRepository;
         this.tarjetaMapper = tarjetaMapper;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -111,10 +114,20 @@ public class TarjetaServiceImpl implements TarjetaService {
 
     @Override
     @Cacheable(key = "#id")
-    public TarjetaResponseCVV getCVV(String id) {
-        log.info("Obteniendo CVV de la tarjeta con ID: {}", id);
-        var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
-        return tarjetaMapper.toTarjetaResponseCVV(tarjeta);
+    public TarjetaResponsePrivado getPrivateData(String id, TarjetaRequestPrivado tarjetaRequestPrivado) {
+        // Cambiar cuando añadamos autenticación
+        log.info("Obteniendo datos privados de la tarjeta con ID: {}", id);
+        var user = userRepository.findByUsername(tarjetaRequestPrivado.getUsername());
+        if (user.isEmpty()) {
+            throw new UserNotFoundByUsername(tarjetaRequestPrivado.getUsername());
+        } else {
+            if (!user.get().getPassword().equals(tarjetaRequestPrivado.getUserPass())) {
+                throw new TarjetaUserPasswordNotValid();
+            } else {
+                var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
+                return tarjetaMapper.toTarjetaPrivado(tarjeta);
+            }
+        }
     }
 
     @Override
