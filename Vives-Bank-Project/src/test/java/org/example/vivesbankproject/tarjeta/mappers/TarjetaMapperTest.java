@@ -3,7 +3,6 @@ package org.example.vivesbankproject.tarjeta.mappers;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestSave;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestUpdate;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaResponseCVV;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.junit.jupiter.api.BeforeEach;
