@@ -7,13 +7,6 @@ import org.example.vivesbankproject.cliente.exceptions.*;
 import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
-import org.example.vivesbankproject.cuenta.exceptions.CuentaNotFound;
-import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
-import org.example.vivesbankproject.cuenta.mappers.TipoCuentaMapper;
-import org.example.vivesbankproject.cuenta.models.Cuenta;
-import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
-import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.exceptions.UserNotFoundById;
 import org.example.vivesbankproject.users.mappers.UserMapper;
@@ -26,9 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -39,20 +30,12 @@ public class ClienteServiceImpl implements ClienteService {
     private final ClienteMapper clienteMapper;
     private final UserMapper userMapper;
     private final UserRepository userRepository;
-    private final CuentaMapper cuentaMapper;
-    private final CuentaRepository cuentaRepository;
-    private final TipoCuentaMapper tipoCuentaMapper;
-    private final TarjetaMapper tarjetaMapper;
 
-    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserMapper userMapper, UserRepository userRepository, CuentaMapper cuentaMapper, CuentaRepository cuentaRepository, TipoCuentaMapper tipoCuentaMapper, TarjetaMapper tarjetaMapper) {
+    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserMapper userMapper, UserRepository userRepository) {
         this.clienteRepository = clienteRepository;
         this.clienteMapper = clienteMapper;
         this.userMapper = userMapper;
         this.userRepository = userRepository;
-        this.cuentaMapper = cuentaMapper;
-        this.cuentaRepository = cuentaRepository;
-        this.tipoCuentaMapper = tipoCuentaMapper;
-        this.tarjetaMapper = tarjetaMapper;
     }
 
     @Override
@@ -87,11 +70,7 @@ public class ClienteServiceImpl implements ClienteService {
 
         return clientePage.map(cliente -> {
             UserResponse userResponse = userMapper.toUserResponse(cliente.getUser());
-            Set<CuentaResponse> cuentasResponse = cliente.getCuentas().stream()
-                   .map(cuenta -> cuentaMapper.toCuentaResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
-                   .collect(Collectors.toSet());
-
-            return clienteMapper.toClienteResponse(cliente, userResponse, cuentasResponse);
+            return clienteMapper.toClienteResponse(cliente, userResponse);
         });
     }
 
@@ -100,38 +79,15 @@ public class ClienteServiceImpl implements ClienteService {
     public ClienteResponse getById(String id) {
         var cliente = clienteRepository.findByGuid(id).orElseThrow(() -> new ClienteNotFound(id));
         var user = userMapper.toUserResponse(cliente.getUser());
-        Set<CuentaResponse> cuentasResponse = cliente.getCuentas().stream()
-               .map(cuenta -> cuentaMapper.toCuentaResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
-               .collect(Collectors.toSet());
-
-        return clienteMapper.toClienteResponse(cliente, user, cuentasResponse);
+        return clienteMapper.toClienteResponse(cliente, user);
     }
 
     @Override
     @CachePut(key = "#result.guid")
     public ClienteResponse save(ClienteRequestSave clienteRequestSave) {
         // Buscamos si existe algún cliente con el usuario adjunto ya asignado
-        if (clienteRepository.existsByUserGuid(clienteRequestSave.getUserId())) {
+        if (clienteRepository.findByUser_Guid(clienteRequestSave.getUserId()).isPresent()) {
             throw new ClienteUserAlreadyAssigned(clienteRequestSave.getUserId());
-        }
-
-        // Buscamos si las cuentas existen
-        clienteRequestSave.getCuentasIds().forEach(cuentaGuid -> {
-                if (cuentaRepository.findByGuid(cuentaGuid).isEmpty()) {
-                    throw new CuentaNotFound(cuentaGuid);
-                }
-            }
-        );
-
-        // Buscamos si las cuentas adjuntadas están asignadas a algún cliente y en ese caso lanzamos excepcion
-        List<Cuenta> cuentas = clienteRepository.findCuentasAsignadas(clienteRequestSave.getCuentasIds());
-
-        if (!cuentas.isEmpty()) {
-            String cuentasAsignadas = cuentas.stream()
-                    .map(Cuenta::getGuid)
-                    .collect(Collectors.joining(", "));
-
-            throw new ClienteCuentasAlreadyAssigned(cuentasAsignadas);
         }
 
         // Buscamos si existe el usuario por la id ajuntada en el cliente request
@@ -139,32 +95,14 @@ public class ClienteServiceImpl implements ClienteService {
                 () -> new UserNotFoundById(clienteRequestSave.getUserId())
         );
 
-        // Creamos listado de cuentas
-        Set<Cuenta> cuentasExistentes = new HashSet<>();
-
-        // Buscamos si existen los ids de las cuentas adjuntadas en el cliente request y si existen las guardamos en el listado de cuentas
-        if (!clienteRequestSave.getCuentasIds().isEmpty()) {
-            for (String cuentaId : clienteRequestSave.getCuentasIds()) {
-                Cuenta cuenta = cuentaRepository.findByGuid(cuentaId).orElseThrow(
-                        () -> new CuentaNotFound(cuentaId)
-                );
-                cuentasExistentes.add(cuenta);
-            }
-        }
-
         // Mapeamos a cliente con el cliente request, el usuario existente y las cuentas existentes
-        var cliente = clienteMapper.toCliente(clienteRequestSave, usuarioExistente, cuentasExistentes);
+        var cliente = clienteMapper.toCliente(clienteRequestSave, usuarioExistente);
 
         // Validamos datos (dni, email y teléfono) existentes
         validarClienteExistente(cliente);
 
-        // Mapeamos el Set<Cuenta> a Set<CuentaResponse>
-        Set<CuentaResponse> cuentasResponse = cuentasExistentes.stream()
-                .map(cuenta -> cuentaMapper.toCuentaResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
-                .collect(Collectors.toSet());
-
         // Guardamos el cliente y lo mapeamos a response para devolverlo
-        return clienteMapper.toClienteResponse(clienteRepository.save(cliente), userMapper.toUserResponse(usuarioExistente), cuentasResponse);
+        return clienteMapper.toClienteResponse(clienteRepository.save(cliente), userMapper.toUserResponse(usuarioExistente));
     }
 
     @Override
@@ -181,7 +119,8 @@ public class ClienteServiceImpl implements ClienteService {
         );
 
         // Buscamos si existe algún cliente con el usuario adjunto ya asignado
-        if (clienteRepository.existsByUserGuid(clienteRequestUpdate.getUserId())) {
+        var clienteConUser = clienteRepository.findByUser_Guid(clienteRequestUpdate.getUserId());
+        if (clienteConUser.isPresent() && clienteConUser.get() != clienteExistente) {
             throw new ClienteUserAlreadyAssigned(clienteRequestUpdate.getUserId());
         }
 
@@ -197,19 +136,14 @@ public class ClienteServiceImpl implements ClienteService {
             }
         }
 
-        // Mapeamos el Set<Cuenta> a Set<CuentaResponse>
-        Set<CuentaResponse> cuentasResponse = clienteExistente.getCuentas().stream()
-                .map(cuenta -> cuentaMapper.toCuentaResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
-                .collect(Collectors.toSet());
-
         // Guardamos el cliente mapeado a update
         var clienteSave = clienteRepository.save(clienteMapper.toClienteUpdate(clienteRequestUpdate, clienteExistente, usuarioExistente));
 
         // Devolvemos el cliente response con los datos necesarios
-        return clienteMapper.toClienteResponse(clienteSave, userMapper.toUserResponse(usuarioExistente), cuentasResponse);
+        return clienteMapper.toClienteResponse(clienteSave, userMapper.toUserResponse(usuarioExistente));
     }
 
-    @Override
+    /*@Override
     public ClienteResponse addCuentas(String id, ClienteCuentaRequest clienteCuentaRequest) {
         // Buscamos si existe el cliente con la el parámetro id
         var clienteExistente = clienteRepository.findByGuid(id).orElseThrow(
@@ -288,7 +222,7 @@ public class ClienteServiceImpl implements ClienteService {
 
         // Devolvemos el cliente como response mapeando los datos necesarios
         return clienteMapper.toClienteResponse(clienteSaved, userMapper.toUserResponse(clienteExistente.getUser()), cuentasResponse);
-    }
+    }*/
 
     @Override
     @CacheEvict(key = "#id")
@@ -301,7 +235,7 @@ public class ClienteServiceImpl implements ClienteService {
         clienteRepository.save(cliente);
     }
 
-    @Override
+/*    @Override
     public ClienteResponseProductos getProductos(String id) {
         var cliente = clienteRepository.findByGuid(id).orElseThrow(
                 () -> new ClienteNotFound(id)
@@ -312,7 +246,7 @@ public class ClienteServiceImpl implements ClienteService {
                 .collect(Collectors.toSet());
 
         return clienteMapper.toClienteResponseProductos(cliente, cuentasResponse);
-    }
+    }*/
 
     private void validarClienteExistente(Cliente cliente) {
         if (clienteRepository.findByDni(cliente.getDni()).isPresent()) {
