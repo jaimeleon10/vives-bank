@@ -25,12 +25,13 @@ public class ClienteRepositoryTest {
 
     @Autowired
     private ClienteRepository clienteRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
 
     private Cliente cliente;
     private Cuenta cuenta1;
     private Cuenta cuenta2;
-
-    private UserRepository userRepository;
 
     @BeforeEach
     void setUp() {
@@ -51,9 +52,12 @@ public class ClienteRepositoryTest {
                 .apellidos("Perez")
                 .email("juan.perez@example.com")
                 .telefono("123456789")
+                .fotoDni("ruta/ejemplo/dni.png")
+                .fotoPerfil("ruta/ejemplo/perfil.png")
                 .user(user)
                 .isDeleted(false)
                 .build();
+
 
         cuenta1 = Cuenta.builder().guid("cuenta1-guid").build();
         cuenta2 = Cuenta.builder().guid("cuenta2-guid").build();
