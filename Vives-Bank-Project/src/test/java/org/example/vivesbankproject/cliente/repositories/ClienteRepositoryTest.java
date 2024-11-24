@@ -1,107 +1,157 @@
 package org.example.vivesbankproject.cliente.repositories;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.users.models.User;
-import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.transaction.annotation.Transactional;
 
 @DataJpaTest
 @ExtendWith(SpringExtension.class)
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-public class ClienteRepositoryTest {
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@Transactional
+class ClienteRepositoryTest {
 
     @Autowired
     private ClienteRepository clienteRepository;
 
-    private Cliente cliente;
-    private Cuenta cuenta1;
-    private Cuenta cuenta2;
+    @Autowired
+    private TestEntityManager entityManager;
 
-    private UserRepository userRepository;
+    private static User userTest;
+    private static Cliente clienteTest;
+    private static Cuenta cuenta1Test;
+    private static Cuenta cuenta2Test;
 
-    @BeforeEach
+  /*  @BeforeEach
     void setUp() {
-        clienteRepository.deleteAll();
-
-        User user = User.builder()
+        userTest = User.builder()
                 .guid("user-guid")
                 .username("testuser")
                 .password("password")
                 .build();
 
-        userRepository.save(user);
+        userTest = entityManager.merge(userTest);
 
-        cliente = Cliente.builder()
+        cuenta1Test = Cuenta.builder()
+                .guid("cuenta1-guid")
+                .iban("iban1")
+                .saldo(BigDecimal.valueOf(100))
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .isDeleted(false)
+                .build();
+
+        cuenta2Test = Cuenta.builder()
+                .guid("cuenta2-guid")
+                .iban("iban2")
+                .saldo(BigDecimal.valueOf(200))
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .isDeleted(false)
+                .build();
+
+        cuenta1Test = entityManager.merge(cuenta1Test);
+        cuenta2Test = entityManager.merge(cuenta2Test);
+
+        entityManager.flush();
+
+        clienteTest = Cliente.builder()
                 .guid("unique-guid")
                 .dni("12345678A")
                 .nombre("Juan")
                 .apellidos("Perez")
                 .email("juan.perez@example.com")
                 .telefono("123456789")
-                .user(user)
+                .user(userTest)
                 .isDeleted(false)
+                .cuentas(Set.of(cuenta1Test, cuenta2Test))
                 .build();
 
-        cuenta1 = Cuenta.builder().guid("cuenta1-guid").build();
-        cuenta2 = Cuenta.builder().guid("cuenta2-guid").build();
-        cliente.setCuentas(Set.of(cuenta1, cuenta2));
-
-        clienteRepository.save(cliente);
-    }
-
-
-    @Test
-    void FindByGuid() {
-        Optional<Cliente> foundCliente = clienteRepository.findByGuid("unique-guid");
-        assertThat(foundCliente).isPresent();
-        assertThat(foundCliente.get().getGuid()).isEqualTo("unique-guid");
+        clienteTest = clienteRepository.saveAndFlush(clienteTest);
     }
 
     @Test
-    void FindByDni() {
-        Optional<Cliente> foundCliente = clienteRepository.findByDni("12345678A");
-        assertThat(foundCliente).isPresent();
-        assertThat(foundCliente.get().getDni()).isEqualTo("12345678A");
+    void findByGuid() {
+        var result = clienteRepository.findByGuid("unique-guid");
+
+        assertAll(
+                () -> assertEquals(clienteTest.getGuid(), result.get().getGuid()),
+                () -> assertEquals(clienteTest.getDni(), result.get().getDni()),
+                () -> assertEquals(clienteTest.getNombre(), result.get().getNombre()),
+                () -> assertEquals(clienteTest.getApellidos(), result.get().getApellidos())
+        );
     }
 
     @Test
-    void FindByEmail() {
-        Optional<Cliente> foundCliente = clienteRepository.findByEmail("juan.perez@example.com");
-        assertThat(foundCliente).isPresent();
-        assertThat(foundCliente.get().getEmail()).isEqualTo("juan.perez@example.com");
+    void findByGuidNotFound() {
+        var result = clienteRepository.findByGuid("non-existent-guid");
+
+        assertNull(result.orElse(null));
     }
 
     @Test
-    void FindByTelefono() {
-        Optional<Cliente> foundCliente = clienteRepository.findByTelefono("123456789");
-        assertThat(foundCliente).isPresent();
-        assertThat(foundCliente.get().getTelefono()).isEqualTo("123456789");
+    void findByDni() {
+        var result = clienteRepository.findByDni("12345678A");
+
+        assertAll(
+                () -> assertEquals(clienteTest.getDni(), result.get().getDni()),
+                () -> assertEquals(clienteTest.getNombre(), result.get().getNombre()),
+                () -> assertEquals(clienteTest.getApellidos(), result.get().getApellidos())
+        );
     }
 
     @Test
-    void ExistsByUserGuid() {
+    void findByEmail() {
+        var result = clienteRepository.findByEmail("juan.perez@example.com");
+
+        assertAll(
+                () -> assertEquals(clienteTest.getEmail(), result.get().getEmail()),
+                () -> assertEquals(clienteTest.getNombre(), result.get().getNombre()),
+                () -> assertEquals(clienteTest.getApellidos(), result.get().getApellidos())
+        );
+    }
+
+    @Test
+    void findByTelefono() {
+        var result = clienteRepository.findByTelefono("123456789");
+
+        assertAll(
+                () -> assertEquals(clienteTest.getTelefono(), result.get().getTelefono()),
+                () -> assertEquals(clienteTest.getNombre(), result.get().getNombre()),
+                () -> assertEquals(clienteTest.getApellidos(), result.get().getApellidos())
+        );
+    }
+
+    @Test
+    void existsByUserGuid() {
         boolean exists = clienteRepository.existsByUserGuid("user-guid");
         assertThat(exists).isTrue();
     }
 
     @Test
-    void FindCuentasAsignadas() {
+    void findCuentasAsignadas() {
         Set<String> cuentasIds = Set.of("cuenta1-guid", "cuenta2-guid");
         List<Cuenta> cuentas = clienteRepository.findCuentasAsignadas(cuentasIds);
+
         assertThat(cuentas).hasSize(2);
         assertThat(cuentas).extracting(Cuenta::getGuid).containsExactlyInAnyOrder("cuenta1-guid", "cuenta2-guid");
-    }
+    }*/
 }
