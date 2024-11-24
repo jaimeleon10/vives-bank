@@ -17,37 +17,37 @@ import java.util.Set;
 @AllArgsConstructor
 public class ClienteRequestSave {
 
-    @NotBlank(message = "El DNI no puede estar vacío")
-    @Pattern(regexp = "^\\d{8}[TRWAGMYFPDXBNJZSQVHLCKEtrwagmyfpdxbnjzsqvhlcke]$", message = "El DNI debe tener 8 números seguidos de una letra")
+    @NotBlank(message = "El DNI no puede estar vacio")
+    @Pattern(regexp = "^\\d{8}[TRWAGMYFPDXBNJZSQVHLCKEtrwagmyfpdxbnjzsqvhlcke]$", message = "El DNI debe tener 8 numeros seguidos de una letra")
     private String dni;
 
-    @NotBlank(message = "El nombre no puede estar vacío")
+    @NotBlank(message = "El nombre no puede estar vacio")
     private String nombre;
 
-    @NotBlank(message = "Los apellidos no pueden estar vacío")
+    @NotBlank(message = "Los apellidos no pueden estar vacio")
     private String apellidos;
 
-    @Email(regexp = ".*@.*\\..*", message = "El email debe ser válido")
-    @NotBlank(message = "El email no puede estar vacío")
+    @Email(regexp = ".*@.*\\..*", message = "El email debe ser valido")
+    @NotBlank(message = "El email no puede estar vacio")
     private String email;
 
-    @Pattern(regexp = "^\\d{9}$", message = "El teléfono debe tener 9 números")
-    @NotBlank(message = "El teléfono no puede estar vacío")
+    @Pattern(regexp = "^\\d{9}$", message = "El telefono debe tener 9 numeros")
+    @NotBlank(message = "El telefono no puede estar vacio")
     private String telefono;
 
-    @NotBlank(message = "La foto de perfil no puede estar vacía")
+    @NotBlank(message = "La foto de perfil no puede estar vacia")
     private String fotoPerfil;
 
-    @NotBlank(message = "La foto del DNI no puede estar vacía")
+    @NotBlank(message = "La foto del DNI no puede estar vacia")
     private String fotoDni;
 
     @Builder.Default
     private Set<String> cuentasIds = new HashSet<>();
 
-    @NotBlank(message = "El id de usuario no puede estar vacío")
+    @NotBlank(message = "El id de usuario no puede estar vacio")
     private String userId;
 
-    @NotNull(message = "El campo de borrado lógico no puede ser nulo")
+    @NotNull(message = "El campo de borrado logico no puede ser nulo")
     @Builder.Default
     private Boolean isDeleted = false;
 }
