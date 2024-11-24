@@ -22,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
@@ -176,6 +177,31 @@ class UserControllerTest {
     }
 
     @Test
+    void usernameBlank() throws Exception {
+        UserRequest userRequest = UserRequest.builder()
+                .username("")
+                .password("password")
+                .roles(Set.of(Role.USER))
+                .isDeleted(false)
+                .build();
+
+        MvcResult response = mockMvc.perform(
+                        post("/v1/usuario")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(userRequest)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        String responseBody = response.getResponse().getContentAsString();
+        System.out.println(responseBody);
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), response.getResponse().getStatus()),
+                () -> assertTrue(responseBody.contains("Username no puede estar vacio"))
+        );
+    }
+
+    @Test
     void updateUser() throws Exception {
         User user = new User();
         user.setGuid("unique-guid");
@@ -248,7 +274,7 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"username\": \"\" }"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.username").value("Username no puede estar vacío"))
+                .andExpect(jsonPath("$.username").value("Username no puede estar vacio"))
                 .andReturn();
     }
 }
