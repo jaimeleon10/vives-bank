@@ -4,6 +4,7 @@ import org.example.vivesbankproject.cliente.dto.*;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.models.User;
 import org.springframework.stereotype.Component;
@@ -84,6 +85,15 @@ public class ClienteMapper {
                 .guid(cliente.getGuid())
                 .nombre(cliente.getNombre())
                 .cuentas(cuentaResponses)
+                .build();
+    }
+
+    public ClienteResponseProductosById toClienteResponseProductoById(Cliente cliente, CuentaResponse cuentaResponse, TarjetaResponse tarjetaResponse) {
+        return ClienteResponseProductosById.builder()
+                .guid(cliente.getGuid())
+                .nombre(cliente.getNombre())
+                .cuenta(cuentaResponse)
+                .tarjeta(tarjetaResponse)
                 .build();
     }
 }
