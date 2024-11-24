@@ -192,12 +192,31 @@ class UserControllerTest {
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
-        String responseBody = response.getResponse().getContentAsString();
-        System.out.println(responseBody);
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), response.getResponse().getStatus()),
+                () -> assertTrue(response.getResponse().getContentAsString().contains("Username no puede estar vacio"))
+        );
+    }
+
+    @Test
+    void passwordBlankAndLessThanFiveChars() throws Exception {
+        UserRequest userRequest = UserRequest.builder()
+                .username("testuser1")
+                .password("")
+                .roles(Set.of(Role.USER))
+                .isDeleted(false)
+                .build();
+
+        MvcResult response = mockMvc.perform(
+                        post("/v1/usuario")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(userRequest)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
 
         assertAll(
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), response.getResponse().getStatus()),
-                () -> assertTrue(responseBody.contains("Username no puede estar vacio"))
+                () -> assertTrue(response.getResponse().getContentAsString().contains("Password debe tener al menos 5 caracteres"))
         );
     }
 
