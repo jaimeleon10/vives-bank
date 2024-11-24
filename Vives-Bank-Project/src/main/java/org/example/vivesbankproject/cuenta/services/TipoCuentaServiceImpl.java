@@ -4,11 +4,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
 import org.example.vivesbankproject.cuenta.exceptions.CuentaExists;
+import org.example.vivesbankproject.cuenta.exceptions.TipoCuentaExists;
 import org.example.vivesbankproject.cuenta.exceptions.TipoCuentaNotFound;
 import org.example.vivesbankproject.cuenta.mappers.TipoCuentaMapper;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.TipoCuentaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -18,6 +23,7 @@ import java.util.Optional;
 
 @Service
 @Slf4j
+@CacheConfig(cacheNames = {"tipo_Cuentas"})
 public class TipoCuentaServiceImpl implements TipoCuentaService {
     private final TipoCuentaRepository tipoCuentaRepository;
     private final TipoCuentaMapper tipoCuentaMapper;
@@ -49,6 +55,7 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
     }
 
     @Override
+    @Cacheable
     public TipoCuentaResponse getById(String id) {
         log.info("Obteniendo tipo de cuenta con id: {}", id);
         var tipoCuenta = tipoCuentaRepository.findByGuid(id).orElseThrow(() -> new TipoCuentaNotFound(id));
@@ -56,16 +63,18 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
     }
 
     @Override
+    @CachePut
     public TipoCuentaResponse save(TipoCuentaRequest tipoCuentaRequest) {
         log.info("Guardando tipo de cuenta: {}", tipoCuentaRequest);
         if (tipoCuentaRepository.findByNombre(tipoCuentaRequest.getNombre()).isPresent()) {
-            throw new CuentaExists(tipoCuentaRequest.getNombre());
+            throw new TipoCuentaExists(tipoCuentaRequest.getNombre());
         }
         var tipoCuenta = tipoCuentaRepository.save(tipoCuentaMapper.toTipoCuenta(tipoCuentaRequest));
         return tipoCuentaMapper.toTipoCuentaResponse(tipoCuenta);
     }
 
     @Override
+    @CachePut
     public TipoCuentaResponse update(String id, TipoCuentaRequest tipoCuentaRequest) {
         log.info("Actualizando tipo de cuenta con id {}", id);
         var tipoCuenta = tipoCuentaRepository.findByGuid(id).orElseThrow(() -> new TipoCuentaNotFound(id));
@@ -74,6 +83,7 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
     }
 
     @Override
+    @CacheEvict
     public void deleteById(String id) {
         log.info("Eliminando tipo de cuenta con id {}", id);
         var tipoCuentaExistente = tipoCuentaRepository.findByGuid(id).orElseThrow(() -> new TipoCuentaNotFound(id));
