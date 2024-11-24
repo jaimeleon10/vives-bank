@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
+import org.example.vivesbankproject.users.models.Role;
 import org.example.vivesbankproject.users.models.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,12 +41,13 @@ class ClienteRepositoryTest {
     private static Cuenta cuenta1Test;
     private static Cuenta cuenta2Test;
 
-  /*  @BeforeEach
+    @BeforeEach
     void setUp() {
         userTest = User.builder()
                 .guid("user-guid")
                 .username("testuser")
                 .password("password")
+                .roles(Set.of(Role.USER))
                 .build();
 
         userTest = entityManager.merge(userTest);
@@ -153,5 +155,5 @@ class ClienteRepositoryTest {
 
         assertThat(cuentas).hasSize(2);
         assertThat(cuentas).extracting(Cuenta::getGuid).containsExactlyInAnyOrder("cuenta1-guid", "cuenta2-guid");
-    }*/
+    }
 }

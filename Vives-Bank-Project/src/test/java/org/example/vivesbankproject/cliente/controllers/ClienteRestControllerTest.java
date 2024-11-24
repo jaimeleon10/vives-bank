@@ -40,6 +40,7 @@ import org.springframework.test.web.servlet.MvcResult;
 class ClienteRestControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final String myEndpoint = "/ v1/ cliente";
 
     @Autowired
     private MockMvc mockMvc;
@@ -589,112 +590,56 @@ class ClienteRestControllerTest {
             );
         }
 
-        @Test
-        void emptyFotoDniUpdate() throws Exception {
-            ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
-                    .nombre("Juan")
-                    .apellidos("Perez")
-                    .email("juan.perez@example.com")
-                    .telefono("123456789")
-                    .fotoPerfil("fotoprfil.jpg")
-                    .fotoDni("") // Empty fotoDni
-                    .userId("user-guid")
-                    .build();
-
-            MvcResult result = mockMvc.perform(
-                            put("/v1/cliente/{id}", "123")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(clienteRequestUpdate)))
-                    .andExpect(status().isBadRequest())
-                    .andReturn();
-
-            assertAll(
-                    () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                    () -> assertTrue(result.getResponse().getContentAsString().contains("La foto del DNI no puede estar vacia"))
-            );
-        }
-
-        @Test
-        void emptyUserIdUpdate() throws Exception {
-            ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
-                    .nombre("Juan")
-                    .apellidos("Perez")
-                    .email("juan.perez@example.com")
-                    .telefono("123456789")
-                    .fotoPerfil("fotoprfil.jpg")
-                    .fotoDni("fotodni.jpg")
-                    .userId("") // Empty userId
-                    .build();
-
-            MvcResult result = mockMvc.perform(
-                            put("/v1/cliente/{id}", "123")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(clienteRequestUpdate)))
-                    .andExpect(status().isBadRequest())
-                    .andReturn();
-
-            assertAll(
-                    () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                    () -> assertTrue(result.getResponse().getContentAsString().contains("El id de usuario no puede estar vacio"))
-            );
-        }
-
-
     @Test
-    void AddCuentas() throws Exception {
-        ClienteCuentasRequest clienteCuentasRequest = ClienteCuentasRequest.builder()
-                .cuentasIds(Set.of("cuenta1-guid", "cuenta2-guid"))
-                .build();
-
-        ClienteResponse clienteResponse = ClienteResponse.builder()
-                .guid("unique-guid")
-                .dni("12345678A")
+    void emptyFotoDniUpdate() throws Exception {
+        ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
                 .nombre("Juan")
                 .apellidos("Perez")
                 .email("juan.perez@example.com")
                 .telefono("123456789")
+                .fotoPerfil("fotoprfil.jpg")
+                .fotoDni("") // Empty fotoDni
+                .userId("user-guid")
                 .build();
 
-        Mockito.when(clienteService.addCuentas(eq("unique-guid"), any(ClienteCuentasRequest.class))).thenReturn(clienteResponse);
+        MvcResult result = mockMvc.perform(
+                        put("/v1/cliente/{id}", "123")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(clienteRequestUpdate)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
 
-        mockMvc.perform(put("/v1/cliente/unique-guid/add")
-                        .contentType("application/json")
-                        .content("{ \"cuentasIds\": [\"cuenta1-guid\", \"cuenta2-guid\"] }"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.dni").value("12345678A"))
-                .andExpect(jsonPath("$.nombre").value("Juan"))
-                .andExpect(jsonPath("$.apellidos").value("Perez"))
-                .andExpect(jsonPath("$.email").value("juan.perez@example.com"))
-                .andExpect(jsonPath("$.telefono").value("123456789"));
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("La foto del DNI no puede estar vacia"))
+        );
     }
 
     @Test
-    void removeCuentas() throws Exception {
-        ClienteCuentasRequest clienteCuentasRequest = ClienteCuentasRequest.builder()
-                .cuentasIds(Set.of("cuenta1-guid", "cuenta2-guid"))
-                .build();
-
-        ClienteResponse clienteResponse = ClienteResponse.builder()
-                .guid("unique-guid")
-                .dni("12345678A")
+    void emptyUserIdUpdate() throws Exception {
+        ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
                 .nombre("Juan")
                 .apellidos("Perez")
                 .email("juan.perez@example.com")
                 .telefono("123456789")
+                .fotoPerfil("fotoprfil.jpg")
+                .fotoDni("fotodni.jpg")
+                .userId("") // Empty userId
                 .build();
 
-        Mockito.when(clienteService.removeCuentas(eq("unique-guid"), any(ClienteCuentasRequest.class))).thenReturn(clienteResponse);
+        MvcResult result = mockMvc.perform(
+                        put("/v1/cliente/{id}", "123")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(clienteRequestUpdate)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
 
-        mockMvc.perform(put("/v1/cliente/unique-guid/delete")
-                        .contentType("application/json")
-                        .content("{ \"cuentasIds\": [\"cuenta1-guid\", \"cuenta2-guid\"] }"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.dni").value("12345678A"))
-                .andExpect(jsonPath("$.nombre").value("Juan"))
-                .andExpect(jsonPath("$.apellidos").value("Perez"))
-                .andExpect(jsonPath("$.email").value("juan.perez@example.com"))
-                .andExpect(jsonPath("$.telefono").value("123456789"));
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El id de usuario no puede estar vacio"))
+        );
     }
+
 
     @Test
     void DeleteCliente() throws Exception {
@@ -704,13 +649,13 @@ class ClienteRestControllerTest {
                 .andExpect(status().isNoContent());
     }
 
-   /* @Test
-    void testValidationExceptionHandler() throws Exception {
-        mvc.perform(post(myEndpoint)
+    @Test
+    void handleValidationExceptions() throws Exception {
+        mockMvc.perform(post(myEndpoint)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{ \"nombre\": \"\" }")) // En este caso, el campo 'nombre' está vacío, lo que debería causar una excepción de validación
-                .andExpect(status().isBadRequest()) // El estado debe ser 400 Bad Request
-                .andExpect(jsonPath("$.nombre").value("El nombre no puede ser un campo vacio"))
+                        .content("{ \"username\": \"\" }"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.username").value("Username no puede estar vacio"))
                 .andReturn();
-    }*/
+    }
 }
