@@ -105,7 +105,7 @@ public class TarjetaServiceImpl implements TarjetaService {
 
 
     @Override
-    @Cacheable(key = "#id")
+    @Cacheable
     public TarjetaResponse getById(String id) {
         log.info("Obteniendo la tarjeta con ID: {}", id);
         var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
@@ -113,7 +113,7 @@ public class TarjetaServiceImpl implements TarjetaService {
     }
 
     @Override
-    @Cacheable(key = "#id")
+    @Cacheable
     public TarjetaResponsePrivado getPrivateData(String id, TarjetaRequestPrivado tarjetaRequestPrivado) {
         // Cambiar cuando añadamos autenticación
         log.info("Obteniendo datos privados de la tarjeta con ID: {}", id);
@@ -131,7 +131,7 @@ public class TarjetaServiceImpl implements TarjetaService {
     }
 
     @Override
-    @CachePut(key = "#result.guid")
+    @CachePut
     public TarjetaResponse save(TarjetaRequestSave tarjetaRequestSave) {
         log.info("Guardando tarjeta: {}", tarjetaRequestSave);
         var tarjeta = tarjetaRepository.save(tarjetaMapper.toTarjeta(tarjetaRequestSave));
@@ -139,7 +139,7 @@ public class TarjetaServiceImpl implements TarjetaService {
     }
 
     @Override
-    @CachePut(key = "#result.guid")
+    @CachePut
     public TarjetaResponse update(String id, TarjetaRequestUpdate tarjetaRequestUpdate) {
         log.info("Actualizando tarjeta con id: {}", id);
         var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(
@@ -150,7 +150,7 @@ public class TarjetaServiceImpl implements TarjetaService {
     }
 
     @Override
-    @CacheEvict(key = "#id")
+    @CacheEvict
     public void deleteById(String id) {
         log.info("Eliminando tarjeta con ID: {}", id);
         var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
