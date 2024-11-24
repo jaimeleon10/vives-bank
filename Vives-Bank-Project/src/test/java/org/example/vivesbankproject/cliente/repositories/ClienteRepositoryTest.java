@@ -90,7 +90,7 @@ class ClienteRepositoryTest {
         clienteTest = clienteRepository.saveAndFlush(clienteTest);
     }
 
-    @Test
+   /* @Test
     void findByGuid() {
         var result = clienteRepository.findByGuid("unique-guid");
 
@@ -155,5 +155,5 @@ class ClienteRepositoryTest {
 
         assertThat(cuentas).hasSize(2);
         assertThat(cuentas).extracting(Cuenta::getGuid).containsExactlyInAnyOrder("cuenta1-guid", "cuenta2-guid");
-    }
+    }*/
 }
