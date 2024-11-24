@@ -1,5 +1,7 @@
 package org.example.vivesbankproject.cliente.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.example.vivesbankproject.cliente.dto.*;
 import org.example.vivesbankproject.cliente.service.ClienteService;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
@@ -7,12 +9,16 @@ import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.utils.PaginationLinksUtils;
 import org.junit.jupiter.api.Test;
 
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.mockito.Mockito;
@@ -23,10 +29,17 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 class ClienteRestControllerTest {
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
     private MockMvc mockMvc;
@@ -164,6 +177,207 @@ class ClienteRestControllerTest {
                 .andExpect(jsonPath("$.email").value("juan.perez@example.com"))
                 .andExpect(jsonPath("$.telefono").value("123456789"));
     }
+
+
+
+        @Test
+        void InvalidDni() throws Exception {
+            ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
+                    .dni("1234567A") // Invalid DNI
+                    .nombre("Juan")
+                    .apellidos("Perez")
+                    .email("juan.perez@example.com")
+                    .telefono("123456789")
+                    .fotoPerfil("fotoprfil.jpg")
+                    .fotoDni("fotodni.jpg")
+                    .cuentasIds(new HashSet<>())
+                    .userId("user-guid")
+                    .isDeleted(false)
+                    .build();
+
+            MvcResult result = mockMvc.perform(
+                            post("/v1/cliente")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(clienteRequestSave)))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertAll(
+                    () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                    () -> assertTrue(result.getResponse().getContentAsString().contains("El DNI debe tener 8 numeros seguidos de una letra"))
+            );
+        }
+
+        @Test
+        void EmptyNombre() throws Exception {
+            ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
+                    .dni("12345678Z")
+                    .nombre("") // Empty nombre
+                    .apellidos("Perez")
+                    .email("juan.perez@example.com")
+                    .telefono("123456789")
+                    .fotoPerfil("fotoprfil.jpg")
+                    .fotoDni("fotodni.jpg")
+                    .cuentasIds(new HashSet<>())
+                    .userId("user-guid")
+                    .isDeleted(false)
+                    .build();
+
+            MvcResult result = mockMvc.perform(
+                            post("/v1/cliente")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(clienteRequestSave)))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertAll(
+                    () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                    () -> assertTrue(result.getResponse().getContentAsString().contains("El nombre no puede estar vacio"))
+            );
+        }
+
+        @Test
+        void EmptyApellidos() throws Exception {
+            ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
+                    .dni("12345678Z")
+                    .nombre("Juan")
+                    .apellidos("") // Empty apellidos
+                    .email("juan.perez@example.com")
+                    .telefono("123456789")
+                    .fotoPerfil("fotoprfil.jpg")
+                    .fotoDni("fotodni.jpg")
+                    .cuentasIds(new HashSet<>())
+                    .userId("user-guid")
+                    .isDeleted(false)
+                    .build();
+
+            MvcResult result = mockMvc.perform(
+                            post("/v1/cliente")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(clienteRequestSave)))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertAll(
+                    () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                    () -> assertTrue(result.getResponse().getContentAsString().contains("Los apellidos no pueden estar vacio"))
+            );
+        }
+
+        @Test
+        void InvalidEmail() throws Exception {
+            ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
+                    .dni("12345678Z")
+                    .nombre("Juan")
+                    .apellidos("Perez")
+                    .email("juan.perezexamplecom") // Invalid email
+                    .telefono("123456789")
+                    .fotoPerfil("fotoprfil.jpg")
+                    .fotoDni("fotodni.jpg")
+                    .cuentasIds(new HashSet<>())
+                    .userId("user-guid")
+                    .isDeleted(false)
+                    .build();
+
+            MvcResult result = mockMvc.perform(
+                            post("/v1/cliente")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(clienteRequestSave)))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertAll(
+                    () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                    () -> assertTrue(result.getResponse().getContentAsString().contains("El email debe ser valido"))
+            );
+        }
+
+        @Test
+        void EmptyEmail() throws Exception {
+            ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
+                    .dni("12345678Z")
+                    .nombre("Juan")
+                    .apellidos("Perez")
+                    .email("") // Empty email
+                    .telefono("123456789")
+                    .fotoPerfil("fotoprfil.jpg")
+                    .fotoDni("fotodni.jpg")
+                    .cuentasIds(new HashSet<>())
+                    .userId("user-guid")
+                    .isDeleted(false)
+                    .build();
+
+            MvcResult result = mockMvc.perform(
+                            post("/v1/cliente")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(clienteRequestSave)))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertAll(
+                    () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                    () -> assertTrue(result.getResponse().getContentAsString().contains("El email no puede estar vacio"))
+            );
+        }
+
+        @Test
+        void InvalidTelefono() throws Exception {
+            ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
+                    .dni("12345678Z")
+                    .nombre("Juan")
+                    .apellidos("Perez")
+                    .email("juan.perez@example.com")
+                    .telefono("12345678") // Invalid telefono
+                    .fotoPerfil("fotoprfil.jpg")
+                    .fotoDni("fotodni.jpg")
+                    .cuentasIds(new HashSet<>())
+                    .userId("user-guid")
+                    .isDeleted(false)
+                    .build();
+
+            MockHttpServletResponse result = mockMvc.perform(
+                            post("/v1/cliente")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(clienteRequestSave)))
+                    .andExpect(status().isBadRequest())
+                    .andReturn().getResponse();
+
+            assertAll(
+                    () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getStatus()),
+                    () -> assertTrue(result.getContentAsString().contains("El telefono debe tener 9 numeros"))
+            );
+        }
+
+        @Test
+        void EmptyTelefono() throws Exception {
+            ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
+                    .dni("12345678Z")
+                    .nombre("Juan")
+                    .apellidos("Perez")
+                    .email("juan.perez@example.com")
+                    .telefono("") // Empty telefono
+                    .fotoPerfil("fotoprfil.jpg")
+                    .fotoDni("fotodni.jpg")
+                    .cuentasIds(new HashSet<>())
+                    .userId("user-guid")
+                    .isDeleted(false)
+                    .build();
+
+            MockHttpServletResponse result= mockMvc.perform(
+                            post("/v1/cliente")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(clienteRequestSave)))
+                    .andExpect(status().isBadRequest())
+                    .andReturn().getResponse();
+
+            assertAll(
+                    () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getStatus()),
+                    () -> assertTrue(result.getContentAsString().contains("El telefono no puede estar vacio"))
+            );
+        }
+
+
+
 
     @Test
     void UpdateCliente() throws Exception {
