@@ -102,7 +102,7 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
     @Override
-    @Cacheable(key = "#id")
+    @Cacheable
     public CuentaResponse getById(String id) {
         log.info("Obteniendo la cuenta con id: {}", id);
         var cuenta = cuentaRepository.findByGuid(id).orElseThrow(() -> new CuentaNotFound(id));
@@ -112,7 +112,7 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
     @Override
-    @CachePut(key = "#result.guid")
+    @CachePut
     public CuentaResponse save(CuentaRequest cuentaRequest) {
         log.info("Guardando cuenta: {}", cuentaRequest);
         var tipoCuenta = tipoCuentaRepository.findByGuid(cuentaRequest.getTipoCuentaId()).orElseThrow(
@@ -130,6 +130,10 @@ public class CuentaServiceImpl implements CuentaService{
         cliente.getCuentas().add(cuentaSaved);
         clienteRepository.save(cliente);
 
+        // Forzamos sincronización y evitamos cache en siguiente busqueda de cliente
+        clienteRepository.flush();
+        evictClienteCache(cliente.getGuid());
+
         var tipoCuentaResponse = tipoCuentaMapper.toTipoCuentaResponse(cuentaSaved.getTipoCuenta());
         var tarjetaResponse = tarjetaMapper.toTarjetaResponse(cuentaSaved.getTarjeta());
         var clienteResponse = clienteMapper.toClienteDataResponse(cliente);
@@ -137,7 +141,7 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
     @Override
-    @CachePut(key = "#result.guid")
+    @CachePut
     public CuentaResponse update(String id, CuentaRequestUpdate cuentaRequestUpdate) {
         log.info("Actualizando cuenta con id {}", id);
         var cuenta = cuentaRepository.findByGuid(id).orElseThrow(
@@ -152,7 +156,7 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
     @Override
-    @CacheEvict(key = "#id")
+    @CacheEvict
     public void deleteById(String id) {
         log.info("Eliminando cuenta con id {}", id);
         var cuentaExistente = cuentaRepository.findByGuid(id).orElseThrow(
@@ -160,5 +164,10 @@ public class CuentaServiceImpl implements CuentaService{
         );
         cuentaExistente.setIsDeleted(true);
         cuentaRepository.save(cuentaExistente);
+    }
+
+    @CacheEvict
+    public void evictClienteCache(String clienteGuid) {
+        log.info("Invalidando la caché del cliente con GUID: {}", clienteGuid);
     }
 }
