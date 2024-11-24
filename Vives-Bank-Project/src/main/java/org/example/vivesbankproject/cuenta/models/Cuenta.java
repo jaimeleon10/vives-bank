@@ -1,8 +1,10 @@
 package org.example.vivesbankproject.cuenta.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.utils.IbanGenerator;
 import org.example.vivesbankproject.utils.IdGenerator;
@@ -10,7 +12,6 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.Cache;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
 @Table(name = "cuentas")
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(exclude = {"cliente"})
 public class Cuenta {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,6 +48,12 @@ public class Cuenta {
     @OneToOne
     @JoinColumn(name = "tarjeta_id", referencedColumnName = "id")
     private Tarjeta tarjeta;
+
+    @ManyToOne
+    @JoinColumn(name = "cliente_id", nullable = false)
+    @NotNull(message = "La cuenta debe estar asociada a un cliente")
+    @JsonIgnore
+    private Cliente cliente;
 
     @CreationTimestamp
     @Column(updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
