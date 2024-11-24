@@ -84,15 +84,15 @@ public class ClienteRestController {
         return ResponseEntity.ok(result);
     }
 
-/*    @PutMapping("{id}/add")
-    public ResponseEntity<ClienteResponse> addCuentas(@PathVariable String id, @Valid @RequestBody ClienteCuentaRequest clienteCuentaRequest) {
-        var result = clienteService.addCuentas(id, clienteCuentaRequest);
+    @PutMapping("{id}/add")
+    public ResponseEntity<ClienteResponse> addCuentas(@PathVariable String id, @Valid @RequestBody ClienteCuentasRequest clienteCuentasRequest) {
+        var result = clienteService.addCuentas(id, clienteCuentasRequest);
         return ResponseEntity.ok(result);
     }*/
 
-/*    @PutMapping("{id}/delete")
-    public ResponseEntity<ClienteResponse> deleteCuentas(@PathVariable String id, @Valid @RequestBody ClienteCuentaRequest clienteCuentaRequest) {
-        var result = clienteService.deleteCuentas(id, clienteCuentaRequest);
+    @PutMapping("{id}/delete")
+    public ResponseEntity<ClienteResponse> deleteCuentas(@PathVariable String id, @Valid @RequestBody ClienteCuentasRequest clienteCuentasRequest) {
+        var result = clienteService.deleteCuentas(id, clienteCuentasRequest);
         return ResponseEntity.ok(result);
     }*/
 

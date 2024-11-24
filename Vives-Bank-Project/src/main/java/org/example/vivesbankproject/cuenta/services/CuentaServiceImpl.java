@@ -2,6 +2,9 @@ package org.example.vivesbankproject.cuenta.services;
 
 import jakarta.persistence.criteria.Join;
 import lombok.extern.slf4j.Slf4j;
+import org.example.vivesbankproject.cliente.exceptions.ClienteNotFound;
+import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
+import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequest;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequestUpdate;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
@@ -17,6 +20,7 @@ import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
 import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.users.dto.UserResponse;
+import org.example.vivesbankproject.users.mappers.UserMapper;
 import org.example.vivesbankproject.users.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
@@ -43,15 +47,19 @@ public class CuentaServiceImpl implements CuentaService{
     private final TarjetaMapper tarjetaMapper;
     private final TipoCuentaRepository tipoCuentaRepository;
     private final TarjetaRepository tarjetaRepository;
+    private final ClienteMapper clienteMapper;
+    private final ClienteRepository clienteRepository;
 
     @Autowired
-    public CuentaServiceImpl(CuentaRepository cuentaRepository, CuentaMapper cuentaMapper, TipoCuentaMapper tipoCuentaMapper, TarjetaMapper tarjetaMapper, TipoCuentaRepository tipoCuentaRepository, TarjetaRepository tarjetaRepository) {
+    public CuentaServiceImpl(CuentaRepository cuentaRepository, CuentaMapper cuentaMapper, TipoCuentaMapper tipoCuentaMapper, TarjetaMapper tarjetaMapper, TipoCuentaRepository tipoCuentaRepository, TarjetaRepository tarjetaRepository, ClienteMapper clienteMapper, ClienteRepository clienteRepository) {
         this.cuentaRepository = cuentaRepository;
         this.cuentaMapper = cuentaMapper;
         this.tipoCuentaMapper = tipoCuentaMapper;
         this.tarjetaMapper = tarjetaMapper;
         this.tipoCuentaRepository = tipoCuentaRepository;
         this.tarjetaRepository = tarjetaRepository;
+        this.clienteMapper = clienteMapper;
+        this.clienteRepository = clienteRepository;
     }
 
     @Override
@@ -83,7 +91,14 @@ public class CuentaServiceImpl implements CuentaService{
 
         Page<Cuenta> cuentaPage = cuentaRepository.findAll(criterio, pageable);
 
-        return cuentaPage.map(cuenta -> cuentaMapper.toCuentaResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())));
+        return cuentaPage.map(cuenta ->
+                cuentaMapper.toCuentaResponse(
+                        cuenta,
+                        tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()),
+                        tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta()),
+                        clienteMapper.toClienteDataResponse(cuenta.getCliente())
+                )
+        );
     }
 
     @Override
@@ -93,7 +108,7 @@ public class CuentaServiceImpl implements CuentaService{
         var cuenta = cuentaRepository.findByGuid(id).orElseThrow(() -> new CuentaNotFound(id));
         var tipoCuentaResponse = tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta());
         var tarjetaResponse = tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta());
-        return cuentaMapper.toCuentaResponse(cuenta, tipoCuentaResponse, tarjetaResponse);
+        return cuentaMapper.toCuentaResponse(cuenta, tipoCuentaResponse, tarjetaResponse, clienteMapper.toClienteDataResponse(cuenta.getCliente()));
     }
 
     @Override
@@ -106,21 +121,34 @@ public class CuentaServiceImpl implements CuentaService{
         var tarjeta = tarjetaRepository.findByGuid(cuentaRequest.getTarjetaId()).orElseThrow(
                 () -> new TarjetaNotFound(cuentaRequest.getTarjetaId())
         );
-        var cuenta = cuentaRepository.save(cuentaMapper.toCuenta(tipoCuenta, tarjeta));
-        var tipoCuentaResponse = tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta());
-        var tarjetaResponse = tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta());
-        return cuentaMapper.toCuentaResponse(cuenta, tipoCuentaResponse, tarjetaResponse);
+        var cliente = clienteRepository.findByGuid(cuentaRequest.getClienteId()).orElseThrow(
+                () -> new ClienteNotFound(cuentaRequest.getClienteId())
+        );
+        var cuentaSaved = cuentaRepository.save(cuentaMapper.toCuenta(tipoCuenta, tarjeta, cliente));
+
+        // Actualizamos el listado de cuentas del cliente
+        cliente.getCuentas().add(cuentaSaved);
+        clienteRepository.save(cliente);
+
+        var tipoCuentaResponse = tipoCuentaMapper.toTipoCuentaResponse(cuentaSaved.getTipoCuenta());
+        var tarjetaResponse = tarjetaMapper.toTarjetaResponse(cuentaSaved.getTarjeta());
+        var clienteResponse = clienteMapper.toClienteDataResponse(cliente);
+        return cuentaMapper.toCuentaResponse(cuentaSaved, tipoCuentaResponse, tarjetaResponse, clienteResponse);
     }
 
     @Override
     @CachePut(key = "#result.guid")
     public CuentaResponse update(String id, CuentaRequestUpdate cuentaRequestUpdate) {
         log.info("Actualizando cuenta con id {}", id);
-        var cuenta = cuentaRepository.findByGuid(id).orElseThrow(() -> new CuentaNotFound(id));
+        var cuenta = cuentaRepository.findByGuid(id).orElseThrow(
+                () -> new CuentaNotFound(id)
+        );
         var cuentaSaved = cuentaRepository.save(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta, cuenta.getTipoCuenta(), cuenta.getTarjeta()));
+
         var tipoCuentaResponse = tipoCuentaMapper.toTipoCuentaResponse(cuentaSaved.getTipoCuenta());
         var tarjetaResponse = tarjetaMapper.toTarjetaResponse(cuentaSaved.getTarjeta());
-        return cuentaMapper.toCuentaResponse(cuentaSaved, tipoCuentaResponse, tarjetaResponse);
+        var clienteResponse = clienteMapper.toClienteDataResponse(cuentaSaved.getCliente());
+        return cuentaMapper.toCuentaResponse(cuentaSaved, tipoCuentaResponse, tarjetaResponse, clienteResponse);
     }
 
     @Override
