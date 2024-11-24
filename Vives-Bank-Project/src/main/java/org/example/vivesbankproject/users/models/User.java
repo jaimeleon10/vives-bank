@@ -40,7 +40,6 @@ public class User {
     private String password;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private Set<Role> roles = Set.of(Role.USER);

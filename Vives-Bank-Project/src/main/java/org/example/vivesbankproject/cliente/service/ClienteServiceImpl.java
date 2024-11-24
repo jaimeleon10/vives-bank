@@ -96,7 +96,7 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
-    @Cacheable(key = "#id")
+    @Cacheable
     public ClienteResponse getById(String id) {
         var cliente = clienteRepository.findByGuid(id).orElseThrow(() -> new ClienteNotFound(id));
         var user = userMapper.toUserResponse(cliente.getUser());
@@ -108,7 +108,7 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
-    @CachePut(key = "#result.guid")
+    @CachePut
     public ClienteResponse save(ClienteRequestSave clienteRequestSave) {
         // Buscamos si existe algún cliente con el usuario adjunto ya asignado
         if (clienteRepository.existsByUserGuid(clienteRequestSave.getUserId())) {
@@ -164,11 +164,12 @@ public class ClienteServiceImpl implements ClienteService {
                 .collect(Collectors.toSet());
 
         // Guardamos el cliente y lo mapeamos a response para devolverlo
-        return clienteMapper.toClienteResponse(clienteRepository.save(cliente), userMapper.toUserResponse(usuarioExistente), cuentasResponse);
+        var clienteSaved = clienteRepository.save(cliente);
+        return clienteMapper.toClienteResponse(clienteSaved, userMapper.toUserResponse(usuarioExistente), cuentasResponse);
     }
 
     @Override
-    @CachePut(key = "#result.guid")
+    @CachePut
     public ClienteResponse update(String id, ClienteRequestUpdate clienteRequestUpdate) {
         // Buscamos si existe el cliente con la el parámetro id
         var clienteExistente = clienteRepository.findByGuid(id).orElseThrow(
@@ -291,7 +292,7 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
-    @CacheEvict(key = "#id")
+    @CacheEvict
     @Transactional
     public void deleteById(String id) {
         var cliente = clienteRepository.findByGuid(id).orElseThrow(

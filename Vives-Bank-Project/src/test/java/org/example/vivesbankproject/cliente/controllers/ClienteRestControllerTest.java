@@ -413,6 +413,233 @@ class ClienteRestControllerTest {
                 .andExpect(jsonPath("$.telefono").value("123456789"));
     }
 
+
+        @Test
+        void emptyNombreUpdate() throws Exception {
+            ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
+                    .nombre("") // Empty nombre
+                    .apellidos("Perez")
+                    .email("juan.perez@example.com")
+                    .telefono("123456789")
+                    .fotoPerfil("fotoprfil.jpg")
+                    .fotoDni("fotodni.jpg")
+                    .userId("user-guid")
+                    .build();
+
+            MvcResult result = mockMvc.perform(
+                            put("/v1/cliente/{id}", "123")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(clienteRequestUpdate)))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertAll(
+                    () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                    () -> assertTrue(result.getResponse().getContentAsString().contains("El nombre no puede estar vacio"))
+            );
+        }
+
+        @Test
+        void emptyApellidosUpdate() throws Exception {
+            ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
+                    .nombre("Juan")
+                    .apellidos("") // Empty apellidos
+                    .email("juan.perez@example.com")
+                    .telefono("123456789")
+                    .fotoPerfil("fotoprfil.jpg")
+                    .fotoDni("fotodni.jpg")
+                    .userId("user-guid")
+                    .build();
+
+            MvcResult result = mockMvc.perform(
+                            put("/v1/cliente/{id}", "123")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(clienteRequestUpdate)))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertAll(
+                    () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                    () -> assertTrue(result.getResponse().getContentAsString().contains("Los apellidos no pueden estar vacio"))
+            );
+        }
+
+        @Test
+        void invalidEmailUpdate() throws Exception {
+            ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
+                    .nombre("Juan")
+                    .apellidos("Perez")
+                    .email("juan.perezexample.com") // Invalid email
+                    .telefono("123456789")
+                    .fotoPerfil("fotoprfil.jpg")
+                    .fotoDni("fotodni.jpg")
+                    .userId("user-guid")
+                    .build();
+
+            MvcResult result = mockMvc.perform(
+                            put("/v1/cliente/{id}", "123")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(clienteRequestUpdate)))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertAll(
+                    () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                    () -> assertTrue(result.getResponse().getContentAsString().contains("El email debe ser valido"))
+            );
+        }
+
+        @Test
+        void emptyEmailUpdate() throws Exception {
+            ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
+                    .nombre("Juan")
+                    .apellidos("Perez")
+                    .email("") // Empty email
+                    .telefono("123456789")
+                    .fotoPerfil("fotoprfil.jpg")
+                    .fotoDni("fotodni.jpg")
+                    .userId("user-guid")
+                    .build();
+
+            MvcResult result = mockMvc.perform(
+                            put("/v1/cliente/{id}", "123")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(clienteRequestUpdate)))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertAll(
+                    () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                    () -> assertTrue(result.getResponse().getContentAsString().contains("El email no puede estar vacio"))
+            );
+        }
+
+        @Test
+        void invalidTelefonoUpdate() throws Exception {
+            ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
+                    .nombre("Juan")
+                    .apellidos("Perez")
+                    .email("juan.perez@example.com")
+                    .telefono("12345678") // Invalid telefono
+                    .fotoPerfil("fotoprfil.jpg")
+                    .fotoDni("fotodni.jpg")
+                    .userId("user-guid")
+                    .build();
+
+            MvcResult result = mockMvc.perform(
+                            put("/v1/cliente/{id}", "123")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(clienteRequestUpdate)))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertAll(
+                    () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                    () -> assertTrue(result.getResponse().getContentAsString().contains("El telefono debe tener 9 numeros"))
+            );
+        }
+
+        @Test
+        void emptyTelefonoUpdate() throws Exception {
+            ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
+                    .nombre("Juan")
+                    .apellidos("Perez")
+                    .email("juan.perez@example.com")
+                    .telefono("") // Empty telefono
+                    .fotoPerfil("fotoprfil.jpg")
+                    .fotoDni("fotodni.jpg")
+                    .userId("user-guid")
+                    .build();
+
+            MvcResult result = mockMvc.perform(
+                            put("/v1/cliente/{id}", "123")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(clienteRequestUpdate)))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertAll(
+                    () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                    () -> assertTrue(result.getResponse().getContentAsString().contains("El telefono no puede estar vacio"))
+            );
+        }
+
+        @Test
+        void emptyFotoPerfilUpdate() throws Exception {
+            ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
+                    .nombre("Juan")
+                    .apellidos("Perez")
+                    .email("juan.perez@example.com")
+                    .telefono("123456789")
+                    .fotoPerfil("") // Empty fotoPerfil
+                    .fotoDni("fotodni.jpg")
+                    .userId("user-guid")
+                    .build();
+
+            MvcResult result = mockMvc.perform(
+                            put("/v1/cliente/{id}", "123")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(clienteRequestUpdate)))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertAll(
+                    () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                    () -> assertTrue(result.getResponse().getContentAsString().contains("La foto de perfil no puede estar vacia"))
+            );
+        }
+
+        @Test
+        void emptyFotoDniUpdate() throws Exception {
+            ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
+                    .nombre("Juan")
+                    .apellidos("Perez")
+                    .email("juan.perez@example.com")
+                    .telefono("123456789")
+                    .fotoPerfil("fotoprfil.jpg")
+                    .fotoDni("") // Empty fotoDni
+                    .userId("user-guid")
+                    .build();
+
+            MvcResult result = mockMvc.perform(
+                            put("/v1/cliente/{id}", "123")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(clienteRequestUpdate)))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertAll(
+                    () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                    () -> assertTrue(result.getResponse().getContentAsString().contains("La foto del DNI no puede estar vacia"))
+            );
+        }
+
+        @Test
+        void emptyUserIdUpdate() throws Exception {
+            ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
+                    .nombre("Juan")
+                    .apellidos("Perez")
+                    .email("juan.perez@example.com")
+                    .telefono("123456789")
+                    .fotoPerfil("fotoprfil.jpg")
+                    .fotoDni("fotodni.jpg")
+                    .userId("") // Empty userId
+                    .build();
+
+            MvcResult result = mockMvc.perform(
+                            put("/v1/cliente/{id}", "123")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(clienteRequestUpdate)))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertAll(
+                    () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                    () -> assertTrue(result.getResponse().getContentAsString().contains("El id de usuario no puede estar vacio"))
+            );
+        }
+
+
     @Test
     void AddCuentas() throws Exception {
         ClienteCuentasRequest clienteCuentasRequest = ClienteCuentasRequest.builder()
