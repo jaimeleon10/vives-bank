@@ -22,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
 import java.util.Optional;
@@ -176,7 +177,7 @@ class UserControllerTest {
 
     @Test
     void updateUser() throws Exception {
-        User user =  new User();
+        User user = new User();
         user.setGuid("unique-guid");
         user.setUsername("testuser2");
         user.setPassword("password2");
@@ -200,12 +201,13 @@ class UserControllerTest {
         when(userService.update(user.getGuid(), userRequest)).thenReturn(userResponse);
 
         MockHttpServletResponse response = mockMvc.perform(
-                        put(myEndpoint + "/6c257ab6-e588-4cef-a479-c2f8fcd7379a")
+                        put(myEndpoint + "/unique-guid")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(userResponse)))
+                                .content(objectMapper.writeValueAsString(userRequest)))
                 .andReturn().getResponse();
 
         String responseBody = response.getContentAsString();
+        assertNotNull(responseBody);
 
         UserResponse res = objectMapper.readValue(responseBody, UserResponse.class);
 
@@ -220,8 +222,24 @@ class UserControllerTest {
         verify(userService, times(1)).update(user.getGuid(), userRequest);
     }
 
+
     @Test
-    void deleteUser() {
+    void deleteUser() throws Exception {
+        String userId = "6c257ab6-e588-4cef-a479-c2f8fcd7379a";
+
+        doNothing().when(userService).deleteById(userId);
+
+        MockHttpServletResponse response = mockMvc.perform(
+                        MockMvcRequestBuilders.delete(myEndpoint + "/" + userId)
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.NO_CONTENT.value(), response.getStatus(), "El estado debe ser 204 No Content"),
+                () -> assertEquals("", response.getContentAsString(), "El cuerpo de la respuesta debe estar vacío")
+        );
+
+        verify(userService, times(1)).deleteById(userId);
     }
 
     @Test
