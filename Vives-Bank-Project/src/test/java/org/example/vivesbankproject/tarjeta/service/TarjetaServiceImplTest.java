@@ -2,10 +2,14 @@ package org.example.vivesbankproject.tarjeta.service;
 
 import org.example.vivesbankproject.tarjeta.dto.*;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
+import org.example.vivesbankproject.tarjeta.exceptions.TarjetaUserPasswordNotValid;
 import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
+import org.example.vivesbankproject.users.exceptions.UserNotFoundByUsername;
+import org.example.vivesbankproject.users.models.User;
+import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +37,9 @@ class TarjetaServiceImplTest {
 
     @Mock
     private TarjetaRepository tarjetaRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     @Mock
     private TarjetaMapper tarjetaMapper;
@@ -138,6 +145,11 @@ class TarjetaServiceImplTest {
 
     @Test
     void getPrivado() {
+        var user = new User();
+        user.setUsername(tarjetaRequestPrivado.getUsername());
+        user.setPassword(tarjetaRequestPrivado.getUserPass());
+        when(userRepository.findByUsername(tarjetaRequestPrivado.getUsername())).thenReturn(Optional.of(user));
+
         when(tarjetaRepository.findByGuid(GUID)).thenReturn(Optional.of(tarjeta));
         when(tarjetaMapper.toTarjetaPrivado(tarjeta)).thenReturn(tarjetaResponsePrivado);
 
@@ -146,17 +158,35 @@ class TarjetaServiceImplTest {
         assertNotNull(result);
         assertEquals(GUID, result.getGuid());
         assertEquals(123, result.getCvv());
+
+        verify(userRepository).findByUsername(tarjetaRequestPrivado.getUsername());
         verify(tarjetaRepository).findByGuid(GUID);
+        verify(tarjetaMapper).toTarjetaPrivado(tarjeta);
     }
+
 
     @Test
     void getPrivadoNotFound() {
-        when(tarjetaRepository.findByGuid(GUID)).thenReturn(Optional.empty());
+        when(userRepository.findByUsername(tarjetaRequestPrivado.getUsername())).thenReturn(Optional.empty());
 
-        assertThrows(TarjetaNotFound.class, () -> tarjetaService.getPrivateData(GUID, tarjetaRequestPrivado));
-        verify(tarjetaRepository).findByGuid(GUID);
+        assertThrows(UserNotFoundByUsername.class, () -> tarjetaService.getPrivateData(GUID, tarjetaRequestPrivado));
+
+        verify(userRepository).findByUsername(tarjetaRequestPrivado.getUsername());
+
+        verifyNoInteractions(tarjetaRepository);
     }
 
+    @Test
+    void getPrivadoPasswordNotValid() {
+        var user = new User();
+        user.setPassword("wrongPassword");
+        when(userRepository.findByUsername(tarjetaRequestPrivado.getUsername())).thenReturn(Optional.of(user));
+
+        assertThrows(TarjetaUserPasswordNotValid.class, () -> tarjetaService.getPrivateData(GUID, tarjetaRequestPrivado));
+
+        verify(userRepository).findByUsername(tarjetaRequestPrivado.getUsername());
+        verifyNoInteractions(tarjetaRepository);
+    }
 
     @Test
     void save() {
