@@ -3,10 +3,7 @@ package org.example.vivesbankproject.cliente.models;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.users.models.Role;
@@ -28,6 +25,7 @@ import java.util.*;
 @Table(name = "clientes")
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(exclude = {"cuentas"})
 public class Cliente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -66,8 +64,7 @@ public class Cliente {
     @NotBlank(message = "La foto del DNI no puede estar vacía")
     private String fotoDni;
 
-    @OneToMany
-    @JoinColumn(name = "cliente_id", nullable = false)
+    @OneToMany(mappedBy = "cliente")
     @Builder.Default
     private Set<Cuenta> cuentas = new HashSet<>();
 
