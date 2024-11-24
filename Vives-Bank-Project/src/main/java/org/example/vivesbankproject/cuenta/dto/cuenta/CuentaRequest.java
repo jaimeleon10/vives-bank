@@ -14,9 +14,12 @@ import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CuentaRequest {
-    @NotBlank(message = "El campo del tipo de cuenta no puede estar vacio")
+    @NotBlank(message = "El campo tipo de cuenta no puede estar vacío")
     private String tipoCuentaId;
 
-    @NotBlank(message = "El campo tarjeta no puede estar vacio")
+    @NotBlank(message = "El campo tarjeta no puede estar vacío")
     private String tarjetaId;
+
+    @NotBlank(message = "El campo cliente no puede estar vacío")
+    private String clienteId;
 }

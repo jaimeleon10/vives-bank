@@ -12,7 +12,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClienteCuentaRequest {
+public class ClienteCuentasRequest {
     @Builder.Default
     private Set<String> cuentasIds = new HashSet<>();
 }

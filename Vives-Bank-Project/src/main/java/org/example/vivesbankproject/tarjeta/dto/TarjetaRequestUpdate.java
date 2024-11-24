@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 @Builder
 public class TarjetaRequestUpdate {
     @NotBlank(message = "El PIN no puede estar vacío")
-    @Pattern(regexp = "^[0-9]{3}$", message = "El PIN debe ser un número de 3 dígitos")
+    @Pattern(regexp = "^[0-9]{4}$", message = "El PIN debe ser un número de 3 dígitos")
     private String pin;
 
     @Positive(message = "El límite diario debe ser un número positivo")

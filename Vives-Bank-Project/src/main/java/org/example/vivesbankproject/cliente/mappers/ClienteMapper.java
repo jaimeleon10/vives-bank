@@ -1,10 +1,6 @@
 package org.example.vivesbankproject.cliente.mappers;
 
-import org.bson.types.ObjectId;
-import org.example.vivesbankproject.cliente.dto.ClienteRequestSave;
-import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdate;
-import org.example.vivesbankproject.cliente.dto.ClienteResponse;
-import org.example.vivesbankproject.cliente.dto.ClienteResponseProductos;
+import org.example.vivesbankproject.cliente.dto.*;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
@@ -33,6 +29,19 @@ public class ClienteMapper {
                 .createdAt(cliente.getCreatedAt())
                 .updatedAt(cliente.getUpdatedAt())
                 .isDeleted(cliente.getIsDeleted())
+                .build();
+    }
+
+    public ClienteForCuentaResponse toClienteDataResponse(Cliente cliente) {
+        return ClienteForCuentaResponse.builder()
+                .guid(cliente.getGuid())
+                .dni(cliente.getDni())
+                .nombre(cliente.getNombre())
+                .apellidos(cliente.getApellidos())
+                .email(cliente.getEmail())
+                .telefono(cliente.getTelefono())
+                .fotoPerfil(cliente.getFotoPerfil())
+                .fotoDni(cliente.getFotoDni())
                 .build();
     }
 
