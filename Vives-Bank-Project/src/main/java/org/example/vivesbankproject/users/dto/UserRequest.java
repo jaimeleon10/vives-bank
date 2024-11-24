@@ -2,7 +2,6 @@ package org.example.vivesbankproject.users.dto;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,10 +15,10 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserRequest {
-    @NotBlank(message = "Username no puede estar vacío")
+    @NotBlank(message = "Username no puede estar vacio")
     private String username;
 
-    @NotBlank(message = "Password no puede estar vacío")
+    @NotBlank(message = "Password no puede estar vacio")
     @Length(min = 5, message = "Password debe tener al menos 5 caracteres")
     private String password;
 
