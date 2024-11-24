@@ -16,11 +16,9 @@ public interface ClienteService {
 
     ClienteResponse update(String id, ClienteRequestUpdate clienteRequestUpdate);
 
-    ClienteResponse addCuentas(String id, ClienteCuentasRequest clienteCuentasRequest);
-
-    ClienteResponse deleteCuentas(String id, ClienteCuentasRequest clienteCuentasRequest);
-
     void deleteById(String id);
 
     ClienteResponseProductos getProductos(String id);
+
+    ClienteResponseProductosById getProductosById(String id, String idProducto);
 }

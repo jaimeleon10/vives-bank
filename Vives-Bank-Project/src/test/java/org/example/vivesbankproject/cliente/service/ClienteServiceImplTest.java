@@ -201,7 +201,7 @@ class ClienteServiceImplTest {
     }
 
     @Test
-    void deleteCuentas() {
+    void removeCuentas() {
     }
 
     @Test

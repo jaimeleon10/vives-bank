@@ -72,6 +72,11 @@ public class ClienteRestController {
         return ResponseEntity.ok(clienteService.getProductos(id));
     }
 
+    @GetMapping("{id}/productos/{idProducto}")
+    public ResponseEntity<ClienteResponseProductosById> getProductosById(@PathVariable String id, @PathVariable String idProducto) {
+        return ResponseEntity.ok(clienteService.getProductosById(id, idProducto));
+    }
+
     @PostMapping
     public ResponseEntity<ClienteResponse> createCliente(@Valid @RequestBody ClienteRequestSave clienteRequestSave) {
         var result = clienteService.save(clienteRequestSave);
@@ -81,18 +86,6 @@ public class ClienteRestController {
     @PutMapping("{id}")
     public ResponseEntity<ClienteResponse> updateCliente(@PathVariable String id, @Valid @RequestBody ClienteRequestUpdate clienteRequest) {
         var result = clienteService.update(id, clienteRequest);
-        return ResponseEntity.ok(result);
-    }
-
-    @PutMapping("{id}/add")
-    public ResponseEntity<ClienteResponse> addCuentas(@PathVariable String id, @Valid @RequestBody ClienteCuentasRequest clienteCuentasRequest) {
-        var result = clienteService.addCuentas(id, clienteCuentasRequest);
-        return ResponseEntity.ok(result);
-    }
-
-    @PutMapping("{id}/delete")
-    public ResponseEntity<ClienteResponse> deleteCuentas(@PathVariable String id, @Valid @RequestBody ClienteCuentasRequest clienteCuentasRequest) {
-        var result = clienteService.deleteCuentas(id, clienteCuentasRequest);
         return ResponseEntity.ok(result);
     }
 

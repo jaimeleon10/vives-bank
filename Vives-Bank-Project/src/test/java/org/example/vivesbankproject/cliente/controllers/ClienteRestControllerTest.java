@@ -669,7 +669,7 @@ class ClienteRestControllerTest {
     }
 
     @Test
-    void DeleteCuentas() throws Exception {
+    void removeCuentas() throws Exception {
         ClienteCuentasRequest clienteCuentasRequest = ClienteCuentasRequest.builder()
                 .cuentasIds(Set.of("cuenta1-guid", "cuenta2-guid"))
                 .build();
@@ -683,7 +683,7 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .build();
 
-        Mockito.when(clienteService.deleteCuentas(eq("unique-guid"), any(ClienteCuentasRequest.class))).thenReturn(clienteResponse);
+        Mockito.when(clienteService.removeCuentas(eq("unique-guid"), any(ClienteCuentasRequest.class))).thenReturn(clienteResponse);
 
         mockMvc.perform(put("/v1/cliente/unique-guid/delete")
                         .contentType("application/json")
