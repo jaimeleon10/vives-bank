@@ -1,5 +1,7 @@
 package org.example.vivesbankproject.cuenta.mappers;
 
+import org.example.vivesbankproject.cliente.dto.ClienteForCuentaResponse;
+import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequest;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequestUpdate;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
@@ -8,12 +10,12 @@ import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
+import org.example.vivesbankproject.users.models.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class CuentaMapperTest {
@@ -67,32 +69,53 @@ class CuentaMapperTest {
 
     @Test
     void toCuentaResponse() {
-        var res = mapper.toCuentaResponse(cuentaTest, tipoCuentaResponse, tarjetaResponse);
+        ClienteForCuentaResponse clienteForCuentaResponse = new ClienteForCuentaResponse();
+
+        var res = mapper.toCuentaResponse(cuentaTest, tipoCuentaResponse, tarjetaResponse, clienteForCuentaResponse);
 
         assertAll(
                 () -> assertEquals(cuentaTest.getGuid(), res.getGuid()),
                 () -> assertEquals(cuentaTest.getIban(), res.getIban()),
                 () -> assertEquals(cuentaTest.getSaldo(), res.getSaldo()),
-                () -> assertEquals(cuentaTest.getTipoCuenta().getNombre(), res.getTipoCuenta().getNombre()),
-                () -> assertEquals(cuentaTest.getTarjeta().getNumeroTarjeta(), res.getTarjeta().getNumeroTarjeta()),
-                () -> assertFalse(res.getIsDeleted())
+                () -> assertEquals(tipoCuentaResponse, res.getTipoCuenta()),
+                () -> assertEquals(tarjetaResponse, res.getTarjeta()),
+                () -> assertEquals(clienteForCuentaResponse, res.getCliente()),
+                () -> assertEquals(cuentaTest.getCreatedAt(), res.getCreatedAt()),
+                () -> assertEquals(cuentaTest.getUpdatedAt(), res.getUpdatedAt()),
+                () -> assertEquals(cuentaTest.getIsDeleted(), res.getIsDeleted())
         );
     }
 
     @Test
     void toCuenta() {
-        CuentaRequest cuentaRequest = new CuentaRequest();
-        cuentaRequest.setTipoCuentaId(tipoCuentaTest.getGuid());
-        cuentaRequest.setTarjetaId(tarjetaTest.getGuid());
 
-        var res = mapper.toCuenta(tipoCuentaTest, tarjetaTest);
+        Cliente clienteTest = Cliente.builder()
+                .id(1L)
+                .guid("cliente-guid-prueba")
+                .dni("12345678Z")
+                .nombre("Nombre Prueba")
+                .apellidos("Apellido Prueba")
+                .email("prueba@correo.com")
+                .telefono("123456789")
+                .fotoPerfil("fotoPerfilPrueba.jpg")
+                .fotoDni("fotoDniPrueba.jpg")
+                .user(User.builder().id(1L).build())
+                .build();
+
+
+        var res = mapper.toCuenta(tipoCuentaTest, tarjetaTest, clienteTest);
 
         assertAll(
-                () -> assertEquals(cuentaRequest.getTipoCuentaId(), res.getTipoCuenta().getGuid()),
-                () -> assertEquals(cuentaRequest.getTarjetaId(), res.getTarjeta().getGuid()),
-                () -> assertFalse(res.getIsDeleted())
+                () -> assertEquals(tipoCuentaTest, res.getTipoCuenta()),
+                () -> assertEquals(tarjetaTest, res.getTarjeta()),
+                () -> assertEquals(clienteTest, res.getCliente()),
+                () -> assertNotNull(res.getGuid(), "El GUID debe ser generado automáticamente"),
+                () -> assertNotNull(res.getIban(), "El IBAN debe ser generado automáticamente"),
+                () -> assertFalse(res.getIsDeleted(), "El estado inicial de isDeleted debe ser false")
         );
     }
+
+
 
     @Test
     void toCuentaUpdate() {
@@ -108,6 +131,11 @@ class CuentaMapperTest {
                 () -> assertEquals(cuentaRequestUpdate.getSaldo(), res.getSaldo()),
                 () -> assertEquals(cuentaRequestUpdate.getTipoCuentaId(), res.getTipoCuenta().getGuid()),
                 () -> assertEquals(cuentaRequestUpdate.getTarjetaId(), res.getTarjeta().getGuid()),
+                () -> assertEquals(cuentaTest.getCliente(), res.getCliente()),
+                () -> assertEquals(cuentaTest.getIban(), res.getIban()),
+                () -> assertEquals(cuentaTest.getGuid(), res.getGuid()),
+                () -> assertEquals(cuentaTest.getCreatedAt(), res.getCreatedAt()),
+                () -> assertNotNull(res.getUpdatedAt()),
                 () -> assertFalse(res.getIsDeleted())
         );
     }
