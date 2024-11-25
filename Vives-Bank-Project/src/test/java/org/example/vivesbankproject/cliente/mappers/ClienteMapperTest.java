@@ -11,6 +11,7 @@ import org.example.vivesbankproject.cliente.dto.ClienteRequestSave;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdate;
 import org.example.vivesbankproject.cliente.dto.ClienteResponse;
 import org.example.vivesbankproject.cliente.models.Cliente;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaForClienteResponse;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.users.dto.UserResponse;
@@ -54,7 +55,7 @@ public class ClienteMapperTest {
                 .isDeleted(false)
                 .build();
 
-        Set<CuentaResponse> cuentas = new HashSet<>();
+        Set<CuentaForClienteResponse> cuentas = new HashSet<>();
 
         ClienteResponse clienteResponse = clienteMapper.toClienteResponse(cliente, userResponse, cuentas);
 
