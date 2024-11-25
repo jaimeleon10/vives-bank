@@ -7,9 +7,11 @@ import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
 import org.example.vivesbankproject.movimientos.dto.TransaccionResponse;
 import org.example.vivesbankproject.movimientos.models.Movimientos;
 import org.example.vivesbankproject.movimientos.models.Transacciones;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Component
 public class MovimientoMapper {
     public MovimientoResponse toMovimientoResponse(Movimientos movimientos, ClienteResponse clienteResponse, TransaccionResponse transaccionResponse) {
         return MovimientoResponse.builder()
