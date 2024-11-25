@@ -7,10 +7,10 @@ import org.example.vivesbankproject.security.auth.dto.UserSignUpRequest;
 import org.example.vivesbankproject.security.auth.exceptions.AuthSingInInvalid;
 import org.example.vivesbankproject.security.auth.exceptions.UserAuthNameOrEmailExisten;
 import org.example.vivesbankproject.security.auth.exceptions.UserDiferentePasswords;
-import org.example.vivesbankproject.security.auth.repositories.AuthUsersRepository;
 import org.example.vivesbankproject.security.auth.services.jwt.JwtService;
 import org.example.vivesbankproject.users.models.Role;
 import org.example.vivesbankproject.users.models.User;
+import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,13 +24,13 @@ import java.util.stream.Stream;
 @Service
 @Slf4j
 public class AuthenticationServiceImpl implements AuthenticationService {
-    private final AuthUsersRepository authUsersRepository;
+    private final UserRepository authUsersRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
     @Autowired
-    public AuthenticationServiceImpl(AuthUsersRepository authUsersRepository, PasswordEncoder passwordEncoder,
+    public AuthenticationServiceImpl(UserRepository authUsersRepository, PasswordEncoder passwordEncoder,
                                      JwtService jwtService, AuthenticationManager authenticationManager) {
         this.authUsersRepository = authUsersRepository;
         this.passwordEncoder = passwordEncoder;
@@ -38,12 +38,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         this.authenticationManager = authenticationManager;
     }
 
-    /**
-     * Registra un usuario
-     *
-     * @param request datos del usuario
-     * @return Token de autenticación
-     */
     @Override
     public JwtAuthResponse signUp(UserSignUpRequest request) {
         log.info("Creando usuario: {}", request);
@@ -58,7 +52,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 var userStored = authUsersRepository.save(user);
                 return JwtAuthResponse.builder().token(jwtService.generateToken(userStored)).build();
             } catch (DataIntegrityViolationException ex) {
-                throw new UserAuthNameOrEmailExisten("El usuario con username " + request.getUsername() + " o email " + request.getEmail() + " ya existe");
+                throw new UserAuthNameOrEmailExisten("El usuario con username " + request.getUsername() + " ya existe");
             }
         } else {
             throw new UserDiferentePasswords("Las contraseñas no coinciden");
@@ -66,12 +60,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
-    /**
-     * Autentica un usuario
-     *
-     * @param request datos del usuario
-     * @return Token de autenticación
-     */
     @Override
     public JwtAuthResponse signIn(UserSignInRequest request) {
         log.info("Autenticando usuario: {}", request);
