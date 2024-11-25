@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -23,23 +24,28 @@ import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
+import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.mappers.UserMapper;
 
+import org.example.vivesbankproject.users.models.Role;
 import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
-import javax.management.relation.Role;
+
+@ExtendWith(MockitoExtension.class)
 public class ClienteServiceImplTest {
 
     private ClienteServiceImpl clienteService;
@@ -63,6 +69,7 @@ public class ClienteServiceImplTest {
                 tarjetaMapper, tarjetaRepository);
     }
 
+
     @Test
     void GetAll() {
         User user = User.builder().guid("user-guid").username("testuser").password("password").build();
@@ -82,16 +89,23 @@ public class ClienteServiceImplTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Cliente> clientePage = new PageImpl<>(List.of(cliente), pageable, 1);
 
-        // Mock responses
+
         when(clienteRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(clientePage);
         when(userMapper.toUserResponse(any(User.class)))
                 .thenReturn(new UserResponse("user-guid", "testuser", "password", roles, LocalDateTime.now(), LocalDateTime.now(), false));
         when(cuentaMapper.toCuentaResponse(any(Cuenta.class), any(), any(), any()))
                 .thenReturn(new CuentaResponse(
                         "cuenta1-guid", "ES123456789", BigDecimal.valueOf(100),
-                        new TipoCuentaResponse("tipo-guid", "Cuenta Corriente", LocalDateTime.now(), LocalDateTime.now(), false),
-                        new TarjetaResponse("tarjeta-guid", "1234-5678-1234-5678", LocalDateTime.now(), LocalDateTime.now(), false),
-                        new ClienteForCuentaResponse("cliente-guid", "Juan Perez"),
+                        new TipoCuentaResponse(
+                                "tipo-guid", "Cuenta Corriente", BigDecimal.valueOf(1.5),
+                                LocalDateTime.now(), LocalDateTime.now(), false),
+                        new TarjetaResponse(
+                                "tarjeta-guid", "1234-5678-1234-5678", LocalDate.now().plusYears(3),
+                                BigDecimal.valueOf(500), BigDecimal.valueOf(2000), BigDecimal.valueOf(5000),
+                                TipoTarjeta.CREDITO, LocalDateTime.now(), LocalDateTime.now(), false),
+                        new ClienteForCuentaResponse(
+                                "cliente-guid", "12345678A", "Juan", "Perez", "juan.perez@example.com",
+                                "123456789", "perfil.jpg", "dni.jpg"),
                         LocalDateTime.now(), LocalDateTime.now(), false));
         when(clienteMapper.toClienteResponse(any(Cliente.class), any(UserResponse.class), any(Set.class)))
                 .thenReturn(new ClienteResponse(
@@ -99,17 +113,24 @@ public class ClienteServiceImplTest {
                         "fotoprfil.jpg", "fotodni.jpg",
                         Set.of(new CuentaResponse(
                                 "cuenta1-guid", "ES123456789", BigDecimal.valueOf(100),
-                                new TipoCuentaResponse("tipo-guid", "Cuenta Corriente", LocalDateTime.now(), LocalDateTime.now(), false),
-                                new TarjetaResponse("tarjeta-guid", "1234-5678-1234-5678", LocalDateTime.now(), LocalDateTime.now(), false),
-                                new ClienteForCuentaResponse("cliente-guid", "Juan Perez"),
+                                new TipoCuentaResponse(
+                                        "tipo-guid", "Cuenta Corriente", BigDecimal.valueOf(1.5),
+                                        LocalDateTime.now(), LocalDateTime.now(), false),
+                                new TarjetaResponse(
+                                        "tarjeta-guid", "1234-5678-1234-5678", LocalDate.now().plusYears(3),
+                                        BigDecimal.valueOf(500), BigDecimal.valueOf(2000), BigDecimal.valueOf(5000),
+                                        TipoTarjeta.CREDITO, LocalDateTime.now(), LocalDateTime.now(), false),
+                                new ClienteForCuentaResponse(
+                                        "cliente-guid", "12345678A", "Juan", "Perez", "juan.perez@example.com",
+                                        "123456789", "perfil.jpg", "dni.jpg"),
                                 LocalDateTime.now(), LocalDateTime.now(), false)),
                         new UserResponse("user-guid", "testuser", "password", roles, LocalDateTime.now(), LocalDateTime.now(), false),
                         LocalDateTime.now(), LocalDateTime.now(), false));
 
-        // Ejecutar el método del servicio
+
         Page<ClienteResponse> result = clienteService.getAll(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), pageable);
 
-        // Verificar resultados
+
         assertEquals(1, result.getTotalElements());
         assertEquals("cliente-guid", result.getContent().get(0).getGuid());
         assertEquals("Juan", result.getContent().get(0).getNombre());
@@ -118,10 +139,17 @@ public class ClienteServiceImplTest {
         assertEquals("cuenta1-guid", cuentaResponse.getGuid());
         assertEquals("ES123456789", cuentaResponse.getIban());
         assertEquals(0, BigDecimal.valueOf(100).compareTo(cuentaResponse.getSaldo()));
-        assertEquals("Cuenta Corriente", cuentaResponse.getTipoCuenta().getNombre());
-        assertEquals("1234-5678-1234-5678", cuentaResponse.getTarjeta());
-        assertEquals("Juan Perez", cuentaResponse.getCliente());
+        ClienteForCuentaResponse clienteForCuentaResponse = cuentaResponse.getCliente();
+        assertEquals("cliente-guid", clienteForCuentaResponse.getGuid());
+        assertEquals("12345678A", clienteForCuentaResponse.getDni());
+        assertEquals("Juan", clienteForCuentaResponse.getNombre());
+        assertEquals("Perez", clienteForCuentaResponse.getApellidos());
+        assertEquals("juan.perez@example.com", clienteForCuentaResponse.getEmail());
+        assertEquals("123456789", clienteForCuentaResponse.getTelefono());
+        assertEquals("perfil.jpg", clienteForCuentaResponse.getFotoPerfil());
+        assertEquals("dni.jpg", clienteForCuentaResponse.getFotoDni());
     }
+
 
     @Test
     void GetById() {
@@ -162,10 +190,10 @@ public class ClienteServiceImplTest {
                         new UserResponse("user-guid", "testuser", "password", roles, LocalDateTime.now(), LocalDateTime.now(), false),
                         LocalDateTime.now(), LocalDateTime.now(), false));
 
-        // Ejecutar el método del servicio
+
         ClienteResponse result = clienteService.getById("cliente-guid");
 
-        // Verificar resultados
+
         assertEquals("cliente-guid", result.getGuid());
         assertEquals("Juan", result.getNombre());
         CuentaResponse cuentaResponse = result.getCuentas().iterator().next();
@@ -176,8 +204,8 @@ public class ClienteServiceImplTest {
     }
 
     @Test
-    void testSave() {
-        // Arrange
+    void Save() {
+
         ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
                 .dni("12345678A")
                 .nombre("Juan")
@@ -207,17 +235,17 @@ public class ClienteServiceImplTest {
                 .thenReturn(cliente);
         when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
 
-        // Act
+
         ClienteResponse result = clienteService.save(clienteRequestSave);
 
-        // Assert
+
         assertEquals("unique-guid", result.getGuid());
         assertEquals("Juan", result.getNombre());
     }
 
     @Test
-    void testDeleteById() {
-        // Arrange
+    void DeleteById() {
+
         Cliente cliente = Cliente.builder()
                 .guid("unique-guid")
                 .isDeleted(false)
@@ -225,21 +253,19 @@ public class ClienteServiceImplTest {
 
         when(clienteRepository.findByGuid("unique-guid")).thenReturn(Optional.of(cliente));
 
-        // Act
         clienteService.deleteById("unique-guid");
 
-        // Assert
         verify(clienteRepository, times(1)).save(cliente);
         assertTrue(cliente.getIsDeleted());
     }
 
     @Test
-    void testValidarClienteExistente_Dni() {
-        // Arrange
+    void ValidarClienteExistente_Dni() {
+
         Cliente cliente = Cliente.builder().dni("12345678A").build();
         when(clienteRepository.findByDni("12345678A")).thenReturn(Optional.of(cliente));
 
-        // Act & Assert
+
         ClienteExistsByDni exception = assertThrows(ClienteExistsByDni.class, () -> {
             clienteService.validarClienteExistente(cliente);
         });
