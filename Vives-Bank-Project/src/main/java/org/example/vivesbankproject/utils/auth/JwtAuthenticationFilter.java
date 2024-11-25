@@ -6,7 +6,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.security.auth.services.jwt.JwtService;
-import org.example.vivesbankproject.security.auth.services.users.AuthUsersService;
+
+import org.example.vivesbankproject.users.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,10 +25,10 @@ import java.io.IOException;
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
-    private final AuthUsersService authUsersService;
+    private final UserService authUsersService;
 
     @Autowired
-    public JwtAuthenticationFilter(JwtService jwtService, AuthUsersService authUsersService) {
+    public JwtAuthenticationFilter(JwtService jwtService, UserService authUsersService) {
         this.jwtService = jwtService;
         this.authUsersService = authUsersService;
     }

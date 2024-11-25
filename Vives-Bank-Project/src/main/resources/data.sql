@@ -1,8 +1,8 @@
 -- Inserción de Usuarios
 INSERT INTO usuarios (guid, username, password, created_at, updated_at, is_deleted)
 VALUES
-    ('1111aaaa', 'userName', 'userPass', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false),
-    ('2222bbbb', 'adminName', 'adminPass', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false);
+    ('1111aaaa', 'userName', '$2a$10$to0IqpINy9GXDo4IH9SKIOOT0cU5kg692jLdV0aPzR/rF3cUt97Fy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false),
+    ('2222bbbb', 'adminName', '$2a$10$to0IqpINy9GXDo4IH9SKIOOT0cU5kg692jLdV0aPzR/rF3cUt97Fy', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false);
 
 INSERT INTO user_roles (user_id, roles)
 VALUES

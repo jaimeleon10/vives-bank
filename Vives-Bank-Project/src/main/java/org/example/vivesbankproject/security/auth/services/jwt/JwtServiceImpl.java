@@ -8,23 +8,62 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-/**
- * Servicio de JWT
- */
+import org.springframework.core.io.Resource;
+
+import java.nio.file.Files;
+import java.security.KeyFactory;
+
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+
+
 @Service
 @Slf4j
 public class JwtServiceImpl implements JwtService {
-    @Value("${jwt.secret}")
-    private String jwtSigningKey;
 
     @Value("${jwt.expiration}")
     private Long jwtExpiration;
+
+    private final RSAPrivateKey privateKey;
+    private final RSAPublicKey publicKey;
+
+    public JwtServiceImpl(@Value("classpath:private_key_pkcs8.pem") Resource privateKeyResource,
+                          @Value("classpath:public_key.pem") Resource publicKeyResource) throws Exception {
+        this.privateKey = loadPrivateKey(privateKeyResource);
+        this.publicKey = loadPublicKey(publicKeyResource);
+    }
+
+    private RSAPrivateKey loadPrivateKey(Resource resource) throws Exception {
+        String privateKeyPEM = new String(Files.readAllBytes(resource.getFile().toPath()))
+                .replace("-----BEGIN PRIVATE KEY-----", "")
+                .replace("-----END PRIVATE KEY-----", "")
+                .replaceAll("\\s", "");
+
+        byte[] encoded = Base64.getDecoder().decode(privateKeyPEM);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
+        return (RSAPrivateKey) keyFactory.generatePrivate(keySpec);
+    }
+
+    private RSAPublicKey loadPublicKey(Resource resource) throws Exception {
+        String publicKeyPEM = new String(Files.readAllBytes(resource.getFile().toPath()))
+                .replace("-----BEGIN PUBLIC KEY-----", "")
+                .replace("-----END PUBLIC KEY-----", "")
+                .replaceAll("\\s", "");
+
+        byte[] encoded = Base64.getDecoder().decode(publicKeyPEM);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encoded);
+        return (RSAPublicKey) keyFactory.generatePublic(keySpec);
+    }
 
     @Override
     public String extractUserName(String token) {
@@ -47,13 +86,15 @@ public class JwtServiceImpl implements JwtService {
 
     private <T> T extractClaim(String token, Function<DecodedJWT, T> claimsResolvers) {
         log.info("Extracting claim from token " + token);
-        final DecodedJWT decodedJWT = JWT.decode(token);
+        final DecodedJWT decodedJWT = JWT.require(Algorithm.RSA256(publicKey,privateKey))
+                .build()
+                .verify(token);
         return claimsResolvers.apply(decodedJWT);
     }
 
     private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         // Preparamos el token
-        Algorithm algorithm = Algorithm.HMAC512(getSigningKey());
+        Algorithm algorithm = Algorithm.RSA256(publicKey, privateKey);
         Date now = new Date();
         Date expirationDate = new Date(now.getTime() + (1000 * jwtExpiration));
 
@@ -78,11 +119,8 @@ public class JwtServiceImpl implements JwtService {
     private Map<String, Object> createHeader() {
         Map<String, Object> header = new HashMap<>();
         header.put("typ", "JWT");
+        header.put("alg", "RS256");
         return header;
     }
 
-    private byte[] getSigningKey() {
-        return Base64.getEncoder().encode(jwtSigningKey.getBytes());
-
-    }
 }
