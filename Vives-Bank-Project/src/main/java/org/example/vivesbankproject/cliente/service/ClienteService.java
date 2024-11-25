@@ -17,8 +17,4 @@ public interface ClienteService {
     ClienteResponse update(String id, ClienteRequestUpdate clienteRequestUpdate);
 
     void deleteById(String id);
-
-    ClienteResponseProductos getProductos(String id);
-
-    ClienteResponseProductosById getProductosById(String id, String idProducto);
 }

@@ -7,9 +7,9 @@ import org.example.vivesbankproject.cliente.exceptions.*;
 import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaForClienteResponse;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.exceptions.CuentaNotFound;
-import org.example.vivesbankproject.cliente.exceptions.ProductoNotFoundException;
 import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.cuenta.mappers.TipoCuentaMapper;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
@@ -45,9 +45,8 @@ public class ClienteServiceImpl implements ClienteService {
     private final CuentaRepository cuentaRepository;
     private final TipoCuentaMapper tipoCuentaMapper;
     private final TarjetaMapper tarjetaMapper;
-    private final TarjetaRepository tarjetaRepository;
 
-    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserMapper userMapper, UserRepository userRepository, CuentaMapper cuentaMapper, CuentaRepository cuentaRepository, TipoCuentaMapper tipoCuentaMapper, TarjetaMapper tarjetaMapper, TarjetaRepository tarjetaRepository) {
+    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserMapper userMapper, UserRepository userRepository, CuentaMapper cuentaMapper, CuentaRepository cuentaRepository, TipoCuentaMapper tipoCuentaMapper, TarjetaMapper tarjetaMapper) {
         this.clienteRepository = clienteRepository;
         this.clienteMapper = clienteMapper;
         this.userMapper = userMapper;
@@ -56,7 +55,6 @@ public class ClienteServiceImpl implements ClienteService {
         this.cuentaRepository = cuentaRepository;
         this.tipoCuentaMapper = tipoCuentaMapper;
         this.tarjetaMapper = tarjetaMapper;
-        this.tarjetaRepository = tarjetaRepository;
     }
 
     @Override
@@ -91,9 +89,9 @@ public class ClienteServiceImpl implements ClienteService {
 
         return clientePage.map(cliente -> {
             UserResponse userResponse = userMapper.toUserResponse(cliente.getUser());
-            Set<CuentaResponse> cuentasResponse = cliente.getCuentas().stream()
-                   .map(cuenta -> cuentaMapper.toCuentaResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta()), clienteMapper.toClienteDataResponse(cliente)))
-                   .collect(Collectors.toSet());
+            Set<CuentaForClienteResponse> cuentasResponse = cliente.getCuentas().stream()
+                    .map(cuenta -> cuentaMapper.toCuentaForClienteResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
+                    .collect(Collectors.toSet());
 
             return clienteMapper.toClienteResponse(cliente, userResponse, cuentasResponse);
         });
@@ -104,8 +102,8 @@ public class ClienteServiceImpl implements ClienteService {
     public ClienteResponse getById(String id) {
         var cliente = clienteRepository.findByGuid(id).orElseThrow(() -> new ClienteNotFound(id));
         var user = userMapper.toUserResponse(cliente.getUser());
-        Set<CuentaResponse> cuentasResponse = cliente.getCuentas().stream()
-               .map(cuenta -> cuentaMapper.toCuentaResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta()), clienteMapper.toClienteDataResponse(cliente)))
+        Set<CuentaForClienteResponse> cuentasResponse = cliente.getCuentas().stream()
+               .map(cuenta -> cuentaMapper.toCuentaForClienteResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
                .collect(Collectors.toSet());
 
         return clienteMapper.toClienteResponse(cliente, user, cuentasResponse);
@@ -163,8 +161,8 @@ public class ClienteServiceImpl implements ClienteService {
         validarClienteExistente(cliente);
 
         // Mapeamos el Set<Cuenta> a Set<CuentaResponse>
-        Set<CuentaResponse> cuentasResponse = cuentasExistentes.stream()
-                .map(cuenta -> cuentaMapper.toCuentaResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta()), clienteMapper.toClienteDataResponse(cliente)))
+        Set<CuentaForClienteResponse> cuentasResponse = cuentasExistentes.stream()
+                .map(cuenta -> cuentaMapper.toCuentaForClienteResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
                 .collect(Collectors.toSet());
 
         // Guardamos el cliente y lo mapeamos a response para devolverlo
@@ -203,8 +201,8 @@ public class ClienteServiceImpl implements ClienteService {
         }
 
         // Mapeamos el Set<Cuenta> a Set<CuentaResponse>
-        Set<CuentaResponse> cuentasResponse = clienteExistente.getCuentas().stream()
-                .map(cuenta -> cuentaMapper.toCuentaResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta()), clienteMapper.toClienteDataResponse(clienteExistente)))
+        Set<CuentaForClienteResponse> cuentasResponse = clienteExistente.getCuentas().stream()
+                .map(cuenta -> cuentaMapper.toCuentaForClienteResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
                 .collect(Collectors.toSet());
 
         // Guardamos el cliente mapeado a update
@@ -223,39 +221,6 @@ public class ClienteServiceImpl implements ClienteService {
         );
         cliente.setIsDeleted(true);
         clienteRepository.save(cliente);
-    }
-
-    @Override
-    public ClienteResponseProductos getProductos(String id) {
-        var cliente = clienteRepository.findByGuid(id).orElseThrow(
-                () -> new ClienteNotFound(id)
-        );
-
-        Set<CuentaResponse> cuentasResponse = cliente.getCuentas().stream()
-                .map(cuenta -> cuentaMapper.toCuentaResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta()), clienteMapper.toClienteDataResponse(cliente)))
-                .collect(Collectors.toSet());
-
-        return clienteMapper.toClienteResponseProductos(cliente, cuentasResponse);
-    }
-
-    @Override
-    public ClienteResponseProductosById getProductosById(String id, String idProducto) {
-        var cliente = clienteRepository.findByGuid(id).orElseThrow(
-                () -> new ClienteNotFound(id)
-        );
-
-        var cuentaEncontrada = cuentaRepository.findByGuid(idProducto);
-        var tarjetaEncontrada = tarjetaRepository.findByGuid(idProducto);
-        if (cuentaEncontrada.isEmpty() && tarjetaEncontrada.isEmpty()) throw new ProductoNotFoundException(idProducto);
-
-        if (cuentaEncontrada.isPresent()) {
-            var tipoCuentaResponse = tipoCuentaMapper.toTipoCuentaResponse(cuentaEncontrada.get().getTipoCuenta());
-            var tarjetaResponse = tarjetaMapper.toTarjetaResponse(cuentaEncontrada.get().getTarjeta());
-            var clienteResponse = clienteMapper.toClienteDataResponse(cuentaEncontrada.get().getCliente());
-            return clienteMapper.toClienteResponseProductoById(cliente, cuentaMapper.toCuentaResponse(cuentaEncontrada.get(), tipoCuentaResponse, tarjetaResponse, clienteResponse), null);
-        } else {
-            return clienteMapper.toClienteResponseProductoById(cliente, null, tarjetaMapper.toTarjetaResponse(tarjetaEncontrada.get()));
-        }
     }
 
     private void validarClienteExistente(Cliente cliente) {

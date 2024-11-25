@@ -2,6 +2,7 @@ package org.example.vivesbankproject.cliente.mappers;
 
 import org.example.vivesbankproject.cliente.dto.*;
 import org.example.vivesbankproject.cliente.models.Cliente;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaForClienteResponse;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
@@ -15,7 +16,7 @@ import java.util.Set;
 @Component
 public class ClienteMapper {
 
-    public ClienteResponse toClienteResponse(Cliente cliente, UserResponse user, Set<CuentaResponse> cuentas) {
+    public ClienteResponse toClienteResponse(Cliente cliente, UserResponse user, Set<CuentaForClienteResponse> cuentas) {
         return ClienteResponse.builder()
                 .guid(cliente.getGuid())
                 .dni(cliente.getDni())
@@ -77,23 +78,6 @@ public class ClienteMapper {
                 .createdAt(cliente.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
                 .isDeleted(cliente.getIsDeleted())
-                .build();
-    }
-
-    public ClienteResponseProductos toClienteResponseProductos(Cliente cliente, Set<CuentaResponse> cuentaResponses) {
-        return ClienteResponseProductos.builder()
-                .guid(cliente.getGuid())
-                .nombre(cliente.getNombre())
-                .cuentas(cuentaResponses)
-                .build();
-    }
-
-    public ClienteResponseProductosById toClienteResponseProductoById(Cliente cliente, CuentaResponse cuentaResponse, TarjetaResponse tarjetaResponse) {
-        return ClienteResponseProductosById.builder()
-                .guid(cliente.getGuid())
-                .nombre(cliente.getNombre())
-                .cuenta(cuentaResponse)
-                .tarjeta(tarjetaResponse)
                 .build();
     }
 }
