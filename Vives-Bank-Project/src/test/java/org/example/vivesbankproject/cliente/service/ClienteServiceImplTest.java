@@ -21,9 +21,11 @@ import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
 import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.cuenta.mappers.TipoCuentaMapper;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
+import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
+import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.users.dto.UserResponse;
@@ -246,6 +248,7 @@ public class ClienteServiceImplTest {
     @Test
     void Save() {
 
+
         ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
                 .dni("12345678A")
                 .nombre("Juan")
@@ -257,7 +260,10 @@ public class ClienteServiceImplTest {
                 .userId("user-guid")
                 .build();
 
+
         User user = User.builder().guid("user-guid").username("testuser").password("password").build();
+
+
         Cliente cliente = Cliente.builder()
                 .guid("unique-guid")
                 .dni("12345678A")
@@ -269,11 +275,22 @@ public class ClienteServiceImplTest {
                 .isDeleted(false)
                 .build();
 
+
         when(clienteRepository.existsByUserGuid("user-guid")).thenReturn(false);
         when(userRepository.findByGuid("user-guid")).thenReturn(Optional.of(user));
         when(clienteMapper.toCliente(any(ClienteRequestSave.class), any(User.class), any(Set.class)))
                 .thenReturn(cliente);
         when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+
+
+        when(clienteMapper.toClienteResponse(any(Cliente.class), any(UserResponse.class), any(Set.class)))
+                .thenReturn(new ClienteResponse(
+                        "unique-guid", "12345678A", "Juan", "Perez", "juan.perez@example.com", "123456789",
+                        "fotoprfil.jpg", "fotodni.jpg",
+                        Set.of(),
+                        new UserResponse("user-guid", "testuser", "password", Set.of(), LocalDateTime.now(), LocalDateTime.now(), false),
+                        LocalDateTime.now(), LocalDateTime.now(), false
+                ));
 
 
         ClienteResponse result = clienteService.save(clienteRequestSave);
@@ -282,6 +299,61 @@ public class ClienteServiceImplTest {
         assertEquals("unique-guid", result.getGuid());
         assertEquals("Juan", result.getNombre());
     }
+
+    @Test
+    void update() {
+        // Datos de entrada
+        String clienteId = "cliente-guid";
+        ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
+                .userId("user-guid")
+                .nombre("Juan")
+                .apellidos("Perez")
+                .email("juan.perez@update.com")
+                .telefono("987654321")
+                .build();
+
+        // Cliente existente en la base de datos
+        Cliente clienteExistente = Cliente.builder()
+                .guid(clienteId)
+                .dni("12345678A")
+                .nombre("Juan")
+                .apellidos("Perez")
+                .email("juan.perez@example.com")
+                .telefono("123456789")
+                .user(User.builder().guid("user-guid").build())
+                .build();
+
+        // Usuario asociado al cliente
+        User usuarioExistente = User.builder().guid("user-guid").username("testuser").password("password").build();
+
+        // Mocks
+        when(clienteRepository.findByGuid(clienteId)).thenReturn(Optional.of(clienteExistente));
+        when(userRepository.findByGuid(clienteRequestUpdate.getUserId())).thenReturn(Optional.of(usuarioExistente));
+        when(clienteRepository.existsByUserGuid(clienteRequestUpdate.getUserId())).thenReturn(false);  // No existe otro cliente con ese usuario
+        when(clienteRepository.findByTelefono(clienteRequestUpdate.getTelefono())).thenReturn(Optional.empty());  // El teléfono no existe
+        when(clienteRepository.findByEmail(clienteRequestUpdate.getEmail())).thenReturn(Optional.empty());  // El email no existe
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteExistente);  // El cliente guardado es el mismo por simplicidad
+
+
+        Set<CuentaResponse> cuentasResponse = Set.of(new CuentaResponse("cuenta-guid", "ES123456789", BigDecimal.valueOf(100), new TipoCuentaResponse("tipo-guid", "Cuenta Corriente", LocalDateTime.now(), LocalDateTime.now(), false), new TarjetaResponse("tarjeta-guid", "1234-5678-1234-5678", LocalDateTime.now(), LocalDateTime.now(), false), new ClienteDataResponse(clienteId, "Juan", "Perez"), LocalDateTime.now(), LocalDateTime.now(), false));
+
+        when(clienteMapper.toClienteUpdate(clienteRequestUpdate, clienteExistente, usuarioExistente)).thenReturn(clienteExistente);
+        when(clienteMapper.toClienteResponse(clienteExistente, userMapper.toUserResponse(usuarioExistente), cuentasResponse)).thenReturn(new ClienteResponse(clienteId, "Juan", "Perez", "juan.perez@update.com", "987654321", cuentasResponse, LocalDateTime.now(), LocalDateTime.now(), false));
+
+
+        ClienteResponse result = clienteService.update(clienteId, clienteRequestUpdate);
+
+        
+        assertNotNull(result);
+        assertEquals(clienteId, result.getGuid());
+        assertEquals("juan.perez@update.com", result.getEmail());
+        assertEquals("987654321", result.getTelefono());
+        assertEquals(1, result.getCuentas().size());
+        assertEquals("cuenta-guid", result.getCuentas().iterator().next().getGuid());
+        assertEquals("ES123456789", result.getCuentas().iterator().next().getIban());
+    }
+
+
 
     @Test
     void DeleteById() {
@@ -298,6 +370,99 @@ public class ClienteServiceImplTest {
         verify(clienteRepository, times(1)).save(cliente);
         assertTrue(cliente.getIsDeleted());
     }
+
+    @Test
+    void getProductos() {
+        String clienteId = "cliente-guid";
+        Cliente cliente = Cliente.builder()
+                .guid(clienteId)
+                .dni("12345678A")
+                .nombre("Juan")
+                .apellidos("Perez")
+                .email("juan.perez@example.com")
+                .telefono("123456789")
+                .build();
+
+        Cuenta cuenta = Cuenta.builder()
+                .guid("cuenta-guid")
+                .iban("ES123456789")
+                .saldo(BigDecimal.valueOf(100))
+                .build();
+
+        cliente.setCuentas(Set.of(cuenta));
+
+        TipoCuentaResponse tipoCuentaResponse = new TipoCuentaResponse("tipo-guid", "Cuenta Corriente", BigDecimal.ZERO, LocalDateTime.now(), LocalDateTime.now(), false);
+        TarjetaResponse tarjetaResponse = new TarjetaResponse("tarjeta-guid", "1234-5678-1234-5678", LocalDate.now(), BigDecimal.valueOf(200), BigDecimal.valueOf(500), BigDecimal.valueOf(1000), TipoTarjeta.CREDITO, LocalDateTime.now(), LocalDateTime.now(), false);
+
+        when(clienteRepository.findByGuid(clienteId)).thenReturn(Optional.of(cliente));
+        when(cuentaMapper.toCuentaResponse(any(Cuenta.class), any(TipoCuentaResponse.class), any(TarjetaResponse.class), any(ClienteDataResponse.class)))
+                .thenReturn(new CuentaResponse("cuenta-guid", "ES123456789", BigDecimal.valueOf(100), tipoCuentaResponse, tarjetaResponse, null, LocalDateTime.now(), LocalDateTime.now(), false));
+        when(tipoCuentaMapper.toTipoCuentaResponse(any(TipoCuenta.class)))
+                .thenReturn(tipoCuentaResponse);
+        when(tarjetaMapper.toTarjetaResponse(any(Tarjeta.class)))
+                .thenReturn(tarjetaResponse);
+        when(clienteMapper.toClienteDataResponse(cliente)).thenReturn(new ClienteDataResponse(clienteId, "Juan", "Perez"));
+
+        ClienteResponseProductos result = clienteService.getProductos(clienteId);
+
+        assertNotNull(result);
+        assertEquals(clienteId, result.getGuid());
+        assertEquals(1, result.getCuentas().size());
+        assertEquals("cuenta-guid", result.getCuentas().iterator().next().getGuid());
+        assertEquals("ES123456789", result.getCuentas().iterator().next().getIban());
+    }
+
+    @Test
+    void getProductosById() {
+        // Preparación de los mocks
+        String clienteId = "cliente-guid";
+        String productoId = "cuenta-guid";  // Puede ser cuenta o tarjeta
+
+        Cliente cliente = Cliente.builder()
+                .guid(clienteId)
+                .dni("12345678A")
+                .nombre("Juan")
+                .apellidos("Perez")
+                .email("juan.perez@example.com")
+                .telefono("123456789")
+                .build();
+
+        Cuenta cuenta = Cuenta.builder()
+                .guid(productoId)
+                .iban("ES123456789")
+                .saldo(BigDecimal.valueOf(100))
+                .build();
+
+        cliente.setCuentas(Set.of(cuenta));
+
+        Tarjeta tarjeta = new Tarjeta("tarjeta-guid", "1234-5678-1234-5678", LocalDate.now(), BigDecimal.valueOf(200), BigDecimal.valueOf(500), BigDecimal.valueOf(1000));
+
+        TipoCuentaResponse tipoCuentaResponse = new TipoCuentaResponse("tipo-guid", "Cuenta Corriente", BigDecimal.ZERO, LocalDateTime.now(), LocalDateTime.now(), false);
+        TarjetaResponse tarjetaResponse = new TarjetaResponse("tarjeta-guid", "1234-5678-1234-5678", LocalDate.now(), BigDecimal.valueOf(200), BigDecimal.valueOf(500), BigDecimal.valueOf(1000), TipoTarjeta.CREDITO, LocalDateTime.now(), LocalDateTime.now(), false);
+
+        when(clienteRepository.findByGuid(clienteId)).thenReturn(Optional.of(cliente));
+        when(cuentaRepository.findByGuid(productoId)).thenReturn(Optional.of(cuenta));
+        when(tarjetaRepository.findByGuid(productoId)).thenReturn(Optional.empty());  // No se encontró tarjeta
+
+        when(cuentaMapper.toCuentaResponse(any(Cuenta.class), any(TipoCuentaResponse.class), any(TarjetaResponse.class), any(ClienteDataResponse.class)))
+                .thenReturn(new CuentaResponse("cuenta-guid", "ES123456789", BigDecimal.valueOf(100), tipoCuentaResponse, tarjetaResponse, null, LocalDateTime.now(), LocalDateTime.now(), false));
+        when(tipoCuentaMapper.toTipoCuentaResponse(any(TipoCuenta.class)))
+                .thenReturn(tipoCuentaResponse);
+        when(tarjetaMapper.toTarjetaResponse(any(Tarjeta.class)))
+                .thenReturn(tarjetaResponse);
+        when(clienteMapper.toClienteDataResponse(cliente)).thenReturn(new ClienteDataResponse(clienteId, "Juan", "Perez"));
+
+        // Llamar al método que se está probando
+        ClienteResponseProductosById result = clienteService.getProductosById(clienteId, productoId);
+
+        // Verificar el resultado
+        assertNotNull(result);
+        assertEquals(clienteId, result.getGuid());
+        assertEquals("cuenta-guid", result.getCuenta().getGuid());
+        assertNull(result.getTarjeta());  // Como no se encontró la tarjeta
+    }
+
+
 
    /* @Test
     void ValidarClienteExistente_Dni() {
