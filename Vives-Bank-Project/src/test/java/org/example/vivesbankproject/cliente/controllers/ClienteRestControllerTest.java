@@ -66,7 +66,6 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .cuentas(Set.of(CuentaResponse.builder().guid("cuenta1-guid").build()))
                 .user(UserResponse.builder().guid("user-guid").username("testuser").build())
                 .createdAt(LocalDateTime.now())
                 .isDeleted(false)
@@ -122,25 +121,7 @@ class ClienteRestControllerTest {
                 .andExpect(jsonPath("$.email").value("juan.perez@example.com"))
                 .andExpect(jsonPath("$.telefono").value("123456789"));
     }
-
-
-    @Test
-    void getProductos() throws Exception {
-        ClienteResponseProductos clienteResponseProductos = ClienteResponseProductos.builder()
-                .guid("unique-guid")
-                .nombre("Juan")
-                .cuentas(Set.of(CuentaResponse.builder().guid("cuenta1-guid").build()))
-                .build();
-
-        Mockito.when(clienteService.getProductos("unique-guid")).thenReturn(clienteResponseProductos);
-
-        mockMvc.perform(get("/v1/cliente/unique-guid/productos"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.guid").value("unique-guid"))
-                .andExpect(jsonPath("$.nombre").value("Juan"))
-                .andExpect(jsonPath("$.cuentas").isArray())
-                .andExpect(jsonPath("$.cuentas[0].guid").value("cuenta1-guid"));
-    }
+    
 
 
     @Test
