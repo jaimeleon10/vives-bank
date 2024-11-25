@@ -13,6 +13,7 @@ import java.util.Set;
 
 import org.example.vivesbankproject.cliente.dto.*;
 import org.example.vivesbankproject.cliente.exceptions.ClienteExistsByDni;
+import org.example.vivesbankproject.cliente.exceptions.ClienteUserAlreadyAssigned;
 import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
@@ -343,7 +344,7 @@ public class ClienteServiceImplTest {
 
         ClienteResponse result = clienteService.update(clienteId, clienteRequestUpdate);
 
-        
+
         assertNotNull(result);
         assertEquals(clienteId, result.getGuid());
         assertEquals("juan.perez@update.com", result.getEmail());
@@ -351,6 +352,68 @@ public class ClienteServiceImplTest {
         assertEquals(1, result.getCuentas().size());
         assertEquals("cuenta-guid", result.getCuentas().iterator().next().getGuid());
         assertEquals("ES123456789", result.getCuentas().iterator().next().getIban());
+    }
+
+    @Test
+    void update_ClienteNotFound() {
+        String clienteId = "cliente-guid";
+        ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
+                .userId("user-guid")
+                .nombre("Juan")
+                .apellidos("Perez")
+                .email("juan.perez@update.com")
+                .telefono("987654321")
+                .build();
+
+        when(clienteRepository.findByGuid(clienteId)).thenReturn(Optional.empty());  // Cliente no encontrado
+
+        ClienteNotFound exception = assertThrows(ClienteNotFound.class, () -> {
+            clienteService.update(clienteId, clienteRequestUpdate);
+        });
+        assertEquals(clienteId, exception.getId());
+    }
+
+    @Test
+    void update_UserNotFound() {
+        String clienteId = "cliente-guid";
+        ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
+                .userId("user-guid")
+                .nombre("Juan")
+                .apellidos("Perez")
+                .email("juan.perez@update.com")
+                .telefono("987654321")
+                .build();
+
+        Cliente clienteExistente = Cliente.builder().guid(clienteId).build();
+        when(clienteRepository.findByGuid(clienteId)).thenReturn(Optional.of(clienteExistente));
+        when(userRepository.findByGuid(clienteRequestUpdate.getUserId())).thenReturn(Optional.empty());  // Usuario no encontrado
+
+        UserNotFoundById exception = assertThrows(UserNotFoundById.class, () -> {
+            clienteService.update(clienteId, clienteRequestUpdate);
+        });
+        assertEquals(clienteRequestUpdate.getUserId(), exception.getId());
+    }
+
+    @Test
+    void update_ClienteUserAlreadyAssigned() {
+        String clienteId = "cliente-guid";
+        ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
+                .userId("user-guid")
+                .nombre("Juan")
+                .apellidos("Perez")
+                .email("juan.perez@update.com")
+                .telefono("987654321")
+                .build();
+
+        Cliente clienteExistente = Cliente.builder().guid(clienteId).build();
+        when(clienteRepository.findByGuid(clienteId)).thenReturn(Optional.of(clienteExistente));
+        when(userRepository.findByGuid(clienteRequestUpdate.getUserId())).thenReturn(Optional.of(new User()));
+        when(clienteRepository.existsByUserGuid(clienteRequestUpdate.getUserId())).thenReturn(true);  // Usuario ya asignado a otro cliente
+
+        ClienteUserAlreadyAssigned exception = assertThrows(ClienteUserAlreadyAssigned.class, () -> {
+            clienteService.update(clienteId, clienteRequestUpdate);
+        });
+        assertEquals(clienteRequestUpdate.getUserId(), exception.getUserId());
     }
 
 
