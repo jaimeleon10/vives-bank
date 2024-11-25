@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaForClienteResponse;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -22,7 +22,7 @@ public class ClienteResponse {
     private String telefono;
     private String fotoPerfil;
     private String fotoDni;
-    private Set<CuentaResponse> cuentas;
+    private Set<CuentaForClienteResponse> cuentas;
     private UserResponse user;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

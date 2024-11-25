@@ -67,16 +67,6 @@ public class ClienteRestController {
         return ResponseEntity.ok(clienteService.getById(id));
     }
 
-    @GetMapping("{id}/productos")
-    public ResponseEntity<ClienteResponseProductos> getProductos(@PathVariable String id) {
-        return ResponseEntity.ok(clienteService.getProductos(id));
-    }
-
-    @GetMapping("{id}/productos/{idProducto}")
-    public ResponseEntity<ClienteResponseProductosById> getProductosById(@PathVariable String id, @PathVariable String idProducto) {
-        return ResponseEntity.ok(clienteService.getProductosById(id, idProducto));
-    }
-
     @PostMapping
     public ResponseEntity<ClienteResponse> createCliente(@Valid @RequestBody ClienteRequestSave clienteRequestSave) {
         var result = clienteService.save(clienteRequestSave);
