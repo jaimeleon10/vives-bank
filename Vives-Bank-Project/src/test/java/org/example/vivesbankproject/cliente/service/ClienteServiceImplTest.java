@@ -3,6 +3,9 @@ package org.example.vivesbankproject.cliente.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -25,6 +28,7 @@ import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.mappers.UserMapper;
+
 import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +40,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+
+import javax.management.relation.Role;
 
 public class ClienteServiceImplTest {
 
@@ -97,7 +103,7 @@ public class ClienteServiceImplTest {
         Page<Cliente> clientePage = new PageImpl<>(List.of(cliente), pageable, 1);
 
         when(clienteRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(clientePage);
-        when(userMapper.toUserResponse(any(User.class))).thenReturn(new UserResponse("user-guid", "testuser"));
+        when(userMapper.toUserResponse(any(User.class))).thenReturn(new UserResponse("user-guid", "testuser", "password", roles, LocalDateTime.now(), LocalDateTime.now(), false));
         when(cuentaMapper.toCuentaResponse(any(Cuenta.class), any(), any(), any())).thenReturn(new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100)));
         when(clienteMapper.toClienteResponse(any(Cliente.class), any(UserResponse.class), any(Set.class)))
                 .thenReturn(new ClienteResponse("unique-guid", "12345678A", "Juan", "Perez", "juan.perez@example.com", "123456789", "fotoprfil.jpg", "fotodni.jpg", Set.of(new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100))), new UserResponse("user-guid", "testuser"), LocalDateTime.now(), LocalDateTime.now(), false));
@@ -114,232 +120,232 @@ public class ClienteServiceImplTest {
     }
 
 
-        @Test
-        void GetById() {
+    @Test
+    void GetById() {
 
-            User user = User.builder().guid("user-guid").username("testuser").password("password").build();
-            Cuenta cuenta1 = Cuenta.builder().guid("cuenta1-guid").build();
-            Cuenta cuenta2 = Cuenta.builder().guid("cuenta2-guid").build();
-            Cliente cliente = Cliente.builder()
-                    .guid("unique-guid")
-                    .dni("12345678A")
-                    .nombre("Juan")
-                    .apellidos("Perez")
-                    .email("juan.perez@example.com")
-                    .telefono("123456789")
-                    .user(user)
-                    .isDeleted(false)
-                    .cuentas(Set.of(cuenta1, cuenta2))
-                    .build();
+        User user = User.builder().guid("user-guid").username("testuser").password("password").build();
+        Set<Role> roles = new HashSet<>();
+        Cuenta cuenta1 = Cuenta.builder().guid("cuenta1-guid").build();
+        Cuenta cuenta2 = Cuenta.builder().guid("cuenta2-guid").build();
+        Cliente cliente = Cliente.builder()
+                .guid("unique-guid")
+                .dni("12345678A")
+                .nombre("Juan")
+                .apellidos("Perez")
+                .email("juan.perez@example.com")
+                .telefono("123456789")
+                .user(user)
+                .isDeleted(false)
+                .cuentas(Set.of(cuenta1, cuenta2))
+                .build();
 
-            when(clienteRepository.findByGuid("unique-guid")).thenReturn(Optional.of(cliente));
-            when(userMapper.toUserResponse(user)).thenReturn(new UserResponse("user-guid", "testuser"));
-            when(cuentaMapper.toCuentaResponse(any(Cuenta.class), any(), any(), any())).thenReturn(new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100)));
-            when(clienteMapper.toClienteResponse(any(Cliente.class), any(UserResponse.class), any(Set.class)))
-                    .thenReturn(new ClienteResponse("unique-guid", "12345678A", "Juan", "Perez", "juan.perez@example.com", "123456789", "fotoprfil.jpg", "fotodni.jpg", Set.of(new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100))), new UserResponse("user-guid", "testuser"), LocalDateTime.now(), LocalDateTime.now(), false));
-
-
-            ClienteResponse result = clienteService.getById("unique-guid");
+        when(clienteRepository.findByGuid("unique-guid")).thenReturn(Optional.of(cliente));
+        when(userMapper.toUserResponse(user)).thenReturn(new UserResponse("user-guid", "testuser", "password", roles, LocalDateTime.now(), LocalDateTime.now(), false));
+        when(cuentaMapper.toCuentaResponse(any(Cuenta.class), any(), any(), any())).thenReturn(new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100)));
+        when(clienteMapper.toClienteResponse(any(Cliente.class), any(UserResponse.class), any(Set.class)))
+                .thenReturn(new ClienteResponse("unique-guid", "12345678A", "Juan", "Perez", "juan.perez@example.com", "123456789", "fotoprfil.jpg", "fotodni.jpg", Set.of(new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100))), new UserResponse("user-guid", "testuser", "password", roles, LocalDateTime.now(), LocalDateTime.now(), false), LocalDateTime.now(), LocalDateTime.now(), false));
 
 
-            assertEquals("unique-guid", result.getGuid());
-            assertEquals("12345678A", result.getDni());
-            assertEquals("Juan", result.getNombre());
-            assertEquals("Perez", result.getApellidos());
-        }
+        ClienteResponse result = clienteService.getById("unique-guid");
 
-        @Test
-        void Save() {
+        assertEquals("unique-guid", result.getGuid());
+        assertEquals("12345678A", result.getDni());
+        assertEquals("Juan", result.getNombre());
+        assertEquals("Perez", result.getApellidos());
+    }
 
-            ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
-                    .dni("12345678A")
-                    .nombre("Juan")
-                    .apellidos("Perez")
-                    .email("juan.perez@example.com")
-                    .telefono("123456789")
-                    .fotoPerfil("fotoprfil.jpg")
-                    .fotoDni("fotodni.jpg")
-                    .cuentasIds(Set.of("cuenta1-guid", "cuenta2-guid"))
-                    .userId("user-guid")
-                    .build();
+    @Test
+    void testSave() {
+        ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
+                .dni("12345678A")
+                .nombre("Juan")
+                .apellidos("Perez")
+                .email("juan.perez@example.com")
+                .telefono("123456789")
+                .fotoPerfil("fotoprfil.jpg")
+                .fotoDni("fotodni.jpg")
+                .cuentasIds(Set.of("cuenta1-guid", "cuenta2-guid"))
+                .userId("user-guid")
+                .build();
 
-            User user = User.builder().guid("user-guid").username("testuser").password("password").build();
-            Cuenta cuenta1 = Cuenta.builder().guid("cuenta1-guid").build();
-            Cuenta cuenta2 = Cuenta.builder().guid("cuenta2-guid").build();
-            Cliente cliente = Cliente.builder()
-                    .guid("unique-guid")
-                    .dni("12345678A")
-                    .nombre("Juan")
-                    .apellidos("Perez")
-                    .email("juan.perez@example.com")
-                    .telefono("123456789")
-                    .user(user)
-                    .isDeleted(false)
-                    .cuentas(Set.of(cuenta1, cuenta2))
-                    .build();
+        User user = User.builder().guid("user-guid").username("testuser").password("password").build();
+        Set<Role> roles = new HashSet<>();
+        Cuenta cuenta1 = Cuenta.builder().guid("cuenta1-guid").build();
+        Cuenta cuenta2 = Cuenta.builder().guid("cuenta2-guid").build();
+        Cliente cliente = Cliente.builder()
+                .guid("unique-guid")
+                .dni("12345678A")
+                .nombre("Juan")
+                .apellidos("Perez")
+                .email("juan.perez@example.com")
+                .telefono("123456789")
+                .user(user)
+                .isDeleted(false)
+                .cuentas(Set.of(cuenta1, cuenta2))
+                .build();
 
-            when(clienteRepository.existsByUserGuid("user-guid")).thenReturn(false);
-            when(cuentaRepository.findByGuid("cuenta1-guid")).thenReturn(Optional.of(cuenta1));
-            when(cuentaRepository.findByGuid("cuenta2-guid")).thenReturn(Optional.of(cuenta2));
-            when(clienteRepository.findCuentasAsignadas(any(Set.class))).thenReturn(List.of());
-            when(userRepository.findByGuid("user-guid")).thenReturn(Optional.of(user));
-            when(clienteMapper.toCliente(any(ClienteRequestSave.class), any(User.class), any(Set.class))).thenReturn(cliente);
-            when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
-            when(userMapper.toUserResponse(user)).thenReturn(new UserResponse("user-guid", "testuser"));
-            when(cuentaMapper.toCuentaResponse(any(Cuenta.class), any(), any(), any())).thenReturn(new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100)));
-            when(clienteMapper.toClienteResponse(any(Cliente.class), any(UserResponse.class), any(Set.class)))
-                    .thenReturn(new ClienteResponse("unique-guid", "12345678A", "Juan", "Perez", "juan.perez@example.com", "123456789", "fotoprfil.jpg", "fotodni.jpg", Set.of(new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100))), new UserResponse("user-guid", "testuser"), LocalDateTime.now(), LocalDateTime.now(), false));
+        when(clienteRepository.existsByUserGuid("user-guid")).thenReturn(false);
+        when(cuentaRepository.findByGuid("cuenta1-guid")).thenReturn(Optional.of(cuenta1));
+        when(cuentaRepository.findByGuid("cuenta2-guid")).thenReturn(Optional.of(cuenta2));
+        when(clienteRepository.findCuentasAsignadas(any(Set.class))).thenReturn(List.of());
+        when(userRepository.findByGuid("user-guid")).thenReturn(Optional.of(user));
+        when(clienteMapper.toCliente(any(ClienteRequestSave.class), any(User.class), any(Set.class))).thenReturn(cliente);
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+        when(userMapper.toUserResponse(user)).thenReturn(new UserResponse("user-guid", "testuser", "password", roles, LocalDateTime.now(), LocalDateTime.now(), false));
+        when(cuentaMapper.toCuentaResponse(any(Cuenta.class), any(), any(), any())).thenReturn(new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100)));
+        when(clienteMapper.toClienteResponse(any(Cliente.class), any(UserResponse.class), any(Set.class)))
+                .thenReturn(new ClienteResponse("unique-guid", "12345678A", "Juan", "Perez", "juan.perez@example.com", "123456789", "fotoprfil.jpg", "fotodni.jpg", Set.of(new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100))), new UserResponse("user-guid", "testuser", "password", roles, LocalDateTime.now(), LocalDateTime.now(), false), LocalDateTime.now(), LocalDateTime.now(), false));
 
+        // Ejecutar el método del servicio
+        ClienteResponse result = clienteService.save(clienteRequestSave);
 
-            ClienteResponse result = clienteService.save(clienteRequestSave);
-
-
-            assertEquals("unique-guid", result.getGuid());
-            assertEquals("12345678A", result.getDni());
-            assertEquals("Juan", result.getNombre());
-            assertEquals("Perez", result.getApellidos());
-        }
-
-
-        @Test
-        void Update() {
-
-            ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
-                    .nombre("Juan")
-                    .apellidos("Perez")
-                    .email("juan.perez@example.com")
-                    .telefono("123456789")
-                    .fotoPerfil("fotoprfil.jpg")
-                    .fotoDni("fotodni.jpg")
-                    .userId("user-guid")
-                    .build();
-
-            User user = User.builder().guid("user-guid").username("testuser").password("password").build();
-            Cuenta cuenta1 = Cuenta.builder().guid("cuenta1-guid").build();
-            Cliente cliente = Cliente.builder()
-                    .guid("unique-guid")
-                    .dni("12345678A")
-                    .nombre("Juan")
-                    .apellidos("Perez")
-                    .email("juan.perez@example.com")
-                    .telefono("123456789")
-                    .user(user)
-                    .isDeleted(false)
-                    .cuentas(Set.of(cuenta1))
-                    .build();
-
-            when(clienteRepository.findByGuid("unique-guid")).thenReturn(Optional.of(cliente));
-            when(userRepository.findByGuid("user-guid")).thenReturn(Optional.of(user));
-            when(clienteRepository.existsByUserGuid("user-guid")).thenReturn(false);
-            when(clienteRepository.findByTelefono(anyString())).thenReturn(Optional.empty());
-            when(clienteRepository.findByEmail(anyString())).thenReturn(Optional.empty());
-            when(clienteMapper.toClienteUpdate(any(ClienteRequestUpdate.class), any(Cliente.class), any(User.class))).thenReturn(cliente);
-            when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
-            when(userMapper.toUserResponse(user)).thenReturn(new UserResponse("user-guid", "testuser"));
-            when(cuentaMapper.toCuentaResponse(any(Cuenta.class), any(), any(), any())).thenReturn(new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100)));
-            when(clienteMapper.toClienteResponse(any(Cliente.class), any(UserResponse.class), any(Set.class)))
-                    .thenReturn(new ClienteResponse("unique-guid", "12345678A", "Juan", "Perez", "juan.perez@example.com", "123456789", "fotoprfil.jpg", "fotodni.jpg", Set.of(new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100))), new UserResponse("user-guid", "testuser"), LocalDateTime.now(), LocalDateTime.now(), false));
+        // Verificar resultados
+        assertEquals("unique-guid", result.getGuid());
+        assertEquals("12345678A", result.getDni());
+        assertEquals("Juan", result.getNombre());
+        assertEquals("Perez", result.getApellidos());
+    }
 
 
-            ClienteResponse result = clienteService.update("unique-guid", clienteRequestUpdate);
+    @Test
+    void Update() {
+
+        ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
+                .nombre("Juan")
+                .apellidos("Perez")
+                .email("juan.perez@example.com")
+                .telefono("123456789")
+                .fotoPerfil("fotoprfil.jpg")
+                .fotoDni("fotodni.jpg")
+                .userId("user-guid")
+                .build();
+
+        User user = User.builder().guid("user-guid").username("testuser").password("password").build();
+        Cuenta cuenta1 = Cuenta.builder().guid("cuenta1-guid").build();
+        Cliente cliente = Cliente.builder()
+                .guid("unique-guid")
+                .dni("12345678A")
+                .nombre("Juan")
+                .apellidos("Perez")
+                .email("juan.perez@example.com")
+                .telefono("123456789")
+                .user(user)
+                .isDeleted(false)
+                .cuentas(Set.of(cuenta1))
+                .build();
+
+        when(clienteRepository.findByGuid("unique-guid")).thenReturn(Optional.of(cliente));
+        when(userRepository.findByGuid("user-guid")).thenReturn(Optional.of(user));
+        when(clienteRepository.existsByUserGuid("user-guid")).thenReturn(false);
+        when(clienteRepository.findByTelefono(anyString())).thenReturn(Optional.empty());
+        when(clienteRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+        when(clienteMapper.toClienteUpdate(any(ClienteRequestUpdate.class), any(Cliente.class), any(User.class))).thenReturn(cliente);
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+        when(userMapper.toUserResponse(user)).thenReturn(new UserResponse("user-guid", "testuser", "password", roles, LocalDateTime.now(), LocalDateTime.now(), false));
+        when(cuentaMapper.toCuentaResponse(any(Cuenta.class), any(), any(), any())).thenReturn(new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100)));
+        when(clienteMapper.toClienteResponse(any(Cliente.class), any(UserResponse.class), any(Set.class)))
+                .thenReturn(new ClienteResponse("unique-guid", "12345678A", "Juan", "Perez", "juan.perez@example.com", "123456789", "fotoprfil.jpg", "fotodni.jpg", Set.of(new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100))), new UserResponse("user-guid", "testuser"), LocalDateTime.now(), LocalDateTime.now(), false));
 
 
-            assertEquals("unique-guid", result.getGuid());
-            assertEquals("12345678A", result.getDni());
-            assertEquals("Juan", result.getNombre());
-            assertEquals("Perez", result.getApellidos());
-        }
-
-        @Test
-        void DeleteById() {
-
-            User user = User.builder().guid("user-guid").username("testuser").password("password").build();
-            Cliente cliente = Cliente.builder()
-                    .guid("unique-guid")
-                    .dni("12345678A")
-                    .nombre("Juan")
-                    .apellidos("Perez")
-                    .email("juan.perez@example.com")
-                    .telefono("123456789")
-                    .user(user)
-                    .isDeleted(false)
-                    .build();
-
-            when(clienteRepository.findByGuid("unique-guid")).thenReturn(Optional.of(cliente));
+        ClienteResponse result = clienteService.update("unique-guid", clienteRequestUpdate);
 
 
-            clienteService.deleteById("unique-guid");
+        assertEquals("unique-guid", result.getGuid());
+        assertEquals("12345678A", result.getDni());
+        assertEquals("Juan", result.getNombre());
+        assertEquals("Perez", result.getApellidos());
+    }
+
+    @Test
+    void DeleteById() {
+
+        User user = User.builder().guid("user-guid").username("testuser").password("password").build();
+        Cliente cliente = Cliente.builder()
+                .guid("unique-guid")
+                .dni("12345678A")
+                .nombre("Juan")
+                .apellidos("Perez")
+                .email("juan.perez@example.com")
+                .telefono("123456789")
+                .user(user)
+                .isDeleted(false)
+                .build();
+
+        when(clienteRepository.findByGuid("unique-guid")).thenReturn(Optional.of(cliente));
 
 
-            verify(clienteRepository, times(1)).save(cliente);
-            assertTrue(cliente.getIsDeleted());
-        }
-
-        @Test
-        void GetProductos() {
-
-            User user = User.builder().guid("user-guid").username("testuser").password("password").build();
-            Cuenta cuenta1 = Cuenta.builder().guid("cuenta1-guid").build();
-            Cliente cliente = Cliente.builder()
-                    .guid("unique-guid")
-                    .dni("12345678A")
-                    .nombre("Juan")
-                    .apellidos("Perez")
-                    .email("juan.perez@example.com")
-                    .telefono("123456789")
-                    .user(user)
-                    .isDeleted(false)
-                    .cuentas(Set.of(cuenta1))
-                    .build();
-
-            when(clienteRepository.findByGuid("unique-guid")).thenReturn(Optional.of(cliente));
-            when(cuentaMapper.toCuentaResponse(any(Cuenta.class), any(), any(), any())).thenReturn(new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100)));
-            when(clienteMapper.toClienteResponseProductos(any(Cliente.class), any(Set.class)))
-                    .thenReturn(new ClienteResponseProductos("unique-guid", "Juan", Set.of(new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100)))));
+        clienteService.deleteById("unique-guid");
 
 
-            ClienteResponseProductos result = clienteService.getProductos("unique-guid");
+        verify(clienteRepository, times(1)).save(cliente);
+        assertTrue(cliente.getIsDeleted());
+    }
+
+    @Test
+    void GetProductos() {
+
+        User user = User.builder().guid("user-guid").username("testuser").password("password").build();
+        Cuenta cuenta1 = Cuenta.builder().guid("cuenta1-guid").build();
+        Cliente cliente = Cliente.builder()
+                .guid("unique-guid")
+                .dni("12345678A")
+                .nombre("Juan")
+                .apellidos("Perez")
+                .email("juan.perez@example.com")
+                .telefono("123456789")
+                .user(user)
+                .isDeleted(false)
+                .cuentas(Set.of(cuenta1))
+                .build();
+
+        when(clienteRepository.findByGuid("unique-guid")).thenReturn(Optional.of(cliente));
+        when(cuentaMapper.toCuentaResponse(any(Cuenta.class), any(), any(), any())).thenReturn(new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100)));
+        when(clienteMapper.toClienteResponseProductos(any(Cliente.class), any(Set.class)))
+                .thenReturn(new ClienteResponseProductos("unique-guid", "Juan", Set.of(new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100)))));
 
 
-            assertEquals("unique-guid", result.getGuid());
-            assertEquals("Juan", result.getNombre());
-            assertEquals(1, result.getCuentas().size());
-        }
-
-        @Test
-        void GetProductosById() {
-
-            User user = User.builder().guid("user-guid").username("testuser").password("password").build();
-            Cuenta cuenta1 = Cuenta.builder().guid("cuenta1-guid").build();
-            Cliente cliente = Cliente.builder()
-                    .guid("unique-guid")
-                    .dni("12345678A")
-                    .nombre("Juan")
-                    .apellidos("Perez")
-                    .email("juan.perez@example.com")
-                    .telefono("123456789")
-                    .user(user)
-                    .isDeleted(false)
-                    .cuentas(Set.of(cuenta1))
-                    .build();
-
-            when(clienteRepository.findByGuid("unique-guid")).thenReturn(Optional.of(cliente));
-            when(cuentaRepository.findByGuid("cuenta1-guid")).thenReturn(Optional.of(cuenta1));
-            when(tarjetaRepository.findByGuid(anyString())).thenReturn(Optional.empty());
-            when(tipoCuentaMapper.toTipoCuentaResponse(any())).thenReturn(new TipoCuentaResponse("tipo-cuenta"));
-            when(tarjetaMapper.toTarjetaResponse(any())).thenReturn(new TarjetaResponse("tarjeta"));
-            when(clienteMapper.toClienteResponseProductoById(any(Cliente.class), any(CuentaResponse.class), any(TarjetaResponse.class)))
-                    .thenReturn(new ClienteResponseProductosById("unique-guid", "Juan", new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100)), null));
+        ClienteResponseProductos result = clienteService.getProductos("unique-guid");
 
 
-            ClienteResponseProductosById result = clienteService.getProductosById("unique-guid", "cuenta1-guid");
+        assertEquals("unique-guid", result.getGuid());
+        assertEquals("Juan", result.getNombre());
+        assertEquals(1, result.getCuentas().size());
+    }
+
+    @Test
+    void GetProductosById() {
+
+        User user = User.builder().guid("user-guid").username("testuser").password("password").build();
+        Cuenta cuenta1 = Cuenta.builder().guid("cuenta1-guid").build();
+        Cliente cliente = Cliente.builder()
+                .guid("unique-guid")
+                .dni("12345678A")
+                .nombre("Juan")
+                .apellidos("Perez")
+                .email("juan.perez@example.com")
+                .telefono("123456789")
+                .user(user)
+                .isDeleted(false)
+                .cuentas(Set.of(cuenta1))
+                .build();
+
+        when(clienteRepository.findByGuid("unique-guid")).thenReturn(Optional.of(cliente));
+        when(cuentaRepository.findByGuid("cuenta1-guid")).thenReturn(Optional.of(cuenta1));
+        when(tarjetaRepository.findByGuid(anyString())).thenReturn(Optional.empty());
+        when(tipoCuentaMapper.toTipoCuentaResponse(any())).thenReturn(new TipoCuentaResponse("tipo-cuenta"));
+        when(tarjetaMapper.toTarjetaResponse(any())).thenReturn(new TarjetaResponse("tarjeta"));
+        when(clienteMapper.toClienteResponseProductoById(any(Cliente.class), any(CuentaResponse.class), any(TarjetaResponse.class)))
+                .thenReturn(new ClienteResponseProductosById("unique-guid", "Juan", new CuentaResponse("cuenta1-guid", "iban", BigDecimal.valueOf(100)), null));
 
 
-            assertEquals("unique-guid", result.getGuid());
-            assertEquals("Juan", result.getNombre());
-            assertNotNull(result.getCuenta());
-            assertNull(result.getTarjeta());
-        }
+        ClienteResponseProductosById result = clienteService.getProductosById("unique-guid", "cuenta1-guid");
+
+
+        assertEquals("unique-guid", result.getGuid());
+        assertEquals("Juan", result.getNombre());
+        assertNotNull(result.getCuenta());
+        assertNull(result.getTarjeta());
+    }
 
 
     @Test
@@ -355,7 +361,6 @@ public class ClienteServiceImplTest {
 
         when(clienteRepository.findByDni("12345678A")).thenReturn(Optional.of(cliente));
 
-        // Ejecutar el método y verificar la excepción
         ClienteExistsByDni exception = assertThrows(ClienteExistsByDni.class, () -> {
             clienteService.validarClienteExistente(cliente);
         });
@@ -400,7 +405,6 @@ public class ClienteServiceImplTest {
         when(clienteRepository.findByTelefono("123456789")).thenReturn(Optional.empty());
         when(clienteRepository.findByEmail("juan.perez@example.com")).thenReturn(Optional.of(cliente));
 
-        // Ejecutar el método y verificar la excepción
         ClienteExistsByEmail exception = assertThrows(ClienteExistsByEmail.class, () -> {
             clienteService.validarClienteExistente(cliente);
         });
@@ -423,7 +427,7 @@ public class ClienteServiceImplTest {
         when(clienteRepository.findByTelefono("123456789")).thenReturn(Optional.empty());
         when(clienteRepository.findByEmail("juan.perez@example.com")).thenReturn(Optional.empty());
 
-        
+
         assertDoesNotThrow(() -> {
             clienteService.validarClienteExistente(cliente);
         });
