@@ -35,6 +35,7 @@ public class ClienteRequestSave {
     @NotBlank(message = "El telefono no puede estar vacio")
     private String telefono;
 
+    // TODO -> MODIFICAR FOTO DE PERFIL Y DNI
     @NotBlank(message = "La foto de perfil no puede estar vacia")
     private String fotoPerfil;
 
