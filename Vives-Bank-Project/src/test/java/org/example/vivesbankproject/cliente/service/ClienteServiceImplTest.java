@@ -165,27 +165,47 @@ public class ClienteServiceImplTest {
                 .user(user)
                 .isDeleted(false)
                 .build();
-        Cuenta cuenta1 = Cuenta.builder().guid("cuenta1-guid").iban("ES123456789").saldo(BigDecimal.valueOf(100)).build();
+
+        Cuenta cuenta1 = Cuenta.builder()
+                .guid("cuenta1-guid")
+                .iban("ES123456789")
+                .saldo(BigDecimal.valueOf(100))
+                .build();
 
         when(clienteRepository.findByGuid("cliente-guid")).thenReturn(Optional.of(cliente));
         when(userMapper.toUserResponse(user))
-                .thenReturn(new UserResponse("user-guid", "testuser", "password", roles, LocalDateTime.now(), LocalDateTime.now(), false));
+                .thenReturn(new UserResponse(
+                        "user-guid", "testuser", "password", roles, LocalDateTime.now(), LocalDateTime.now(), false));
         when(cuentaMapper.toCuentaResponse(any(Cuenta.class), any(), any(), any()))
                 .thenReturn(new CuentaResponse(
                         "cuenta1-guid", "ES123456789", BigDecimal.valueOf(100),
-                        new TipoCuentaResponse("tipo-guid", "Cuenta Corriente", LocalDateTime.now(), LocalDateTime.now(), false),
-                        new TarjetaResponse("tarjeta-guid", "1234-5678-1234-5678", LocalDateTime.now(), LocalDateTime.now(), false),
-                        new ClienteForCuentaResponse("cliente-guid", "Juan Perez"),
+                        new TipoCuentaResponse(
+                                "tipo-guid", "Cuenta Corriente", BigDecimal.valueOf(1.5),
+                                LocalDateTime.now(), LocalDateTime.now(), false),
+                        new TarjetaResponse(
+                                "tarjeta-guid", "1234-5678-1234-5678", LocalDate.now().plusYears(3),
+                                BigDecimal.valueOf(500), BigDecimal.valueOf(2000), BigDecimal.valueOf(5000),
+                                TipoTarjeta.CREDITO, LocalDateTime.now(), LocalDateTime.now(), false),
+                        new ClienteForCuentaResponse(
+                                "cliente-guid", "12345678A", "Juan", "Perez", "juan.perez@example.com",
+                                "123456789", "perfil.jpg", "dni.jpg"),
                         LocalDateTime.now(), LocalDateTime.now(), false));
         when(clienteMapper.toClienteResponse(any(Cliente.class), any(UserResponse.class), any(Set.class)))
                 .thenReturn(new ClienteResponse(
                         "cliente-guid", "12345678A", "Juan", "Perez", "juan.perez@example.com", "123456789",
-                        "fotoprfil.jpg", "fotodni.jpg",
+                        "perfil.jpg", "dni.jpg",
                         Set.of(new CuentaResponse(
                                 "cuenta1-guid", "ES123456789", BigDecimal.valueOf(100),
-                                new TipoCuentaResponse("tipo-guid", "Cuenta Corriente", LocalDateTime.now(), LocalDateTime.now(), false),
-                                new TarjetaResponse("tarjeta-guid", "1234-5678-1234-5678", LocalDateTime.now(), LocalDateTime.now(), false),
-                                new ClienteForCuentaResponse("cliente-guid", "Juan Perez"),
+                                new TipoCuentaResponse(
+                                        "tipo-guid", "Cuenta Corriente", BigDecimal.valueOf(1.5),
+                                        LocalDateTime.now(), LocalDateTime.now(), false),
+                                new TarjetaResponse(
+                                        "tarjeta-guid", "1234-5678-1234-5678", LocalDate.now().plusYears(3),
+                                        BigDecimal.valueOf(500), BigDecimal.valueOf(2000), BigDecimal.valueOf(5000),
+                                        TipoTarjeta.CREDITO, LocalDateTime.now(), LocalDateTime.now(), false),
+                                new ClienteForCuentaResponse(
+                                        "cliente-guid", "12345678A", "Juan", "Perez", "juan.perez@example.com",
+                                        "123456789", "perfil.jpg", "dni.jpg"),
                                 LocalDateTime.now(), LocalDateTime.now(), false)),
                         new UserResponse("user-guid", "testuser", "password", roles, LocalDateTime.now(), LocalDateTime.now(), false),
                         LocalDateTime.now(), LocalDateTime.now(), false));
@@ -195,12 +215,32 @@ public class ClienteServiceImplTest {
 
 
         assertEquals("cliente-guid", result.getGuid());
+        assertEquals("12345678A", result.getDni());
         assertEquals("Juan", result.getNombre());
+        assertEquals("Perez", result.getApellidos());
+        assertEquals("juan.perez@example.com", result.getEmail());
+        assertEquals("123456789", result.getTelefono());
+        assertEquals("perfil.jpg", result.getFotoPerfil());
+        assertEquals("dni.jpg", result.getFotoDni());
+
+
         CuentaResponse cuentaResponse = result.getCuentas().iterator().next();
         assertEquals("cuenta1-guid", cuentaResponse.getGuid());
         assertEquals("ES123456789", cuentaResponse.getIban());
         assertEquals(0, BigDecimal.valueOf(100).compareTo(cuentaResponse.getSaldo()));
         assertEquals("Cuenta Corriente", cuentaResponse.getTipoCuenta().getNombre());
+        assertEquals(0, BigDecimal.valueOf(1.5).compareTo(cuentaResponse.getTipoCuenta().getInteres()));
+
+
+        ClienteForCuentaResponse clienteForCuentaResponse = cuentaResponse.getCliente();
+        assertEquals("cliente-guid", clienteForCuentaResponse.getGuid());
+        assertEquals("12345678A", clienteForCuentaResponse.getDni());
+        assertEquals("Juan", clienteForCuentaResponse.getNombre());
+        assertEquals("Perez", clienteForCuentaResponse.getApellidos());
+        assertEquals("juan.perez@example.com", clienteForCuentaResponse.getEmail());
+        assertEquals("123456789", clienteForCuentaResponse.getTelefono());
+        assertEquals("perfil.jpg", clienteForCuentaResponse.getFotoPerfil());
+        assertEquals("dni.jpg", clienteForCuentaResponse.getFotoDni());
     }
 
     @Test
