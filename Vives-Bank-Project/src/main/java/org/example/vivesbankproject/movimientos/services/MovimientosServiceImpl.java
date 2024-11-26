@@ -3,10 +3,15 @@ package org.example.vivesbankproject.movimientos.services;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cliente.exceptions.ClienteNotFound;
+import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
+import org.example.vivesbankproject.movimientos.dto.MovimientoRequest;
+import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
 import org.example.vivesbankproject.movimientos.exceptions.ClienteHasNoMovements;
 import org.example.vivesbankproject.movimientos.exceptions.MovimientoNotFound;
+import org.example.vivesbankproject.movimientos.mappers.MovimientoMapper;
+import org.example.vivesbankproject.movimientos.mappers.TransaccionMapper;
 import org.example.vivesbankproject.movimientos.models.Movimientos;
 import org.example.vivesbankproject.movimientos.repositories.MovimientosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,34 +39,41 @@ public class MovimientosServiceImpl implements MovimientosService {
 
    // private final ClienteService clienteService;
     private final ClienteRepository clienteRepository;
+    private final MovimientoMapper movimientosMapper;
+    private final ClienteMapper clienteMapper;
+    private final TransaccionMapper transaccionMapper;
     private final MovimientosRepository movimientosRepository;
 
     @Autowired
-    public MovimientosServiceImpl( MovimientosRepository movimientosRepository, ClienteRepository clienteRepository) {
+    public MovimientosServiceImpl( MovimientosRepository movimientosRepository, ClienteRepository clienteRepository, MovimientoMapper movimientoMapper, ClienteMapper clienteMapper, TransaccionMapper transaccionMapper) {
         //this.clienteService = clienteService;
         this.clienteRepository = clienteRepository;
         this.movimientosRepository = movimientosRepository;
+        this.movimientosMapper = movimientoMapper;
+        this.clienteMapper = clienteMapper;
+        this.transaccionMapper = transaccionMapper;
     }
 
     @Override
-    public Page<Movimientos> getAll(Pageable pageable) {
+    public Page<MovimientoResponse> getAll(Pageable pageable) {
         log.info("Encontrando todos los Movimientos");
-        return movimientosRepository.findAll(pageable);
+        return movimientosMapper.toMovimientoResponse(movimientosRepository.findAll(pageable));
     }
 
 
     @Override
     @Cacheable(key = "#guidMovimiento")
-    public Movimientos getById(String guidMovimiento) {
+    public MovimientoResponse getById(String guidMovimiento) {
         log.info("Encontrando Movimiento por id: {}", guidMovimiento);
-        return movimientosRepository.findByGuid(guidMovimiento).orElseThrow(
+        var movimiento = movimientosRepository.findByGuid(guidMovimiento).orElseThrow(
                 () -> new MovimientoNotFound(guidMovimiento)
         );
+        return movimientosMapper.toMovimientoResponse(movimiento, clienteMapper.toClienteResponse(movimiento.getCliente()), transaccionMapper.toTransaccionResponse(movimiento.getTransacciones()));
     }
 
     @Override
     @Cacheable(key = "#idCliente")
-    public Movimientos getByClienteId(String idCliente) {
+    public MovimientoResponse getByClienteId(String idCliente) {
         log.info("Encontrando Movimientos por idCliente: {}", idCliente);
         clienteRepository.findByGuid(idCliente).orElseThrow(() -> new ClienteNotFound(idCliente));
         return movimientosRepository.findMovimientosByClienteId(idCliente)
@@ -70,7 +82,7 @@ public class MovimientosServiceImpl implements MovimientosService {
 
     @Override
     @CachePut(key = "#result.id")
-    public Movimientos save(Movimientos movimiento) {
+    public MovimientoResponse save(MovimientoRequest movimientoRequest) {
         log.info("Guardando Movimiento: {}", movimiento);
         var cliente = clienteRepository.findById(movimiento.getCliente().getId()).orElseThrow(() -> new ClienteNotFound(movimiento.getCliente().getGuid()));
         if (cliente.getIdMovimientos() == null) {
