@@ -5,6 +5,7 @@ import org.example.vivesbankproject.frankfurter.model.FrankFurterResponse;
 import org.example.vivesbankproject.frankfurter.services.DivisasApiServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
 @RestController
 @RequestMapping("${api.version}/divisas")
 @Slf4j
+@PreAuthorize("hasRole('USER')")
 public class DivisasController {
 
     private final DivisasApiServiceImpl divisasServiceImpl;

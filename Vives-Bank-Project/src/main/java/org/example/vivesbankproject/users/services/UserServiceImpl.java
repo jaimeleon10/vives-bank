@@ -5,6 +5,7 @@ import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.exceptions.UserExists;
 import org.example.vivesbankproject.users.exceptions.UserNotFoundById;
 import org.example.vivesbankproject.users.exceptions.UserNotFoundByUsername;
+import org.example.vivesbankproject.users.exceptions.UserNotFoundException;
 import org.example.vivesbankproject.users.mappers.UserMapper;
 import org.example.vivesbankproject.users.models.Role;
 import org.example.vivesbankproject.users.models.User;
@@ -13,14 +14,17 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 @Service
+@Primary
 @CacheConfig(cacheNames = {"usuario"})
 public class UserServiceImpl implements UserService {
 
@@ -94,5 +98,11 @@ public class UserServiceImpl implements UserService {
         );
         user.setIsDeleted(true);
         userRepository.save(user);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username)  {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException( username ));
     }
 }

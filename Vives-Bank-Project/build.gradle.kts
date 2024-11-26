@@ -63,6 +63,12 @@ dependencies {
     // Jackson
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.1")
 
+    // Spring Security
+    implementation("org.springframework.boot:spring-boot-starter-security")
+
+    // JWT (Json Web Token)
+    implementation("com.auth0:java-jwt:4.4.0")
+
     // Redis
     // implementation ("org.springframework.boot:spring-boot-starter-data-redis")
     // implementation ("org.hibernate:hibernate-core:6.2.8.Final")
@@ -77,8 +83,10 @@ dependencies {
 
     // testear MongoDB
     implementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo:4.18.0")
-
     testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo:4.18.0")
+
+    // Test Spring Security
+    testImplementation("org.springframework.security:spring-security-test")
 
 }
 

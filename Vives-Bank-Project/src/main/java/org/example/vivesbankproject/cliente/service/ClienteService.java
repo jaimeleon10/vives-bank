@@ -17,4 +17,6 @@ public interface ClienteService {
     ClienteResponse update(String id, ClienteRequestUpdate clienteRequestUpdate);
 
     void deleteById(String id);
+
+    ClienteResponse getUserByGuid(String userGuid);
 }

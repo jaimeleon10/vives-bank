@@ -26,4 +26,6 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long>, JpaSpec
 
     @Query("SELECT cuenta FROM Cliente c JOIN c.cuentas cuenta WHERE cuenta.guid IN :cuentasIds")
     List<Cuenta> findCuentasAsignadas(@Param("cuentasIds") Set<String> cuentasIds);
+
+    Optional<Cliente> findByUserGuid(String userGuid);
 }
