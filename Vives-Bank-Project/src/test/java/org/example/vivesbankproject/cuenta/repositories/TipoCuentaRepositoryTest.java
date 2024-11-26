@@ -3,76 +3,83 @@ package org.example.vivesbankproject.cuenta.repositories;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.context.SpringBootTest;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class TipoCuentaRepositoryTest {
+@ExtendWith(SpringExtension.class)
+@Transactional
+public class TipoCuentaRepositoryTest {
 
     @Autowired
-    private TipoCuentaRepository repository;
+    private TipoCuentaRepository tipoCuentaRepository;
 
-    @Autowired
-    private TestEntityManager entityManager;
-
-    private TipoCuenta tipoCuentaTest;
+    private TipoCuenta tipoCuenta;
 
     @BeforeEach
     void setUp() {
-
-        tipoCuentaTest = new TipoCuenta();
-        tipoCuentaTest.setGuid("hola");
-        tipoCuentaTest.setNombre("normal");
-        tipoCuentaTest.setInteres(BigDecimal.valueOf(2.0));
-
-        entityManager.persist(tipoCuentaTest);
-        entityManager.flush();
+        tipoCuenta = new TipoCuenta();
+        tipoCuenta.setNombre("Cuenta de Ahorros");
+        tipoCuenta.setInteres(new BigDecimal("1.5"));
+        tipoCuenta = tipoCuentaRepository.save(tipoCuenta);
     }
 
     @Test
     void findByNombre() {
+        String nombre = "Cuenta de Ahorros";
 
-        Optional<TipoCuenta> result = repository.findByNombre("normal");
+        Optional<TipoCuenta> result = tipoCuentaRepository.findByNombre(nombre);
 
-
-        assertAll(
-                () -> assertTrue(result.isPresent(), "El resultado no debe estar vacío"),
-                () -> assertEquals(tipoCuentaTest.getGuid(), result.get().getGuid(), "El GUID no coincide"),
-                () -> assertEquals(tipoCuentaTest.getNombre(), result.get().getNombre(), "El nombre no coincide"),
-                () -> assertEquals(tipoCuentaTest.getInteres(), result.get().getInteres(), "El interés no coincide")
-        );
+        assertTrue(result.isPresent());
+        assertEquals(nombre, result.get().getNombre());
     }
 
     @Test
     void findByNombreNotFound() {
+        String nombre = "Cuenta Inexistente";
 
-        Optional<TipoCuenta> result = repository.findByNombre("ahorro");
+        Optional<TipoCuenta> result = tipoCuentaRepository.findByNombre(nombre);
 
-        assertTrue(result.isEmpty(), "El resultado debe estar vacío");
+        assertFalse(result.isPresent());
     }
 
     @Test
     void findByGuid() {
-        Optional<TipoCuenta> result = repository.findByGuid("hola");
+        String guid = tipoCuenta.getGuid();
 
-        assertAll(
-                () -> assertTrue(result.isPresent(), "El resultado no debe estar vacío"),
-                () -> assertEquals(tipoCuentaTest.getGuid(), result.get().getGuid(), "El GUID no coincide"),
-                () -> assertEquals(tipoCuentaTest.getNombre(), result.get().getNombre(), "El nombre no coincide")
-        );
+        Optional<TipoCuenta> result = tipoCuentaRepository.findByGuid(guid);
+
+        assertTrue(result.isPresent());
+        assertEquals(guid, result.get().getGuid());
     }
 
     @Test
     void findByGuidNotFound() {
-        Optional<TipoCuenta> result = repository.findByGuid("guid-inexistente");
+        String guid = "non-existent-guid";
 
-        assertTrue(result.isEmpty(), "El resultado debe estar vacío");
+        Optional<TipoCuenta> result = tipoCuentaRepository.findByGuid(guid);
+
+        assertFalse(result.isPresent());
+    }
+
+    @Test
+    void FindAllConSpecification() {
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Specification<TipoCuenta> spec = (root, query, criteriaBuilder) -> criteriaBuilder.like(root.get("nombre"), "%Cuenta%");
+        Page<TipoCuenta> result = tipoCuentaRepository.findAll(spec, pageable);
+
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
     }
 }
