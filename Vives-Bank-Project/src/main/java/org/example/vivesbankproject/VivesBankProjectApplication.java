@@ -9,16 +9,6 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 
 @SpringBootApplication
 @EnableCaching
-@EnableMongoRepositories(basePackages = {
-        "org.example.vivesbankproject.movimientos.repositories",
-        "org.example.vivesbankproject.movimientoTransaccion.repositories"
-})
-@EnableJpaRepositories(basePackages = {
-        "org.example.vivesbankproject.cliente.repositories",
-        "org.example.vivesbankproject.cuenta.repositories",
-        "org.example.vivesbankproject.tarjeta.repositories",
-        "org.example.vivesbankproject.users.repositories"
-})
 public class VivesBankProjectApplication implements CommandLineRunner {
 
     public static void main(String[] args) {

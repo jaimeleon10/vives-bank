@@ -4,16 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaForClienteResponse;
-import org.example.vivesbankproject.users.dto.UserResponse;
-import java.time.LocalDateTime;
-import java.util.Set;
+
+import java.io.Serializable;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClienteResponse {
+public class ClienteResponse implements Serializable {
     private String guid;
     private String dni;
     private String nombre;
@@ -22,9 +20,8 @@ public class ClienteResponse {
     private String telefono;
     private String fotoPerfil;
     private String fotoDni;
-    private Set<CuentaForClienteResponse> cuentas;
-    private UserResponse user;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String userId;
+    private String createdAt;
+    private String updatedAt;
     private Boolean isDeleted;
 }

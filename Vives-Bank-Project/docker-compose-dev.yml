@@ -38,7 +38,7 @@ services:
     restart: always
     env_file: .env
     ports:
-      - 8080:8080
+      - "8080:8080"
     depends_on:
       - postgres-db-dev
     networks:
@@ -51,7 +51,7 @@ services:
     restart: always
     env_file: .env
     ports:
-      - 8081:8081
+      - "8081:8081"
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: ${DATABASE_USER_MONGO}
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${DATABASE_PASSWORD_MONGO}
@@ -67,16 +67,11 @@ services:
     image: redis:7.4.1
     restart: always
     ports:
-      - 6379:6379
+      - "6379:6379"
     volumes:
       - redis-data:/data
     networks:
       - banco-network
-    # command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
-    # Por si queremos personalizar el comportamiento de Redis. Si no, arranca
-    # con comportamiento por defecto. En este caso "Habilita un volcado a disco
-    # cada 60 segundos si hay cambios". "Reduce el nivel de detalle de los logs
-    # a solo advertencias importantes.
 
 volumes:
   redis-data:

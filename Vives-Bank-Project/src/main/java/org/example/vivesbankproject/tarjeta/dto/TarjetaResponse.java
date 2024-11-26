@@ -1,11 +1,14 @@
 package org.example.vivesbankproject.tarjeta.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,15 +18,16 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TarjetaResponse {
+@JsonSerialize
+public class TarjetaResponse implements Serializable {
     private String guid;
     private String numeroTarjeta;
-    private LocalDate fechaCaducidad;
-    private BigDecimal limiteDiario;
-    private BigDecimal limiteSemanal;
-    private BigDecimal limiteMensual;
+    private String fechaCaducidad;
+    private String limiteDiario;
+    private String limiteSemanal;
+    private String limiteMensual;
     private TipoTarjeta tipoTarjeta;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String createdAt;
+    private String updatedAt;
     public Boolean isDeleted;
 }
