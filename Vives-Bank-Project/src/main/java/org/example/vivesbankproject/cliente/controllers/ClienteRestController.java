@@ -6,7 +6,9 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cliente.dto.*;
+import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.service.ClienteService;
+import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.utils.PageResponse;
 import org.example.vivesbankproject.utils.PaginationLinksUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -29,6 +33,7 @@ import java.util.Optional;
 @RequestMapping("${api.version}/cliente")
 @Validated
 @Slf4j
+@PreAuthorize("hasRole('ADMIN')")
 public class ClienteRestController {
     private final ClienteService clienteService;
     private final PaginationLinksUtils paginationLinksUtils;
@@ -83,6 +88,13 @@ public class ClienteRestController {
     public ResponseEntity<Void> deleteCliente(@PathVariable String id) {
         clienteService.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/me/profile")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ClienteResponse> me(@AuthenticationPrincipal User user) {
+        log.info("Obteniendo datos del cliente con guid: " + user.getGuid());
+        return ResponseEntity.ok(clienteService.getUserByGuid(user.getGuid()));
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

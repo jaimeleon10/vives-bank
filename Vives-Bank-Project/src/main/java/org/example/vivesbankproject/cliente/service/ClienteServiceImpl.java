@@ -18,6 +18,7 @@ import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.exceptions.UserNotFoundById;
+import org.example.vivesbankproject.users.exceptions.UserNotFoundException;
 import org.example.vivesbankproject.users.mappers.UserMapper;
 import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.springframework.cache.annotation.CacheConfig;
@@ -221,6 +222,36 @@ public class ClienteServiceImpl implements ClienteService {
         );
         cliente.setIsDeleted(true);
         clienteRepository.save(cliente);
+    }
+
+    @Override
+    @Cacheable(key = "#guid") // Añadimos caché para mejorar el rendimiento en llamadas repetidas
+    public ClienteResponse getUserByGuid(String guid) {
+        log.info("Buscando cliente por user guid: {}", guid);
+
+        // Buscamos el cliente directamente por el userGuid
+        var cliente = clienteRepository.findByUserGuid(guid)
+                .orElseThrow(() -> new ClienteNotFound("No se encontró cliente para el usuario con guid: " + guid));
+
+        // Obtenemos el usuario asociado al cliente
+        var usuarioExistente = cliente.getUser();
+        if (usuarioExistente == null) {
+            throw new UserNotFoundById(guid);
+        }
+
+        // Obtenemos las cuentas del cliente
+        Set<CuentaForClienteResponse> cuentasResponse = cliente.getCuentas().stream()
+                .map(cuenta -> cuentaMapper.toCuentaForClienteResponse(
+                        cuenta,
+                        tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()),
+                        tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
+                .collect(Collectors.toSet());
+
+        return clienteMapper.toClienteResponse(
+                cliente,
+                userMapper.toUserResponse(usuarioExistente),
+                cuentasResponse
+        );
     }
 
     private void validarClienteExistente(Cliente cliente) {
