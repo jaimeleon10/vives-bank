@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.vivesbankproject.movimientos.models.Transacciones;
+import org.example.vivesbankproject.utils.IdGenerator;
 
 import java.util.List;
 
@@ -13,6 +15,10 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MovimientoRequest {
+
+    @Builder.Default
+    String guid = IdGenerator.generarId();
+
     @NotBlank(message = "El campo movimiento no puede estar vacio")
     String idUsuario;
 
@@ -20,5 +26,5 @@ public class MovimientoRequest {
     String idCliente;
 
     @NotBlank(message = "El campo transacciones no puede estar vacio")
-    List<String> transaccionesIds;
+    private List<Transacciones> transacciones;
 }
