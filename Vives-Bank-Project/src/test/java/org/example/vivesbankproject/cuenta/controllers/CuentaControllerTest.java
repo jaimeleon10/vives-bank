@@ -26,7 +26,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-/*
+
 @ExtendWith(MockitoExtension.class)
 class CuentaControllerTest {
 
@@ -142,4 +142,4 @@ class CuentaControllerTest {
         String responseBody = result.getResponse().getContentAsString();
         assertTrue(responseBody.contains("El formato del IBAN es inválido"));
     }
-} */
+}
