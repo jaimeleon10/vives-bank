@@ -155,35 +155,64 @@ class CuentaServiceImplTest {
     @Test
     void update() {
         String cuentaId = "123";
+
+        TipoCuenta tipoCuenta = new TipoCuenta();
+        tipoCuenta.setGuid("tipoCuenta-guid");
+
+        Cliente cliente = new Cliente();
+        cliente.setGuid("cliente-guid");
+
+        Tarjeta tarjeta = new Tarjeta();
+        tarjeta.setGuid("tarjeta-guid");
+
         Cuenta cuenta = new Cuenta();
         cuenta.setGuid(cuentaId);
+        cuenta.setIban("ES1234567890");
+        cuenta.setTipoCuenta(tipoCuenta);
+        cuenta.setCliente(cliente);
+        cuenta.setTarjeta(tarjeta);
 
         CuentaRequestUpdate cuentaRequestUpdate = new CuentaRequestUpdate();
 
         Cuenta cuentaActualizada = new Cuenta();
         cuentaActualizada.setGuid(cuentaId);
-
-        when(cuentaRepository.findByGuid(cuentaId)).thenReturn(Optional.of(cuenta));
-        when(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta, cuenta.getTipoCuenta(), cuenta.getTarjeta(), cuenta.getCliente())).thenReturn(cuentaActualizada);
-        when(cuentaRepository.save(cuentaActualizada)).thenReturn(cuentaActualizada);
+        cuentaActualizada.setIban(cuenta.getIban());
+        cuentaActualizada.setTipoCuenta(tipoCuenta);
+        cuentaActualizada.setCliente(cliente);
+        cuentaActualizada.setTarjeta(tarjeta);
 
         TipoCuentaResponse tipoCuentaResponse = new TipoCuentaResponse();
-        when(tipoCuentaMapper.toTipoCuentaResponse(cuentaActualizada.getTipoCuenta())).thenReturn(tipoCuentaResponse);
+        tipoCuentaResponse.setGuid("tipoCuentaResponse");
 
         TarjetaResponse tarjetaResponse = new TarjetaResponse();
+        tarjetaResponse.setGuid("tarjetaResponse");
+
+        ClienteResponse clienteResponse = new ClienteResponse();
+        clienteResponse.setGuid("clienteResponse");
+
+        CuentaResponse cuentaResponse = new CuentaResponse();
+        cuentaResponse.setGuid(cuentaId);
+
+        when(cuentaRepository.findByGuid(cuentaId)).thenReturn(Optional.of(cuenta));
+        when(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta, cuenta.getTipoCuenta(), cuenta.getTarjeta(), cuenta.getCliente()))
+                .thenReturn(cuentaActualizada);
+        when(cuentaRepository.save(cuentaActualizada)).thenReturn(cuentaActualizada);
+
+        when(tipoCuentaMapper.toTipoCuentaResponse(cuentaActualizada.getTipoCuenta())).thenReturn(tipoCuentaResponse);
+
         when(tarjetaMapper.toTarjetaResponse(cuentaActualizada.getTarjeta())).thenReturn(tarjetaResponse);
-        ClienteResponse clienteDataResponse = new ClienteResponse();
 
-        when(clienteMapper.toClienteResponse(cuentaActualizada.getCliente(), cuenta.getCliente().getGuid())).thenReturn(clienteDataResponse);
+        when(clienteMapper.toClienteResponse(cuentaActualizada.getCliente(), cuenta.getCliente().getGuid())).thenReturn(clienteResponse);
 
-        when(cuentaMapper.toCuentaResponse(any(), any(), any(), any())).thenReturn(new CuentaResponse());
+        when(cuentaMapper.toCuentaResponse(any(Cuenta.class), eq("tipoCuenta-guid"), eq("tarjeta-guid"), eq("cliente-guid")))
+                .thenReturn(cuentaResponse);
 
         CuentaResponse result = cuentaService.update(cuentaId, cuentaRequestUpdate);
 
-        assertNotNull(result);
+        assertNotNull(result, "La respuesta no debe ser nula");
         verify(cuentaRepository).findByGuid(cuentaId);
         verify(cuentaRepository).save(cuentaActualizada);
-        verify(cuentaMapper).toCuentaResponse(any(), any(), any(), any());
+        verify(cuentaMapper).toCuentaResponse(any(Cuenta.class), eq("tipoCuenta-guid"), eq("tarjeta-guid"), eq("cliente-guid"));
     }
 
     @Test
