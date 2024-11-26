@@ -1,8 +1,7 @@
 package org.example.vivesbankproject.cuenta.mappers;
 
-import org.example.vivesbankproject.cliente.dto.ClienteForCuentaResponse;
+import org.example.vivesbankproject.cliente.dto.ClienteResponse;
 import org.example.vivesbankproject.cliente.models.Cliente;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequest;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequestUpdate;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
@@ -47,15 +46,15 @@ class CuentaMapperTest {
         tipoCuentaResponse = new TipoCuentaResponse();
         tipoCuentaResponse.setGuid("hola");
         tipoCuentaResponse.setNombre("normal");
-        tipoCuentaResponse.setInteres(BigDecimal.valueOf(2.0));
+        tipoCuentaResponse.setInteres("2.0");
 
         tarjetaResponse = new TarjetaResponse();
         tarjetaResponse.setGuid("hola");
         tarjetaResponse.setNumeroTarjeta("4242424242424242");
-        tarjetaResponse.setFechaCaducidad(LocalDate.parse("2025-12-31"));
-        tarjetaResponse.setLimiteDiario(BigDecimal.valueOf(100.0));
-        tarjetaResponse.setLimiteSemanal(BigDecimal.valueOf(200.0));
-        tarjetaResponse.setLimiteMensual(BigDecimal.valueOf(500.0));
+        tarjetaResponse.setFechaCaducidad("2025-12-31");
+        tarjetaResponse.setLimiteDiario("100.0");
+        tarjetaResponse.setLimiteSemanal("200.0");
+        tarjetaResponse.setLimiteMensual("500.0");
         tarjetaResponse.setTipoTarjeta(TipoTarjeta.valueOf("DEBITO"));
 
         cuentaTest = new Cuenta();
@@ -69,19 +68,19 @@ class CuentaMapperTest {
 
     @Test
     void toCuentaResponse() {
-        ClienteForCuentaResponse clienteForCuentaResponse = new ClienteForCuentaResponse();
+        ClienteResponse clienteForCuentaResponse = new ClienteResponse();
 
-        var res = mapper.toCuentaResponse(cuentaTest, tipoCuentaResponse, tarjetaResponse, clienteForCuentaResponse);
+        var res = mapper.toCuentaResponse(cuentaTest, tipoCuentaResponse.getGuid(), tarjetaResponse.getGuid(), clienteForCuentaResponse.getGuid());
 
         assertAll(
                 () -> assertEquals(cuentaTest.getGuid(), res.getGuid()),
                 () -> assertEquals(cuentaTest.getIban(), res.getIban()),
-                () -> assertEquals(cuentaTest.getSaldo(), res.getSaldo()),
-                () -> assertEquals(tipoCuentaResponse, res.getTipoCuenta()),
-                () -> assertEquals(tarjetaResponse, res.getTarjeta()),
-                () -> assertEquals(clienteForCuentaResponse, res.getCliente()),
-                () -> assertEquals(cuentaTest.getCreatedAt(), res.getCreatedAt()),
-                () -> assertEquals(cuentaTest.getUpdatedAt(), res.getUpdatedAt()),
+                () -> assertEquals(cuentaTest.getSaldo().toString(), res.getSaldo()),
+                () -> assertEquals(tipoCuentaResponse.getGuid(), res.getTipoCuentaId()),
+                () -> assertEquals(tarjetaResponse.getGuid(), res.getTarjetaId()),
+                () -> assertEquals(clienteForCuentaResponse.getGuid(), res.getClienteId()),
+                () -> assertEquals(cuentaTest.getCreatedAt().toString(), res.getCreatedAt()),
+                () -> assertEquals(cuentaTest.getUpdatedAt().toString(), res.getUpdatedAt()),
                 () -> assertEquals(cuentaTest.getIsDeleted(), res.getIsDeleted())
         );
     }
@@ -125,7 +124,7 @@ class CuentaMapperTest {
         cuentaRequestUpdate.setTarjetaId(tarjetaTest.getGuid());
         cuentaRequestUpdate.setIsDeleted(false);
 
-        var res = mapper.toCuentaUpdate(cuentaRequestUpdate, cuentaTest, tipoCuentaTest, tarjetaTest);
+        var res = mapper.toCuentaUpdate(cuentaRequestUpdate, cuentaTest, tipoCuentaTest, tarjetaTest, cuentaTest.getCliente());
 
         assertAll(
                 () -> assertEquals(cuentaRequestUpdate.getSaldo(), res.getSaldo()),
