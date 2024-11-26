@@ -92,8 +92,17 @@ class CuentaServiceImplTest {
     @Test
     void getById() {
         String cuentaId = "123";
+        TipoCuenta tipoCuenta = new TipoCuenta();
+        Cliente cliente = new Cliente();
+        Tarjeta tarjeta = new Tarjeta();
+
         Cuenta cuenta = new Cuenta();
         cuenta.setGuid(cuentaId);
+        cuenta.setIban("ES1234567890");
+        cuenta.setTipoCuenta(tipoCuenta);
+        cuenta.setCliente(cliente);
+        cuenta.setTarjeta(tarjeta);
+
         when(cuentaRepository.findByGuid(cuentaId)).thenReturn(Optional.of(cuenta));
         when(cuentaMapper.toCuentaResponse(any(Cuenta.class), any(), any(), any())).thenReturn(new CuentaResponse());
 
