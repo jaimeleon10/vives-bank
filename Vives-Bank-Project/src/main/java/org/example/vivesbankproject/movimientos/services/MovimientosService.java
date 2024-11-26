@@ -1,18 +1,19 @@
 package org.example.vivesbankproject.movimientos.services;
 
-import org.example.vivesbankproject.movimientos.dto.MovimientoRequest;
-import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
-import org.example.vivesbankproject.movimientos.models.Movimientos;
+import org.bson.types.ObjectId;
+import org.example.vivesbankproject.movimientos.models.Movimiento;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface MovimientosService {
-    Page<MovimientoResponse> getAll(Pageable pageable);
+    Page<Movimiento> getAll(Pageable pageable);
 
-    MovimientoResponse getById(String guidMovimiento);
+    Movimiento getById(ObjectId _id);
 
-    MovimientoResponse getByClienteId(String idCliente);
+    Movimiento getByGuid(String guidMovimiento);
 
-    MovimientoResponse save(MovimientoRequest movimientoRequest);
+    Movimiento getByClienteGuid(String idCliente);
+
+    Movimiento save(MovimientoRequest movimientoRequest);
 
 }
