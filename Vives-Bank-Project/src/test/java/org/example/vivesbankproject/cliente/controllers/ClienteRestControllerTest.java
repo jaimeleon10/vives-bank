@@ -2,6 +2,7 @@ package org.example.vivesbankproject.cliente.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.validation.ConstraintViolationException;
 import org.example.vivesbankproject.cliente.dto.*;
 import org.example.vivesbankproject.cliente.service.ClienteService;
 import org.example.vivesbankproject.users.dto.UserResponse;
@@ -13,6 +14,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -33,6 +36,9 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -70,8 +76,8 @@ class ClienteRestControllerTest {
                 .build();
 
         Page<ClienteResponse> page = new PageImpl<>(List.of(clienteResponse), PageRequest.of(0, 10), 1);
-        Mockito.when(clienteService.getAll(any(), any(), any(), any(), any(), any())).thenReturn(page);
-        Mockito.when(paginationLinksUtils.createLinkHeader(eq(page), any())).thenReturn("");
+        when(clienteService.getAll(any(), any(), any(), any(), any(), any())).thenReturn(page);
+        when(paginationLinksUtils.createLinkHeader(eq(page), any())).thenReturn("");
 
         mockMvc.perform(get("/v1/cliente")
                         .param("dni", "12345678A")
@@ -108,7 +114,7 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .build();
 
-        Mockito.when(clienteService.getById("unique-guid")).thenReturn(clienteResponse);
+        when(clienteService.getById("unique-guid")).thenReturn(clienteResponse);
 
         mockMvc.perform(get("/v1/cliente/unique-guid"))
                 .andExpect(status().isOk())
@@ -144,7 +150,7 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .build();
 
-        Mockito.when(clienteService.save(any(ClienteRequestSave.class))).thenReturn(clienteResponse);
+        when(clienteService.save(any(ClienteRequestSave.class))).thenReturn(clienteResponse);
 
         mockMvc.perform(post("/v1/cliente")
                         .contentType("application/json")
@@ -376,7 +382,7 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .build();
 
-        Mockito.when(clienteService.update(eq("unique-guid"), any(ClienteRequestUpdate.class))).thenReturn(clienteResponse);
+        when(clienteService.update(eq("unique-guid"), any(ClienteRequestUpdate.class))).thenReturn(clienteResponse);
 
         mockMvc.perform(put("/v1/cliente/unique-guid")
                         .contentType("application/json")
@@ -632,16 +638,28 @@ class ClienteRestControllerTest {
                 .andExpect(status().isNoContent());
     }
 
-    /*@Test
-    void handleValidationExceptionError() {
-        MethodArgumentNotValidException ex = mock(MethodArgumentNotValidException.class);
-        BindingResult bindingResult = mock(BindingResult.class);
-        when(ex.getBindingResult()).thenReturn(bindingResult);
+    @Test
+    void me() {
+    }
 
-        Map<String, String> errors = restController.handleValidationExceptions(ex);
+    @Test
+    void handleValidationExceptionUpdateError() throws Exception {
+        var result = mockMvc.perform(put("/v1/cliente/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"nombre\": \"\", \"apellidos\": \"\", \"email\": \"\", \"telefono\": \"\" }")) // Campos vacíos
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.nombre").value("El nombre no puede estar vacio"))
+                .andExpect(jsonPath("$.apellidos").value("Los apellidos no pueden estar vacio"))
+                .andReturn();
 
-        assertNotNull(errors);
-        assertInstanceOf(HashMap.class, errors);
-        verify(ex).getBindingResult();
-    }*/
+        String responseContent = result.getResponse().getContentAsString();
+        System.out.println(responseContent);
+
+        assertAll(
+                () -> assertTrue(responseContent.contains("\"email\":\"El email no puede estar vacio\"")
+                        || responseContent.contains("\"email\":\"El email debe ser valido\"")),
+                () -> assertTrue(responseContent.contains("\"telefono\":\"El telefono no puede estar vacio\"")
+                        || responseContent.contains("\"telefono\":\"El telefono debe tener 9 numeros\""))
+        );
+    }
 }
