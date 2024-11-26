@@ -1,32 +1,44 @@
 package org.example.vivesbankproject.cuenta.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
 import org.example.vivesbankproject.cuenta.services.TipoCuentaService;
 import org.example.vivesbankproject.utils.PageResponse;
 import org.example.vivesbankproject.utils.PaginationLinksUtils;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.mongodb.assertions.Assertions.assertNotNull;
-import static com.mongodb.assertions.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 class TipoCuentaControllerTest {
@@ -43,6 +55,11 @@ class TipoCuentaControllerTest {
     private TipoCuentaResponse tipoCuentaResponse;
     private TipoCuentaRequest tipoCuentaRequest;
     private MockHttpServletRequest request;
+
+    @MockBean
+    private MockMvc mockMvc;
+
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
@@ -116,37 +133,33 @@ class TipoCuentaControllerTest {
 
     @Test
     void deleteTipoCuenta() {
-        doNothing().when(tipoCuentaService).deleteById(anyString());
+        TipoCuentaResponse tipoCuentaResponse = TipoCuentaResponse.builder()
+                .guid("guidTest")
+                .nombre("Cuenta de prueba")
+                .interes(new BigDecimal("5.0"))
+                .build();
 
-        ResponseEntity response = tipoCuentaController.delete("guidTest");
+        when(tipoCuentaService.deleteById(anyString())).thenReturn(tipoCuentaResponse);
+
+        ResponseEntity<TipoCuentaResponse> response = tipoCuentaController.delete("guidTest");
 
         assertNotNull(response);
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        assertNull(response.getBody());
-
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(tipoCuentaResponse, response.getBody());
         verify(tipoCuentaService).deleteById("guidTest");
     }
-
-    /*@Test
+    @Test
     void handleValidationExceptionError() {
         MethodArgumentNotValidException ex = mock(MethodArgumentNotValidException.class);
-
         BindingResult bindingResult = mock(BindingResult.class);
-
         when(ex.getBindingResult()).thenReturn(bindingResult);
-
-        ObjectError objectError = new ObjectError("nombre", "El campo nombre es obligatorio");
-        when(bindingResult.getAllErrors()).thenReturn(List.of(objectError));
 
         Map<String, String> errors = tipoCuentaController.handleValidationExceptions(ex);
 
-        assertNotNull(errors);
-        assertEquals(1, errors.size());
-        assertEquals("El campo nombre es obligatorio", errors.get("nombre"));
-
+        Assertions.assertNotNull(errors);
+        assertInstanceOf(HashMap.class, errors);
         verify(ex).getBindingResult();
-        verify(bindingResult).getAllErrors();
-    }*/
+    }
 
     @Test
     void getAllTipoCuentasConFiltros() {
@@ -166,4 +179,64 @@ class TipoCuentaControllerTest {
         assertNotNull(response.getBody());
         verify(tipoCuentaService).getAll(any(), any(), any());
     }
+
+   /* @Test
+    void InvalidNombreTipoCuenta() throws Exception {
+        TipoCuentaRequest tipoCuentaRequest = TipoCuentaRequest.builder()
+                .nombre("")
+                .interes(new BigDecimal("2.5"))
+                .build();
+
+        MvcResult result = mockMvc.perform(
+                        post("/v1/tipocuentas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(tipoCuentaRequest)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El nombre del tipo de cuenta no puede estar vacío"))  // Verifica el mensaje de error para 'nombre'
+        );
+    }
+
+    @Test
+    void InvalidInteresTipoCuenta() throws Exception {
+        TipoCuentaRequest tipoCuentaRequest = TipoCuentaRequest.builder()
+                .nombre("Cuenta Ahorro")
+                .interes(new BigDecimal("-2.5"))
+                .build();
+
+        MvcResult result = mockMvc.perform(
+                        post("/v1/tipocuentas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(tipoCuentaRequest)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El interés no puede ser negativo"))  // Verifica el mensaje de error para 'interes'
+        );
+    }
+
+    @Test
+    void InvalidInteresDecimalTipoCuenta() throws Exception {
+        TipoCuentaRequest tipoCuentaRequest = TipoCuentaRequest.builder()
+                .nombre("Cuenta Ahorro")
+                .interes(new BigDecimal("2.555"))
+                .build();
+
+        MvcResult result = mockMvc.perform(
+                        post("/v1/tipocuentas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(tipoCuentaRequest)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El interés debe ser un número válido"))  // Verifica el mensaje de error para el campo 'interes'
+        );
+    } */
 }
