@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +28,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("${api.version}/movimientos")
 @Slf4j
+@PreAuthorize("hasRole('ADMIN')")
 public class MovimientosController {
 
     private final MovimientosService service;
