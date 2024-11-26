@@ -11,7 +11,6 @@ import org.example.vivesbankproject.cliente.dto.ClienteRequestSave;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdate;
 import org.example.vivesbankproject.cliente.dto.ClienteResponse;
 import org.example.vivesbankproject.cliente.models.Cliente;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaForClienteResponse;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.users.dto.UserResponse;
@@ -50,14 +49,12 @@ public class ClienteMapperTest {
                 .username("testuser")
                 .password("password")
                 .roles(new HashSet<>(Set.of(Role.USER)))
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt("2024-11-26T15:23:45.123")
+                .updatedAt("2024-11-26T15:23:45.123")
                 .isDeleted(false)
                 .build();
 
-        Set<CuentaForClienteResponse> cuentas = new HashSet<>();
-
-        ClienteResponse clienteResponse = clienteMapper.toClienteResponse(cliente, userResponse, cuentas);
+        ClienteResponse clienteResponse = clienteMapper.toClienteResponse(cliente, userResponse.getGuid());
 
         assertNotNull(clienteResponse);
         assertEquals(cliente.getGuid(), clienteResponse.getGuid());
@@ -71,8 +68,6 @@ public class ClienteMapperTest {
         assertEquals(cliente.getCreatedAt(), clienteResponse.getCreatedAt());
         assertEquals(cliente.getUpdatedAt(), clienteResponse.getUpdatedAt());
         assertEquals(cliente.getIsDeleted(), clienteResponse.getIsDeleted());
-        assertEquals(userResponse, clienteResponse.getUser());
-        assertEquals(cuentas, clienteResponse.getCuentas());
     }
 
     @Test
@@ -101,7 +96,7 @@ public class ClienteMapperTest {
 
         Set<Cuenta> cuentas = new HashSet<>();
 
-        Cliente cliente = clienteMapper.toCliente(clienteRequestSave, user, cuentas);
+        Cliente cliente = clienteMapper.toCliente(clienteRequestSave, user);
 
         assertNotNull(cliente);
         assertEquals(clienteRequestSave.getDni(), cliente.getDni());
