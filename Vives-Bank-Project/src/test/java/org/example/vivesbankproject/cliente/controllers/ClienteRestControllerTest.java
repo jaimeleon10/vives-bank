@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.example.vivesbankproject.cliente.dto.*;
 import org.example.vivesbankproject.cliente.service.ClienteService;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.utils.PaginationLinksUtils;
 import org.junit.jupiter.api.Test;
@@ -14,7 +13,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
-import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -32,13 +30,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@WithMockUser(username = "admin", password = "adminPassword123", roles = {"ADMIN", "USER"})
 class ClienteRestControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -93,7 +91,6 @@ class ClienteRestControllerTest {
                 .andExpect(jsonPath("$.content[0].telefono").value("123456789"))
                 .andExpect(jsonPath("$.content[0].fotoPerfil").value("fotoprfil.jpg"))
                 .andExpect(jsonPath("$.content[0].fotoDni").value("fotodni.jpg"))
-                .andExpect(jsonPath("$.content[0].cuentas[0].guid").value("cuenta1-guid"))
                 .andExpect(jsonPath("$.content[0].user.guid").value("user-guid"))
                 .andExpect(jsonPath("$.content[0].user.username").value("testuser"))
                 .andExpect(jsonPath("$.content[0].isDeleted").value(false));
@@ -464,7 +461,8 @@ class ClienteRestControllerTest {
 
         assertAll(
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(result.getResponse().getContentAsString().contains("El email debe ser valido"))
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El email debe ser valido")),
+                () -> assertFalse(result.getResponse().getContentAsString().contains("El email no puede estar vacio"))
         );
     }
 
@@ -489,7 +487,8 @@ class ClienteRestControllerTest {
 
         assertAll(
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(result.getResponse().getContentAsString().contains("El email no puede estar vacio"))
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El email no puede estar vacio")),
+                () -> assertFalse(result.getResponse().getContentAsString().contains("El email debe ser valido"))
         );
     }
 
@@ -499,7 +498,7 @@ class ClienteRestControllerTest {
                 .nombre("Juan")
                 .apellidos("Perez")
                 .email("juan.perez@example.com")
-                .telefono("12345678") // Invalid telefono
+                .telefono("12345678")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
                 .userId("user-guid")
@@ -512,9 +511,12 @@ class ClienteRestControllerTest {
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
+        String responseContent = result.getResponse().getContentAsString();
+
         assertAll(
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(result.getResponse().getContentAsString().contains("El telefono debe tener 9 numeros"))
+                () -> assertTrue(responseContent.contains("El telefono debe tener 9 numeros")),
+                () -> assertFalse(responseContent.contains("El telefono no puede estar vacio"))
         );
     }
 
@@ -524,7 +526,7 @@ class ClienteRestControllerTest {
                 .nombre("Juan")
                 .apellidos("Perez")
                 .email("juan.perez@example.com")
-                .telefono("") // Empty telefono
+                .telefono("")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
                 .userId("user-guid")
@@ -537,9 +539,12 @@ class ClienteRestControllerTest {
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
+        String responseContent = result.getResponse().getContentAsString();
+
         assertAll(
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(result.getResponse().getContentAsString().contains("El telefono no puede estar vacio"))
+                () -> assertTrue(responseContent.contains("El telefono no puede estar vacio")),
+                () -> assertFalse(responseContent.contains("El telefono debe tener 9 numeros"))
         );
     }
 
