@@ -76,19 +76,19 @@ class TarjetaServiceImplTest {
         tarjetaResponse = TarjetaResponse.builder()
                 .guid(GUID)
                 .numeroTarjeta("1234567890123456")
-                .fechaCaducidad(CADUCIDAD)
-                .limiteDiario(new BigDecimal("1000.00"))
-                .limiteSemanal(new BigDecimal("5000.00"))
-                .limiteMensual(new BigDecimal("20000.00"))
+                .fechaCaducidad(String.valueOf(CADUCIDAD))
+                .limiteDiario("1000.00")
+                .limiteSemanal("5000.00")
+                .limiteMensual("20000.00")
                 .tipoTarjeta(TipoTarjeta.DEBITO)
-                .createdAt(NOW)
-                .updatedAt(NOW)
+                .createdAt(String.valueOf(NOW))
+                .updatedAt(String.valueOf(NOW))
                 .isDeleted(false)
                 .build();
 
         tarjetaResponsePrivado = TarjetaResponsePrivado.builder()
                 .guid(GUID)
-                .cvv(123)
+                .cvv("123")
                 .build();
 
         tarjetaRequestPrivado = new TarjetaRequestPrivado();
@@ -157,7 +157,7 @@ class TarjetaServiceImplTest {
 
         assertNotNull(result);
         assertEquals(GUID, result.getGuid());
-        assertEquals(123, result.getCvv());
+        assertEquals("123", result.getCvv());
 
         verify(userRepository).findByUsername(tarjetaRequestPrivado.getUsername());
         verify(tarjetaRepository).findByGuid(GUID);

@@ -42,9 +42,9 @@ class TipoCuentaMapperTest {
         assertAll(
                 () -> assertEquals(tipoCuenta.getGuid(), response.getGuid()),
                 () -> assertEquals(tipoCuenta.getNombre(), response.getNombre()),
-                () -> assertEquals(tipoCuenta.getInteres(), response.getInteres()),
-                () -> assertEquals(tipoCuenta.getCreatedAt(), response.getCreatedAt()),
-                () -> assertEquals(tipoCuenta.getUpdatedAt(), response.getUpdatedAt()),
+                () -> assertEquals(tipoCuenta.getInteres().toString(), response.getInteres()),
+                () -> assertEquals(tipoCuenta.getCreatedAt().toString(), response.getCreatedAt()),
+                () -> assertEquals(tipoCuenta.getUpdatedAt().toString(), response.getUpdatedAt()),
                 () -> assertEquals(tipoCuenta.getIsDeleted(), response.getIsDeleted())
         );
     }
