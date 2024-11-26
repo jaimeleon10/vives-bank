@@ -15,5 +15,5 @@ public interface TipoCuentaService {
     TipoCuentaResponse getById(String id);
     TipoCuentaResponse save(TipoCuentaRequest tipoCuentaRequest);
     TipoCuentaResponse update(String id, TipoCuentaRequest tipoCuentaRequest);
-    void deleteById(String id);
+    TipoCuentaResponse deleteById(String id);
 }
