@@ -49,13 +49,13 @@ class TarjetaMapperTest {
         assertNotNull(response);
         assertEquals(tarjetaMock.getGuid(), response.getGuid());
         assertEquals(tarjetaMock.getNumeroTarjeta(), response.getNumeroTarjeta());
-        assertEquals(tarjetaMock.getFechaCaducidad(), response.getFechaCaducidad());
-        assertEquals(tarjetaMock.getLimiteDiario(), response.getLimiteDiario());
-        assertEquals(tarjetaMock.getLimiteSemanal(), response.getLimiteSemanal());
-        assertEquals(tarjetaMock.getLimiteMensual(), response.getLimiteMensual());
+        assertEquals(tarjetaMock.getFechaCaducidad().toString(), response.getFechaCaducidad());
+        assertEquals(tarjetaMock.getLimiteDiario().toString(), response.getLimiteDiario());
+        assertEquals(tarjetaMock.getLimiteSemanal().toString(), response.getLimiteSemanal());
+        assertEquals(tarjetaMock.getLimiteMensual().toString(), response.getLimiteMensual());
         assertEquals(tarjetaMock.getTipoTarjeta(), response.getTipoTarjeta());
-        assertEquals(tarjetaMock.getCreatedAt(), response.getCreatedAt());
-        assertEquals(tarjetaMock.getUpdatedAt(), response.getUpdatedAt());
+        assertEquals(tarjetaMock.getCreatedAt().toString(), response.getCreatedAt());
+        assertEquals(tarjetaMock.getUpdatedAt().toString(), response.getUpdatedAt());
         assertEquals(tarjetaMock.getIsDeleted(), response.getIsDeleted());
     }
 
@@ -113,7 +113,7 @@ class TarjetaMapperTest {
         assertNotNull(response);
         assertEquals(tarjetaMock.getGuid(), response.getGuid());
         assertEquals(tarjetaMock.getPin(), response.getPin());
-        assertEquals(tarjetaMock.getCvv(), response.getCvv());
+        assertEquals(tarjetaMock.getCvv().toString(), response.getCvv());
     }
 
     @Test
