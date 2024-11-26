@@ -66,16 +66,23 @@ class CuentaServiceImplTest {
 
     @Test
     void getAll() {
-
         Pageable pageable = PageRequest.of(0, 10);
+        TipoCuenta tipoCuenta = new TipoCuenta();
+        Cliente cliente = new Cliente();
+        Tarjeta tarjeta = new Tarjeta();
+
         Cuenta cuenta = new Cuenta();
         cuenta.setIban("ES1234567890");
+        cuenta.setTipoCuenta(tipoCuenta);
+        cuenta.setCliente(cliente);
+        cuenta.setTarjeta(tarjeta);
+
         Page<Cuenta> cuentaPage = new PageImpl<>(List.of(cuenta));
 
         when(cuentaRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(cuentaPage);
         when(cuentaMapper.toCuentaResponse(any(Cuenta.class), any(), any(), any())).thenReturn(new CuentaResponse());
 
-        Page<CuentaResponse> result = cuentaService.getAll(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), pageable);
+        Page<CuentaResponse> result = cuentaService.getAll(Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(String.valueOf(tipoCuenta)), pageable);
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
