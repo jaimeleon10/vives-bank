@@ -10,6 +10,7 @@ import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.services.TipoCuentaService;
 import org.example.vivesbankproject.utils.PageResponse;
 import org.example.vivesbankproject.utils.PaginationLinksUtils;
+import org.example.vivesbankproject.websocket.notifications.models.Notification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -85,9 +86,10 @@ public class TipoCuentaController {
     }
 
     @DeleteMapping("{id}")
-    public void delete(@PathVariable String id) {
+    public ResponseEntity<TipoCuentaResponse> delete(@PathVariable String id) {
         log.info("Eliminando tipo de cuenta con id: {}", id);
-        tipoCuentaService.deleteById(id);
+        var result = tipoCuentaService.deleteById(id);
+        return ResponseEntity.ok(result);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
