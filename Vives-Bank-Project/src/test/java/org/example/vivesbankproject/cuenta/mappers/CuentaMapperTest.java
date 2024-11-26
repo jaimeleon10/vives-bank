@@ -124,7 +124,7 @@ class CuentaMapperTest {
         cuentaRequestUpdate.setTarjetaId(tarjetaTest.getGuid());
         cuentaRequestUpdate.setIsDeleted(false);
 
-        var res = mapper.toCuentaUpdate(cuentaRequestUpdate, cuentaTest, tipoCuentaTest, tarjetaTest, new Cliente());
+        var res = mapper.toCuentaUpdate(cuentaRequestUpdate, cuentaTest, tipoCuentaTest, tarjetaTest, cuentaTest.getCliente());
 
         assertAll(
                 () -> assertEquals(cuentaRequestUpdate.getSaldo(), res.getSaldo()),

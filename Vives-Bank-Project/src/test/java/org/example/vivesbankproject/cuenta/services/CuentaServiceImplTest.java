@@ -1,6 +1,5 @@
 package org.example.vivesbankproject.cuenta.services;
 
-import org.example.vivesbankproject.cliente.dto.ClienteForCuentaResponse;
 import org.example.vivesbankproject.cliente.dto.ClienteResponse;
 import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.models.Cliente;
@@ -20,7 +19,6 @@ import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -145,7 +143,7 @@ class CuentaServiceImplTest {
         cuentaActualizada.setGuid(cuentaId);
 
         when(cuentaRepository.findByGuid(cuentaId)).thenReturn(Optional.of(cuenta));
-        when(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta, cuenta.getTipoCuenta(), cuenta.getTarjeta())).thenReturn(cuentaActualizada);
+        when(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta, cuenta.getTipoCuenta(), cuenta.getTarjeta(), cuenta.getCliente())).thenReturn(cuentaActualizada);
         when(cuentaRepository.save(cuentaActualizada)).thenReturn(cuentaActualizada);
 
         TipoCuentaResponse tipoCuentaResponse = new TipoCuentaResponse();
@@ -153,9 +151,9 @@ class CuentaServiceImplTest {
 
         TarjetaResponse tarjetaResponse = new TarjetaResponse();
         when(tarjetaMapper.toTarjetaResponse(cuentaActualizada.getTarjeta())).thenReturn(tarjetaResponse);
-        ClienteForCuentaResponse clienteDataResponse = new ClienteForCuentaResponse();
+        ClienteResponse clienteDataResponse = new ClienteResponse();
 
-        when(clienteMapper.toClienteDataResponse(cuentaActualizada.getCliente())).thenReturn(clienteDataResponse);
+        when(clienteMapper.toClienteResponse(cuentaActualizada.getCliente(), cuenta.getCliente().getGuid())).thenReturn(clienteDataResponse);
 
         when(cuentaMapper.toCuentaResponse(any(), any(), any(), any())).thenReturn(new CuentaResponse());
 
