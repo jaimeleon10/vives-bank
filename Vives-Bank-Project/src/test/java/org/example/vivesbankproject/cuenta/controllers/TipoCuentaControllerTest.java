@@ -1,5 +1,6 @@
 package org.example.vivesbankproject.cuenta.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
 import org.example.vivesbankproject.cuenta.services.TipoCuentaService;
@@ -12,11 +13,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -28,10 +35,10 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.mongodb.assertions.Assertions.assertNotNull;
-import static com.mongodb.assertions.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 class TipoCuentaControllerTest {
@@ -48,6 +55,11 @@ class TipoCuentaControllerTest {
     private TipoCuentaResponse tipoCuentaResponse;
     private TipoCuentaRequest tipoCuentaRequest;
     private MockHttpServletRequest request;
+
+    @MockBean
+    private MockMvc mockMvc;
+
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
@@ -167,4 +179,64 @@ class TipoCuentaControllerTest {
         assertNotNull(response.getBody());
         verify(tipoCuentaService).getAll(any(), any(), any());
     }
+
+   /* @Test
+    void InvalidNombreTipoCuenta() throws Exception {
+        TipoCuentaRequest tipoCuentaRequest = TipoCuentaRequest.builder()
+                .nombre("")
+                .interes(new BigDecimal("2.5"))
+                .build();
+
+        MvcResult result = mockMvc.perform(
+                        post("/v1/tipocuentas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(tipoCuentaRequest)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El nombre del tipo de cuenta no puede estar vacío"))  // Verifica el mensaje de error para 'nombre'
+        );
+    }
+
+    @Test
+    void InvalidInteresTipoCuenta() throws Exception {
+        TipoCuentaRequest tipoCuentaRequest = TipoCuentaRequest.builder()
+                .nombre("Cuenta Ahorro")
+                .interes(new BigDecimal("-2.5"))
+                .build();
+
+        MvcResult result = mockMvc.perform(
+                        post("/v1/tipocuentas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(tipoCuentaRequest)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El interés no puede ser negativo"))  // Verifica el mensaje de error para 'interes'
+        );
+    }
+
+    @Test
+    void InvalidInteresDecimalTipoCuenta() throws Exception {
+        TipoCuentaRequest tipoCuentaRequest = TipoCuentaRequest.builder()
+                .nombre("Cuenta Ahorro")
+                .interes(new BigDecimal("2.555"))
+                .build();
+
+        MvcResult result = mockMvc.perform(
+                        post("/v1/tipocuentas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(tipoCuentaRequest)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El interés debe ser un número válido"))  // Verifica el mensaje de error para el campo 'interes'
+        );
+    } */
 }
