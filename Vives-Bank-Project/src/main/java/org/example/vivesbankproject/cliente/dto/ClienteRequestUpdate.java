@@ -25,12 +25,12 @@ public class ClienteRequestUpdate {
     @NotBlank(message = "Los apellidos no pueden estar vacio")
     private String apellidos;
 
-    @Email(regexp = ".*@.*\\..*", message = "El email debe ser valido")
     @NotBlank(message = "El email no puede estar vacio")
+    @Email(regexp = ".*@.*\\..*", message = "El email debe ser valido")
     private String email;
 
-    @Pattern(regexp = "^\\d{9}$", message = "El telefono debe tener 9 numeros")
     @NotBlank(message = "El telefono no puede estar vacio")
+    @Pattern(regexp = "^\\d{9}$", message = "El telefono debe tener 9 numeros")
     private String telefono;
 
     @NotBlank(message = "La foto de perfil no puede estar vacia")
