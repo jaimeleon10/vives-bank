@@ -10,12 +10,14 @@ import org.example.vivesbankproject.movimientos.models.PagoConTarjeta;
 import org.example.vivesbankproject.movimientos.models.Transferencia;
 import org.example.vivesbankproject.utils.IdGenerator;
 
+import java.time.LocalDateTime;
+
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class MovimientoResponse {
+public class MovimientoRequest {
 
     @Builder.Default
     private String guid = IdGenerator.generarId();
@@ -30,8 +32,5 @@ public class MovimientoResponse {
 
     private Transferencia transferencia;
 
-    @Builder.Default
-    private Boolean isDeleted = false;
-
-    private String createdAt;
 }
+
