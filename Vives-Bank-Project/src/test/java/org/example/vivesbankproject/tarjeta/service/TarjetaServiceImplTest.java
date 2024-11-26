@@ -157,7 +157,7 @@ class TarjetaServiceImplTest {
 
         assertNotNull(result);
         assertEquals(GUID, result.getGuid());
-        assertEquals(123, result.getCvv());
+        assertEquals("123", result.getCvv());
 
         verify(userRepository).findByUsername(tarjetaRequestPrivado.getUsername());
         verify(tarjetaRepository).findByGuid(GUID);
