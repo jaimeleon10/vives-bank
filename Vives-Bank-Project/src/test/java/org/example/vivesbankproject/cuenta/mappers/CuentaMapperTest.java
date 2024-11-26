@@ -75,12 +75,12 @@ class CuentaMapperTest {
         assertAll(
                 () -> assertEquals(cuentaTest.getGuid(), res.getGuid()),
                 () -> assertEquals(cuentaTest.getIban(), res.getIban()),
-                () -> assertEquals(cuentaTest.getSaldo(), res.getSaldo()),
+                () -> assertEquals(cuentaTest.getSaldo().toString(), res.getSaldo()),
                 () -> assertEquals(tipoCuentaResponse.getGuid(), res.getTipoCuentaId()),
                 () -> assertEquals(tarjetaResponse.getGuid(), res.getTarjetaId()),
                 () -> assertEquals(clienteForCuentaResponse.getGuid(), res.getClienteId()),
-                () -> assertEquals(cuentaTest.getCreatedAt(), res.getCreatedAt()),
-                () -> assertEquals(cuentaTest.getUpdatedAt(), res.getUpdatedAt()),
+                () -> assertEquals(cuentaTest.getCreatedAt().toString(), res.getCreatedAt()),
+                () -> assertEquals(cuentaTest.getUpdatedAt().toString(), res.getUpdatedAt()),
                 () -> assertEquals(cuentaTest.getIsDeleted(), res.getIsDeleted())
         );
     }
