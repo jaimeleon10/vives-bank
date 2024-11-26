@@ -13,20 +13,20 @@ import java.util.List;
 
 @Component
 public class MovimientoMapper {
-    public MovimientoResponse toMovimientoResponse(Movimientos movimientos, ClienteResponse clienteResponse, TransaccionResponse transaccionResponse) {
+    public MovimientoResponse toMovimientoResponse(Movimientos movimientos, ClienteResponse clienteResponse, List<Transacciones> transaccionResponse) {
         return MovimientoResponse.builder()
                 .guid(movimientos.getGuid())
                 .idUsuario(movimientos.getIdUsuario())
                 .clienteResponse(clienteResponse)
-                .transacciones(List.of(transaccionResponse))
+                .transacciones(transaccionResponse)
                 .isDeleted(movimientos.getIsDeleted())
                 .build();
     }
 
-    public Movimientos toMovimientos(Cliente cliente, Transacciones transacciones) {
+    public Movimientos toMovimientos(Cliente cliente, List<Transacciones> transacciones) {
         return Movimientos.builder()
                 .cliente(cliente)
-                .transacciones(List.of(transacciones))
+                .transacciones(transacciones)
                 .build();
     }
 }
