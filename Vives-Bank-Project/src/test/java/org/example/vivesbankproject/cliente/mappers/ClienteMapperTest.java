@@ -65,8 +65,8 @@ public class ClienteMapperTest {
         assertEquals(cliente.getTelefono(), clienteResponse.getTelefono());
         assertEquals(cliente.getFotoPerfil(), clienteResponse.getFotoPerfil());
         assertEquals(cliente.getFotoDni(), clienteResponse.getFotoDni());
-        assertEquals(cliente.getCreatedAt(), clienteResponse.getCreatedAt());
-        assertEquals(cliente.getUpdatedAt(), clienteResponse.getUpdatedAt());
+        assertEquals(cliente.getCreatedAt().toString(), clienteResponse.getCreatedAt());
+        assertEquals(cliente.getUpdatedAt().toString(), clienteResponse.getUpdatedAt());
         assertEquals(cliente.getIsDeleted(), clienteResponse.getIsDeleted());
     }
 
