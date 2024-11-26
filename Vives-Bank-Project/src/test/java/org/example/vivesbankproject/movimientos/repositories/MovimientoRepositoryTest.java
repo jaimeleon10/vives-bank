@@ -57,7 +57,7 @@ class MovimientoRepositoryTest {
         Optional<Movimiento> result = movimientosRepository.findMovimientosByClienteGuid(movimiento.getClienteGuid());
 
         assertTrue(result.isPresent(), "El resultado debería estar presente");
-        
+
         Movimiento movimientoEncontrado = result.get();
         assertEquals(cliente.getGuid(), movimientoEncontrado.getClienteGuid(), "El ID del cliente debería coincidir");
     }
