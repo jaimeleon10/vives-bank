@@ -1,3 +1,4 @@
+/*
 package org.example.vivesbankproject.websocket.notifications.mappers;
 
 
@@ -19,3 +20,4 @@ public class NotificationMapper {
         );
     }
 }
+*/

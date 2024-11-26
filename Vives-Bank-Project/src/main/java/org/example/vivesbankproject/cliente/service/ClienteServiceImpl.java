@@ -38,20 +38,12 @@ public class ClienteServiceImpl implements ClienteService {
 
     private final ClienteRepository clienteRepository;
     private final ClienteMapper clienteMapper;
-    private final UserMapper userMapper;
     private final UserRepository userRepository;
-    private final CuentaMapper cuentaMapper;
-    private final TipoCuentaMapper tipoCuentaMapper;
-    private final TarjetaMapper tarjetaMapper;
 
-    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserMapper userMapper, UserRepository userRepository, CuentaMapper cuentaMapper, TipoCuentaMapper tipoCuentaMapper, TarjetaMapper tarjetaMapper) {
+    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserRepository userRepository) {
         this.clienteRepository = clienteRepository;
         this.clienteMapper = clienteMapper;
-        this.userMapper = userMapper;
         this.userRepository = userRepository;
-        this.cuentaMapper = cuentaMapper;
-        this.tipoCuentaMapper = tipoCuentaMapper;
-        this.tarjetaMapper = tarjetaMapper;
     }
 
     @Override
@@ -178,7 +170,7 @@ public class ClienteServiceImpl implements ClienteService {
 
         // Buscamos el cliente directamente por el userGuid
         var cliente = clienteRepository.findByUserGuid(guid)
-                .orElseThrow(() -> new ClienteNotFound("No se encontró cliente para el usuario con guid: " + guid));
+                .orElseThrow(() -> new ClienteNotFoundByUser(guid));
 
         // Obtenemos el usuario asociado al cliente
         var usuarioExistente = cliente.getUser();
