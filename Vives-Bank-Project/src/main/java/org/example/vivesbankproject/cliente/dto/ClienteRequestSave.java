@@ -35,14 +35,12 @@ public class ClienteRequestSave {
     @NotBlank(message = "El telefono no puede estar vacio")
     private String telefono;
 
+    // TODO -> MODIFICAR FOTO DE PERFIL Y DNI
     @NotBlank(message = "La foto de perfil no puede estar vacia")
     private String fotoPerfil;
 
     @NotBlank(message = "La foto del DNI no puede estar vacia")
     private String fotoDni;
-
-    @Builder.Default
-    private Set<String> cuentasIds = new HashSet<>();
 
     @NotBlank(message = "El id de usuario no puede estar vacio")
     private String userId;

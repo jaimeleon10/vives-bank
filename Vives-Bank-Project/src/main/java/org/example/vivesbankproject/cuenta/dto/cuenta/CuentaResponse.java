@@ -1,28 +1,26 @@
 package org.example.vivesbankproject.cuenta.dto.cuenta;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.vivesbankproject.cliente.dto.ClienteForCuentaResponse;
-import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.io.Serializable;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CuentaResponse {
+@JsonSerialize
+public class CuentaResponse implements Serializable {
     private String guid;
     private String iban;
-    private BigDecimal saldo;
-    private TipoCuentaResponse tipoCuenta;
-    private TarjetaResponse tarjeta;
-    private ClienteForCuentaResponse cliente;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String saldo;
+    private String tipoCuentaId;
+    private String tarjetaId;
+    private String clienteId;
+    private String createdAt;
+    private String updatedAt;
     private Boolean isDeleted;
 }

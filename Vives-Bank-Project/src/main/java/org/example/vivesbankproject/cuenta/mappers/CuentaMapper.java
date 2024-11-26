@@ -1,8 +1,6 @@
 package org.example.vivesbankproject.cuenta.mappers;
 
-import org.example.vivesbankproject.cliente.dto.ClienteForCuentaResponse;
 import org.example.vivesbankproject.cliente.models.Cliente;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaForClienteResponse;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequestUpdate;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
@@ -17,27 +15,17 @@ import java.time.LocalDateTime;
 @Component
 public class CuentaMapper {
 
-    public CuentaResponse toCuentaResponse(Cuenta cuenta, TipoCuentaResponse tipoCuentaResponse, TarjetaResponse tarjetaResponse, ClienteForCuentaResponse clienteForCuentaResponse) {
+    public CuentaResponse toCuentaResponse(Cuenta cuenta, String tipoCuentaId, String tarjetaId, String clienteId) {
         return CuentaResponse.builder()
                 .guid(cuenta.getGuid())
                 .iban(cuenta.getIban())
-                .saldo(cuenta.getSaldo())
-                .tipoCuenta(tipoCuentaResponse)
-                .tarjeta(tarjetaResponse)
-                .cliente(clienteForCuentaResponse)
-                .createdAt(cuenta.getCreatedAt())
-                .updatedAt(cuenta.getUpdatedAt())
+                .saldo(cuenta.getSaldo().toString())
+                .tipoCuentaId(tipoCuentaId)
+                .tarjetaId(tarjetaId)
+                .clienteId(clienteId)
+                .createdAt(cuenta.getCreatedAt().toString())
+                .updatedAt(cuenta.getUpdatedAt().toString())
                 .isDeleted(cuenta.getIsDeleted())
-                .build();
-    }
-
-    public CuentaForClienteResponse toCuentaForClienteResponse(Cuenta cuenta, TipoCuentaResponse tipoCuentaResponse, TarjetaResponse tarjetaResponse) {
-        return CuentaForClienteResponse.builder()
-                .guid(cuenta.getGuid())
-                .iban(cuenta.getIban())
-                .saldo(cuenta.getSaldo())
-                .tipoCuenta(tipoCuentaResponse)
-                .tarjeta(tarjetaResponse)
                 .build();
     }
 
@@ -49,7 +37,7 @@ public class CuentaMapper {
                 .build();
     }
 
-    public Cuenta toCuentaUpdate(CuentaRequestUpdate cuentaRequestUpdate, Cuenta cuenta, TipoCuenta tipoCuenta, Tarjeta tarjeta) {
+    public Cuenta toCuentaUpdate(CuentaRequestUpdate cuentaRequestUpdate, Cuenta cuenta, TipoCuenta tipoCuenta, Tarjeta tarjeta, Cliente cliente) {
         return Cuenta.builder()
                 .id(cuenta.getId())
                 .guid(cuenta.getGuid())
@@ -57,7 +45,7 @@ public class CuentaMapper {
                 .saldo(cuentaRequestUpdate.getSaldo())
                 .tipoCuenta(tipoCuenta)
                 .tarjeta(tarjeta)
-                .cliente(cuenta.getCliente())
+                .cliente(cliente)
                 .createdAt(cuenta.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
                 .isDeleted(cuenta.getIsDeleted())

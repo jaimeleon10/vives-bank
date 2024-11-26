@@ -94,9 +94,9 @@ public class CuentaServiceImpl implements CuentaService{
         return cuentaPage.map(cuenta ->
                 cuentaMapper.toCuentaResponse(
                         cuenta,
-                        tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()),
-                        tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta()),
-                        clienteMapper.toClienteDataResponse(cuenta.getCliente())
+                        cuenta.getTipoCuenta().getGuid(),
+                        cuenta.getTarjeta().getGuid(),
+                        cuenta.getCliente().getGuid()
                 )
         );
     }
@@ -106,9 +106,7 @@ public class CuentaServiceImpl implements CuentaService{
     public CuentaResponse getById(String id) {
         log.info("Obteniendo la cuenta con id: {}", id);
         var cuenta = cuentaRepository.findByGuid(id).orElseThrow(() -> new CuentaNotFound(id));
-        var tipoCuentaResponse = tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta());
-        var tarjetaResponse = tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta());
-        return cuentaMapper.toCuentaResponse(cuenta, tipoCuentaResponse, tarjetaResponse, clienteMapper.toClienteDataResponse(cuenta.getCliente()));
+        return cuentaMapper.toCuentaResponse(cuenta, cuenta.getTipoCuenta().getGuid(), cuenta.getTarjeta().getGuid(), cuenta.getCliente().getGuid());
     }
 
     @Override
@@ -134,10 +132,7 @@ public class CuentaServiceImpl implements CuentaService{
         clienteRepository.flush();
         evictClienteCache(cliente.getGuid());
 
-        var tipoCuentaResponse = tipoCuentaMapper.toTipoCuentaResponse(cuentaSaved.getTipoCuenta());
-        var tarjetaResponse = tarjetaMapper.toTarjetaResponse(cuentaSaved.getTarjeta());
-        var clienteResponse = clienteMapper.toClienteDataResponse(cliente);
-        return cuentaMapper.toCuentaResponse(cuentaSaved, tipoCuentaResponse, tarjetaResponse, clienteResponse);
+        return cuentaMapper.toCuentaResponse(cuentaSaved, cuentaSaved.getTipoCuenta().getGuid(), cuentaSaved.getTarjeta().getGuid(), cuentaSaved.getCliente().getGuid());
     }
 
     @Override
@@ -147,12 +142,31 @@ public class CuentaServiceImpl implements CuentaService{
         var cuenta = cuentaRepository.findByGuid(id).orElseThrow(
                 () -> new CuentaNotFound(id)
         );
-        var cuentaSaved = cuentaRepository.save(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta, cuenta.getTipoCuenta(), cuenta.getTarjeta()));
 
-        var tipoCuentaResponse = tipoCuentaMapper.toTipoCuentaResponse(cuentaSaved.getTipoCuenta());
-        var tarjetaResponse = tarjetaMapper.toTarjetaResponse(cuentaSaved.getTarjeta());
-        var clienteResponse = clienteMapper.toClienteDataResponse(cuentaSaved.getCliente());
-        return cuentaMapper.toCuentaResponse(cuentaSaved, tipoCuentaResponse, tarjetaResponse, clienteResponse);
+        var tipoCuenta = cuenta.getTipoCuenta();
+        var tarjeta = cuenta.getTarjeta();
+        var cliente = cuenta.getCliente();
+
+        if (!cuentaRequestUpdate.getTipoCuentaId().isEmpty()) {
+            tipoCuenta = tipoCuentaRepository.findByGuid(cuentaRequestUpdate.getTipoCuentaId()).orElseThrow(
+                    () -> new TipoCuentaNotFound(cuentaRequestUpdate.getTipoCuentaId())
+            );
+        }
+
+        if (!cuentaRequestUpdate.getTarjetaId().isEmpty()) {
+            tarjeta = tarjetaRepository.findByGuid(cuentaRequestUpdate.getTarjetaId()).orElseThrow(
+                    () -> new TarjetaNotFound(cuentaRequestUpdate.getTarjetaId())
+            );
+        }
+
+        if (!cuentaRequestUpdate.getClienteId().isEmpty()) {
+            cliente = clienteRepository.findByGuid(cuentaRequestUpdate.getClienteId()).orElseThrow(
+                    () -> new ClienteNotFound(cuentaRequestUpdate.getClienteId())
+            );
+        }
+
+        var cuentaUpdated = cuentaRepository.save(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta, tipoCuenta, tarjeta, cliente));
+        return cuentaMapper.toCuentaResponse(cuentaUpdated, cuentaUpdated.getTipoCuenta().getGuid(), cuentaUpdated.getTipoCuenta().getGuid(), cuentaUpdated.getCliente().getGuid());
     }
 
     @Override
