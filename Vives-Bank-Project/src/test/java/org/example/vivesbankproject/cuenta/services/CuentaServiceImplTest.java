@@ -65,10 +65,6 @@ class CuentaServiceImplTest {
     @Mock
     private ClienteRepository clienteRepository;
 
-    @BeforeEach
-    void setUp() {
-
-    }
 
     @Test
     void getAll() {
@@ -78,13 +74,10 @@ class CuentaServiceImplTest {
         cuenta.setIban("ES1234567890");
         Page<Cuenta> cuentaPage = new PageImpl<>(List.of(cuenta));
 
-
         when(cuentaRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(cuentaPage);
         when(cuentaMapper.toCuentaResponse(any(Cuenta.class), any(), any(), any())).thenReturn(new CuentaResponse());
 
-
         Page<CuentaResponse> result = cuentaService.getAll(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), pageable);
-
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
@@ -133,7 +126,6 @@ class CuentaServiceImplTest {
         when(cuentaRepository.save(cuenta)).thenReturn(cuenta);
         when(cuentaMapper.toCuentaResponse(any(), any(), any(), any())).thenReturn(new CuentaResponse());
 
-
         CuentaResponse result = cuentaService.save(cuentaRequest);
 
         assertNotNull(result);
@@ -152,36 +144,31 @@ class CuentaServiceImplTest {
         Cuenta cuentaActualizada = new Cuenta();
         cuentaActualizada.setGuid(cuentaId);
 
-
         when(cuentaRepository.findByGuid(cuentaId)).thenReturn(Optional.of(cuenta));
         when(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta, cuenta.getTipoCuenta(), cuenta.getTarjeta())).thenReturn(cuentaActualizada);
         when(cuentaRepository.save(cuentaActualizada)).thenReturn(cuentaActualizada);
-
 
         TipoCuentaResponse tipoCuentaResponse = new TipoCuentaResponse();
         when(tipoCuentaMapper.toTipoCuentaResponse(cuentaActualizada.getTipoCuenta())).thenReturn(tipoCuentaResponse);
 
         TarjetaResponse tarjetaResponse = new TarjetaResponse();
         when(tarjetaMapper.toTarjetaResponse(cuentaActualizada.getTarjeta())).thenReturn(tarjetaResponse);
-
         ClienteForCuentaResponse clienteDataResponse = new ClienteForCuentaResponse();
-        when(clienteMapper.toClienteDataResponse(cuentaActualizada.getCliente())).thenReturn(clienteDataResponse);
 
+        when(clienteMapper.toClienteDataResponse(cuentaActualizada.getCliente())).thenReturn(clienteDataResponse);
 
         when(cuentaMapper.toCuentaResponse(any(), any(), any(), any())).thenReturn(new CuentaResponse());
 
-
         CuentaResponse result = cuentaService.update(cuentaId, cuentaRequestUpdate);
-
 
         assertNotNull(result);
         verify(cuentaRepository).findByGuid(cuentaId);
         verify(cuentaRepository).save(cuentaActualizada);
         verify(cuentaMapper).toCuentaResponse(any(), any(), any(), any());
     }
+
     @Test
     void updateNotFound() {
-
         String cuentaId = "123";
         CuentaRequestUpdate cuentaRequestUpdate = new CuentaRequestUpdate();
 
@@ -194,7 +181,6 @@ class CuentaServiceImplTest {
 
     @Test
     void deleteById() {
-
         String cuentaId = "123";
         Cuenta cuenta = new Cuenta();
         cuenta.setGuid(cuentaId);
@@ -224,6 +210,5 @@ class CuentaServiceImplTest {
         cuentaService.evictClienteCache(clienteGuid);
         assertDoesNotThrow(() -> cuentaService.evictClienteCache(clienteGuid));
     }
-
 
 }

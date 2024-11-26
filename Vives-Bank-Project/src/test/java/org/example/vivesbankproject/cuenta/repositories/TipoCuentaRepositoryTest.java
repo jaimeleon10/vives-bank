@@ -32,7 +32,6 @@ class TipoCuentaRepositoryTest {
         tipoCuentaTest.setNombre("normal");
         tipoCuentaTest.setInteres(BigDecimal.valueOf(2.0));
 
-        // Guardamos el objeto en la base de datos de prueba
         entityManager.persist(tipoCuentaTest);
         entityManager.flush();
     }
@@ -56,7 +55,6 @@ class TipoCuentaRepositoryTest {
 
         Optional<TipoCuenta> result = repository.findByNombre("ahorro");
 
-        // Validamos que no se encontró un resultado
         assertTrue(result.isEmpty(), "El resultado debe estar vacío");
     }
 
