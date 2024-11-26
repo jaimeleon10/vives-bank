@@ -37,7 +37,7 @@ class MovimientoRepositoryTest {
         cliente.setGuid(clienteId);
 
         movimiento = new Movimiento();
-        movimiento.setCliente(cliente);
+        movimiento.setClienteGuid(cliente.getGuid());
 
         mongoTemplate.insert(movimiento);
     }
@@ -51,11 +51,11 @@ class MovimientoRepositoryTest {
     void findMovimientosByClienteId_shouldReturnMovimientos_whenClienteExists() {
         System.out.println("Saved movimientos: " + mongoTemplate.findAll(Movimiento.class));
 
-        Optional<Movimiento> result = movimientosRepository.findMovimientosByClienteId(clienteId);
+        Optional<Movimiento> result = movimientosRepository.findMovimientosByClienteGuid(clienteId);
 
         assertAll(
                 () -> assertTrue(result.isPresent(), "El resultado debería estar presente"),
-                () -> assertEquals(clienteId, result.get().getCliente().getGuid(), "El ID del cliente debería coincidir")
+                () -> assertEquals(clienteId, result.get().getClienteGuid(), "El ID del cliente debería coincidir")
         );
     }
 
@@ -63,7 +63,7 @@ class MovimientoRepositoryTest {
     void findMovimientosByClienteId_shouldReturnEmpty_whenClienteDoesNotExist() {
         String nonExistentClienteId = IdGenerator.generarId();
 
-        Optional<Movimiento> result = movimientosRepository.findMovimientosByClienteId(nonExistentClienteId);
+        Optional<Movimiento> result = movimientosRepository.findMovimientosByClienteGuid(nonExistentClienteId);
 
         assertTrue(result.isEmpty(), "El resultado debería estar vacío para un cliente inexistente");
     }
