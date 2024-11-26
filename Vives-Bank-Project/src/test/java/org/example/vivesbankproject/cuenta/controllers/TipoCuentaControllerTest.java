@@ -5,6 +5,7 @@ import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
 import org.example.vivesbankproject.cuenta.services.TipoCuentaService;
 import org.example.vivesbankproject.utils.PageResponse;
 import org.example.vivesbankproject.utils.PaginationLinksUtils;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,10 +17,14 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.mongodb.assertions.Assertions.assertNotNull;
@@ -116,37 +121,33 @@ class TipoCuentaControllerTest {
 
     @Test
     void deleteTipoCuenta() {
-        doNothing().when(tipoCuentaService).deleteById(anyString());
+        TipoCuentaResponse tipoCuentaResponse = TipoCuentaResponse.builder()
+                .guid("guidTest")
+                .nombre("Cuenta de prueba")
+                .interes(new BigDecimal("5.0"))
+                .build();
 
-        ResponseEntity response = tipoCuentaController.delete("guidTest");
+        when(tipoCuentaService.deleteById(anyString())).thenReturn(tipoCuentaResponse);
+
+        ResponseEntity<TipoCuentaResponse> response = tipoCuentaController.delete("guidTest");
 
         assertNotNull(response);
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        assertNull(response.getBody());
-
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(tipoCuentaResponse, response.getBody());
         verify(tipoCuentaService).deleteById("guidTest");
     }
-
-    /*@Test
+    @Test
     void handleValidationExceptionError() {
         MethodArgumentNotValidException ex = mock(MethodArgumentNotValidException.class);
-
         BindingResult bindingResult = mock(BindingResult.class);
-
         when(ex.getBindingResult()).thenReturn(bindingResult);
-
-        ObjectError objectError = new ObjectError("nombre", "El campo nombre es obligatorio");
-        when(bindingResult.getAllErrors()).thenReturn(List.of(objectError));
 
         Map<String, String> errors = tipoCuentaController.handleValidationExceptions(ex);
 
-        assertNotNull(errors);
-        assertEquals(1, errors.size());
-        assertEquals("El campo nombre es obligatorio", errors.get("nombre"));
-
+        Assertions.assertNotNull(errors);
+        assertInstanceOf(HashMap.class, errors);
         verify(ex).getBindingResult();
-        verify(bindingResult).getAllErrors();
-    }*/
+    }
 
     @Test
     void getAllTipoCuentasConFiltros() {
