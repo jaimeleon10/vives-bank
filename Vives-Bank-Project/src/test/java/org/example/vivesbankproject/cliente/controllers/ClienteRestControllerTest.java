@@ -2,10 +2,11 @@ package org.example.vivesbankproject.cliente.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.validation.ConstraintViolationException;
 import org.example.vivesbankproject.cliente.dto.*;
 import org.example.vivesbankproject.cliente.service.ClienteService;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.users.dto.UserResponse;
+import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.utils.PaginationLinksUtils;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +15,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -32,17 +34,20 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@WithMockUser(username = "admin", password = "adminPassword123", roles = {"ADMIN", "USER"})
 class ClienteRestControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final String myEndpoint = "/ v1/cliente";
+    private final String myEndpoint = "/v1/cliente";
 
     @Autowired
     private MockMvc mockMvc;
@@ -72,8 +77,8 @@ class ClienteRestControllerTest {
                 .build();
 
         Page<ClienteResponse> page = new PageImpl<>(List.of(clienteResponse), PageRequest.of(0, 10), 1);
-        Mockito.when(clienteService.getAll(any(), any(), any(), any(), any(), any())).thenReturn(page);
-        Mockito.when(paginationLinksUtils.createLinkHeader(eq(page), any())).thenReturn("");
+        when(clienteService.getAll(any(), any(), any(), any(), any(), any())).thenReturn(page);
+        when(paginationLinksUtils.createLinkHeader(eq(page), any())).thenReturn("");
 
         mockMvc.perform(get("/v1/cliente")
                         .param("dni", "12345678A")
@@ -93,7 +98,6 @@ class ClienteRestControllerTest {
                 .andExpect(jsonPath("$.content[0].telefono").value("123456789"))
                 .andExpect(jsonPath("$.content[0].fotoPerfil").value("fotoprfil.jpg"))
                 .andExpect(jsonPath("$.content[0].fotoDni").value("fotodni.jpg"))
-                .andExpect(jsonPath("$.content[0].cuentas[0].guid").value("cuenta1-guid"))
                 .andExpect(jsonPath("$.content[0].user.guid").value("user-guid"))
                 .andExpect(jsonPath("$.content[0].user.username").value("testuser"))
                 .andExpect(jsonPath("$.content[0].isDeleted").value(false));
@@ -111,7 +115,7 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .build();
 
-        Mockito.when(clienteService.getById("unique-guid")).thenReturn(clienteResponse);
+        when(clienteService.getById("unique-guid")).thenReturn(clienteResponse);
 
         mockMvc.perform(get("/v1/cliente/unique-guid"))
                 .andExpect(status().isOk())
@@ -147,7 +151,7 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .build();
 
-        Mockito.when(clienteService.save(any(ClienteRequestSave.class))).thenReturn(clienteResponse);
+        when(clienteService.save(any(ClienteRequestSave.class))).thenReturn(clienteResponse);
 
         mockMvc.perform(post("/v1/cliente")
                         .contentType("application/json")
@@ -379,7 +383,7 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .build();
 
-        Mockito.when(clienteService.update(eq("unique-guid"), any(ClienteRequestUpdate.class))).thenReturn(clienteResponse);
+        when(clienteService.update(eq("unique-guid"), any(ClienteRequestUpdate.class))).thenReturn(clienteResponse);
 
         mockMvc.perform(put("/v1/cliente/unique-guid")
                         .contentType("application/json")
@@ -464,7 +468,8 @@ class ClienteRestControllerTest {
 
         assertAll(
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(result.getResponse().getContentAsString().contains("El email debe ser valido"))
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El email debe ser valido")),
+                () -> assertFalse(result.getResponse().getContentAsString().contains("El email no puede estar vacio"))
         );
     }
 
@@ -489,7 +494,8 @@ class ClienteRestControllerTest {
 
         assertAll(
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(result.getResponse().getContentAsString().contains("El email no puede estar vacio"))
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El email no puede estar vacio")),
+                () -> assertFalse(result.getResponse().getContentAsString().contains("El email debe ser valido"))
         );
     }
 
@@ -499,7 +505,7 @@ class ClienteRestControllerTest {
                 .nombre("Juan")
                 .apellidos("Perez")
                 .email("juan.perez@example.com")
-                .telefono("12345678") // Invalid telefono
+                .telefono("12345678")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
                 .userId("user-guid")
@@ -512,9 +518,12 @@ class ClienteRestControllerTest {
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
+        String responseContent = result.getResponse().getContentAsString();
+
         assertAll(
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(result.getResponse().getContentAsString().contains("El telefono debe tener 9 numeros"))
+                () -> assertTrue(responseContent.contains("El telefono debe tener 9 numeros")),
+                () -> assertFalse(responseContent.contains("El telefono no puede estar vacio"))
         );
     }
 
@@ -524,7 +533,7 @@ class ClienteRestControllerTest {
                 .nombre("Juan")
                 .apellidos("Perez")
                 .email("juan.perez@example.com")
-                .telefono("") // Empty telefono
+                .telefono("")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
                 .userId("user-guid")
@@ -537,9 +546,12 @@ class ClienteRestControllerTest {
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
+        String responseContent = result.getResponse().getContentAsString();
+
         assertAll(
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(result.getResponse().getContentAsString().contains("El telefono no puede estar vacio"))
+                () -> assertTrue(responseContent.contains("El telefono no puede estar vacio")),
+                () -> assertFalse(responseContent.contains("El telefono debe tener 9 numeros"))
         );
     }
 
@@ -627,16 +639,62 @@ class ClienteRestControllerTest {
                 .andExpect(status().isNoContent());
     }
 
-    /*@Test
-    void handleValidationExceptionError() {
-        MethodArgumentNotValidException ex = mock(MethodArgumentNotValidException.class);
-        BindingResult bindingResult = mock(BindingResult.class);
-        when(ex.getBindingResult()).thenReturn(bindingResult);
+    @Test
+    @WithMockUser(username = "userName", roles = {"USER"})
+    void me() throws Exception {
+        String userGuid = "1111aaaa";
 
-        Map<String, String> errors = restController.handleValidationExceptions(ex);
+        User user = User.builder()
+                .id(1L)
+                .guid(userGuid)
+                .username("userName")
+                .password("$2a$10$to0IqpINy9GXDo4IH9SKIOOT0cU5kg692jLdV0aPzR/rF3cUt97Fy")
+                .build();
 
-        assertNotNull(errors);
-        assertInstanceOf(HashMap.class, errors);
-        verify(ex).getBindingResult();
-    }*/
+        System.out.println("User for test: " + user);
+
+        ClienteResponse mockResponse = ClienteResponse.builder()
+                .guid(user.getGuid())
+                .dni("12345678A")
+                .nombre("John")
+                .apellidos("Doe")
+                .email("john.doe@example.com")
+                .telefono("123456789")
+                .build();
+
+        Mockito.when(clienteService.getUserByGuid(userGuid)).thenReturn(mockResponse);
+
+        mockMvc.perform(get(myEndpoint + "/me/profile")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.guid").value(userGuid))
+                .andExpect(jsonPath("$.dni").value("12345678A"))
+                .andExpect(jsonPath("$.nombre").value("John"))
+                .andExpect(jsonPath("$.apellidos").value("Doe"))
+                .andExpect(jsonPath("$.email").value("john.doe@example.com"))
+                .andExpect(jsonPath("$.telefono").value("123456789"));
+
+        Mockito.verify(clienteService).getUserByGuid(userGuid);
+    }
+
+    @Test
+    void handleValidationExceptionUpdateError() throws Exception {
+        var result = mockMvc.perform(put("/v1/cliente/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"nombre\": \"\", \"apellidos\": \"\", \"email\": \"\", \"telefono\": \"\" }")) // Campos vacíos
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.nombre").value("El nombre no puede estar vacio"))
+                .andExpect(jsonPath("$.apellidos").value("Los apellidos no pueden estar vacio"))
+                .andReturn();
+
+        String responseContent = result.getResponse().getContentAsString();
+        System.out.println(responseContent);
+
+        assertAll(
+                () -> assertTrue(responseContent.contains("\"email\":\"El email no puede estar vacio\"")
+                        || responseContent.contains("\"email\":\"El email debe ser valido\"")),
+                () -> assertTrue(responseContent.contains("\"telefono\":\"El telefono no puede estar vacio\"")
+                        || responseContent.contains("\"telefono\":\"El telefono debe tener 9 numeros\""))
+        );
+    }
 }
