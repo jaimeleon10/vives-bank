@@ -10,4 +10,8 @@ public class MovimientoNotFound  extends MovimientosException{
     public MovimientoNotFound(String id) {
         super("El movimiento con id " + id + " no existe");
     }
+
+    public MovimientoNotFound(ObjectId id) {
+        super("El movimiento con id " + id + " no existe");
+    }
 }

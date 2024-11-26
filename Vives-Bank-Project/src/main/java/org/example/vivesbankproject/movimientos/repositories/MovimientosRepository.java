@@ -1,7 +1,7 @@
 package org.example.vivesbankproject.movimientos.repositories;
 
 import org.bson.types.ObjectId;
-import org.example.vivesbankproject.movimientos.models.Movimientos;
+import org.example.vivesbankproject.movimientos.models.Movimiento;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -9,9 +9,9 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface MovimientosRepository extends MongoRepository<Movimientos, ObjectId> {
-    Optional<Movimientos> findByGuid(String guid);
+public interface MovimientosRepository extends MongoRepository<Movimiento, ObjectId> {
+    Optional<Movimiento> findByGuid(String guid);
 
     @Query("{ 'cliente.guid': ?0 }")
-    Optional<Movimientos> findMovimientosByClienteId(String clienteId);
+    Optional<Movimiento> findMovimientosByClienteGuid(String clienteId);
 }

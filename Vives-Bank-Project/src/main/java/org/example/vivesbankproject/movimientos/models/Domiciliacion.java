@@ -3,19 +3,14 @@ package org.example.vivesbankproject.movimientos.models;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-@SuperBuilder
-@JsonTypeName("DOMICILIACION")
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Domiciliacion extends Transacciones {
+public class Domiciliacion {
     @Pattern(
             regexp = "^ES\\d{22}$",
             message = "El IBAN español debe comenzar con 'ES' seguido de 22 dígitos"

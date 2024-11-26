@@ -14,7 +14,7 @@ db.movimientos.insertOne({
     _id: ObjectId("673f1569034e2e357248c445"),
     _class: "Movimiento",
     cliente: {
-        _id: "asd",
+        guid: "7777gggg",
         dni: "50378911x",
         nombre: "alvaro",
         apellidos: "Herrero",
@@ -24,7 +24,7 @@ db.movimientos.insertOne({
         fotoDni: "alvaro.jpg",
         cuentas: [],
         user: {
-            _id: "asdd",
+            guid: "1111aaaa",
             username: "admin",
             password: "admin",
             roles: ["ADMIN"],
@@ -36,7 +36,7 @@ db.movimientos.insertOne({
         updatedAt: ISODate("2024-11-21T12:11:38.000Z"),
     },
     createdAt: ISODate("2024-11-21T11:11:37.846Z"),
-    idUsuario: "asdd",
+    idUsuario: "1111aaaa",
     isDeleted: false,
     totalItems: 2,
     transacciones: [

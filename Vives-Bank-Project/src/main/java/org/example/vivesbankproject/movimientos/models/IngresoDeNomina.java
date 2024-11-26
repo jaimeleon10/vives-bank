@@ -7,12 +7,10 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-@SuperBuilder
-@JsonTypeName("INGRESO_DE_NOMINA")
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class IngresoDeNomina extends Transacciones {
+public class IngresoDeNomina  {
     @Pattern(
             regexp = "^ES\\d{22}$",
             message = "El IBAN español debe comenzar con 'ES' seguido de 22 dígitos"

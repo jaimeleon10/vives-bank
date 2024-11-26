@@ -1,7 +1,7 @@
 package org.example.vivesbankproject.movimientos.repositories;
 
 import org.example.vivesbankproject.cliente.models.Cliente;
-import org.example.vivesbankproject.movimientos.models.Movimientos;
+import org.example.vivesbankproject.movimientos.models.Movimiento;
 import org.example.vivesbankproject.utils.IdGenerator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,7 +16,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataMongoTest
-class MovimientosRepositoryTest {
+class MovimientoRepositoryTest {
 
     @Autowired
     private MovimientosRepository movimientosRepository;
@@ -28,7 +28,7 @@ class MovimientosRepositoryTest {
     private Environment env;
 
     private String clienteId;
-    private Movimientos movimientos;
+    private Movimiento movimiento;
 
     @BeforeEach
     void setUp() {
@@ -36,22 +36,22 @@ class MovimientosRepositoryTest {
         Cliente cliente = new Cliente();
         cliente.setGuid(clienteId);
 
-        movimientos = new Movimientos();
-        movimientos.setCliente(cliente);
+        movimiento = new Movimiento();
+        movimiento.setCliente(cliente);
 
-        mongoTemplate.insert(movimientos);
+        mongoTemplate.insert(movimiento);
     }
 
     @AfterEach
     void tearDown() {
-        mongoTemplate.dropCollection(Movimientos.class);
+        mongoTemplate.dropCollection(Movimiento.class);
     }
 
     @Test
     void findMovimientosByClienteId_shouldReturnMovimientos_whenClienteExists() {
-        System.out.println("Saved movimientos: " + mongoTemplate.findAll(Movimientos.class));
+        System.out.println("Saved movimientos: " + mongoTemplate.findAll(Movimiento.class));
 
-        Optional<Movimientos> result = movimientosRepository.findMovimientosByClienteId(clienteId);
+        Optional<Movimiento> result = movimientosRepository.findMovimientosByClienteId(clienteId);
 
         assertAll(
                 () -> assertTrue(result.isPresent(), "El resultado debería estar presente"),
@@ -63,7 +63,7 @@ class MovimientosRepositoryTest {
     void findMovimientosByClienteId_shouldReturnEmpty_whenClienteDoesNotExist() {
         String nonExistentClienteId = IdGenerator.generarId();
 
-        Optional<Movimientos> result = movimientosRepository.findMovimientosByClienteId(nonExistentClienteId);
+        Optional<Movimiento> result = movimientosRepository.findMovimientosByClienteId(nonExistentClienteId);
 
         assertTrue(result.isEmpty(), "El resultado debería estar vacío para un cliente inexistente");
     }
