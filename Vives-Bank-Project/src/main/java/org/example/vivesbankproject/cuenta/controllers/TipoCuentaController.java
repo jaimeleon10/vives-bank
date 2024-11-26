@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -31,6 +32,7 @@ import java.util.Optional;
 @RequestMapping("${api.version}/tipocuentas")
 @Slf4j
 @Validated
+@PreAuthorize("hasRole('ADMIN')")
 public class TipoCuentaController {
     private final TipoCuentaService tipoCuentaService;
     private final PaginationLinksUtils paginationLinksUtils;
@@ -42,6 +44,7 @@ public class TipoCuentaController {
     }
 
     @GetMapping()
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PageResponse<TipoCuentaResponse>> getAllPageable(
             @RequestParam(required = false) Optional<String> nombre,
             @RequestParam(required = false) Optional<BigDecimal> interes,

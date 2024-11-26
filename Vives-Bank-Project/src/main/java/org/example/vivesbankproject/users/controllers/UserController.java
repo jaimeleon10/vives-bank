@@ -31,7 +31,7 @@ import java.util.Optional;
 @Validated
 @RestController
 @RequestMapping("${api.version}/usuario")
-@PreAuthorize("hasRole('USER')")
+@PreAuthorize("hasRole('ADMIN')")
 public class UserController {
 
     private final UserService userService;

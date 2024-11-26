@@ -29,7 +29,7 @@ import java.security.spec.X509EncodedKeySpec;
 @Slf4j
 public class JwtServiceImpl implements JwtService {
 
-    @Value("${jwt.expiration}")
+    @Value("${jwt.expiration:3600000}")
     private Long jwtExpiration;
 
     private final RSAPrivateKey privateKey;
