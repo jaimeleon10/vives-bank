@@ -6,6 +6,7 @@ import jakarta.validation.ConstraintViolationException;
 import org.example.vivesbankproject.cliente.dto.*;
 import org.example.vivesbankproject.cliente.service.ClienteService;
 import org.example.vivesbankproject.users.dto.UserResponse;
+import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.utils.PaginationLinksUtils;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +47,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 class ClienteRestControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final String myEndpoint = "/ v1/cliente";
+    private final String myEndpoint = "/v1/cliente";
 
     @Autowired
     private MockMvc mockMvc;
@@ -639,7 +640,41 @@ class ClienteRestControllerTest {
     }
 
     @Test
-    void me() {
+    @WithMockUser(username = "userName", roles = {"USER"})
+    void me() throws Exception {
+        String userGuid = "1111aaaa";
+
+        User user = User.builder()
+                .id(1L)
+                .guid(userGuid)
+                .username("userName")
+                .password("$2a$10$to0IqpINy9GXDo4IH9SKIOOT0cU5kg692jLdV0aPzR/rF3cUt97Fy")
+                .build();
+
+        System.out.println("User for test: " + user);
+
+        ClienteResponse mockResponse = ClienteResponse.builder()
+                .guid(user.getGuid())
+                .dni("12345678A")
+                .nombre("John")
+                .apellidos("Doe")
+                .email("john.doe@example.com")
+                .telefono("123456789")
+                .build();
+
+        Mockito.when(clienteService.getUserByGuid(userGuid)).thenReturn(mockResponse);
+
+        mockMvc.perform(get(myEndpoint + "/me/profile")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.guid").value(userGuid))
+                .andExpect(jsonPath("$.dni").value("12345678A"))
+                .andExpect(jsonPath("$.nombre").value("John"))
+                .andExpect(jsonPath("$.apellidos").value("Doe"))
+                .andExpect(jsonPath("$.email").value("john.doe@example.com"))
+                .andExpect(jsonPath("$.telefono").value("123456789"));
+
+        Mockito.verify(clienteService).getUserByGuid(userGuid);
     }
 
     @Test
