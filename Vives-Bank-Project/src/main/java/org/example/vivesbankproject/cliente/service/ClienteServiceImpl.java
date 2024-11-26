@@ -41,17 +41,15 @@ public class ClienteServiceImpl implements ClienteService {
     private final UserMapper userMapper;
     private final UserRepository userRepository;
     private final CuentaMapper cuentaMapper;
-    private final CuentaRepository cuentaRepository;
     private final TipoCuentaMapper tipoCuentaMapper;
     private final TarjetaMapper tarjetaMapper;
 
-    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserMapper userMapper, UserRepository userRepository, CuentaMapper cuentaMapper, CuentaRepository cuentaRepository, TipoCuentaMapper tipoCuentaMapper, TarjetaMapper tarjetaMapper) {
+    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserMapper userMapper, UserRepository userRepository, CuentaMapper cuentaMapper, TipoCuentaMapper tipoCuentaMapper, TarjetaMapper tarjetaMapper) {
         this.clienteRepository = clienteRepository;
         this.clienteMapper = clienteMapper;
         this.userMapper = userMapper;
         this.userRepository = userRepository;
         this.cuentaMapper = cuentaMapper;
-        this.cuentaRepository = cuentaRepository;
         this.tipoCuentaMapper = tipoCuentaMapper;
         this.tarjetaMapper = tarjetaMapper;
     }
@@ -174,7 +172,7 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
-    @Cacheable(key = "#guid") // Añadimos caché para mejorar el rendimiento en llamadas repetidas
+    @Cacheable // Añadimos caché para mejorar el rendimiento en llamadas repetidas
     public ClienteResponse getUserByGuid(String guid) {
         log.info("Buscando cliente por user guid: {}", guid);
 
@@ -188,19 +186,7 @@ public class ClienteServiceImpl implements ClienteService {
             throw new UserNotFoundById(guid);
         }
 
-        // Obtenemos las cuentas del cliente
-        Set<CuentaForClienteResponse> cuentasResponse = cliente.getCuentas().stream()
-                .map(cuenta -> cuentaMapper.toCuentaForClienteResponse(
-                        cuenta,
-                        tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()),
-                        tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
-                .collect(Collectors.toSet());
-
-        return clienteMapper.toClienteResponse(
-                cliente,
-                userMapper.toUserResponse(usuarioExistente),
-                cuentasResponse
-        );
+        return clienteMapper.toClienteResponse(cliente, usuarioExistente.getGuid());
     }
 
     private void validarClienteExistente(Cliente cliente) {
