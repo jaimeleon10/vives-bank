@@ -21,4 +21,6 @@ public interface ClienteService {
     ClienteResponseProductos getProductos(String id);
 
     ClienteResponseProductosById getProductosById(String id, String idProducto);
+
+    ClienteResponse getUserByGuid(String userGuid);
 }

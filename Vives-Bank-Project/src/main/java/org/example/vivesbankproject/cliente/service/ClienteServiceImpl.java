@@ -18,6 +18,7 @@ import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.exceptions.UserNotFoundById;
+import org.example.vivesbankproject.users.exceptions.UserNotFoundException;
 import org.example.vivesbankproject.users.mappers.UserMapper;
 import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.springframework.cache.annotation.CacheConfig;
@@ -256,6 +257,31 @@ public class ClienteServiceImpl implements ClienteService {
         } else {
             return clienteMapper.toClienteResponseProductoById(cliente, null, tarjetaMapper.toTarjetaResponse(tarjetaEncontrada.get()));
         }
+    }
+
+    @Override
+    public ClienteResponse getUserByGuid(String guid) {
+        log.info("Buscando cliente por user guid: {}", guid);
+
+        // Primero, buscamos el usuario
+        var usuarioExistente = userRepository.findByGuid(guid).orElseThrow(
+                () -> new UserNotFoundById(guid)
+        );
+
+        // Luego, buscamos el cliente asociado a ese usuario
+        var cliente = clienteRepository.findByUserGuid(guid).orElseThrow(
+                () -> new ClienteNotFound( guid)
+        );
+
+        // Obtenemos las cuentas del cliente
+        Set<CuentaResponse> cuentasResponse = cliente.getCuentas().stream()
+                .map(cuenta -> cuentaMapper.toCuentaResponse(cuenta,
+                        tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()),
+                        tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta()),
+                        clienteMapper.toClienteDataResponse(cliente)))
+                .collect(Collectors.toSet());
+
+        return clienteMapper.toClienteResponse(cliente, userMapper.toUserResponse(usuarioExistente), cuentasResponse);
     }
 
     private void validarClienteExistente(Cliente cliente) {
