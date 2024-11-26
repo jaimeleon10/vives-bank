@@ -1,32 +1,38 @@
 package org.example.vivesbankproject.movimientos.mappers;
 
-import org.example.vivesbankproject.cliente.dto.ClienteResponse;
-import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
-import org.example.vivesbankproject.cliente.models.Cliente;
+import org.example.vivesbankproject.movimientos.dto.MovimientoRequest;
 import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
-import org.example.vivesbankproject.movimientos.dto.TransaccionResponse;
-import org.example.vivesbankproject.movimientos.models.Movimientos;
-import org.example.vivesbankproject.movimientos.models.Transacciones;
+import org.example.vivesbankproject.movimientos.models.Movimiento;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 @Component
 public class MovimientoMapper {
-    public MovimientoResponse toMovimientoResponse(Movimientos movimientos, ClienteResponse clienteResponse, TransaccionResponse transaccionResponse) {
-        return MovimientoResponse.builder()
-                .guid(movimientos.getGuid())
-                .idUsuario(movimientos.getIdUsuario())
-                .clienteResponse(clienteResponse)
-                .transacciones(List.of(transaccionResponse))
-                .isDeleted(movimientos.getIsDeleted())
+
+    public Movimiento toMovimiento(MovimientoRequest movimientoRequest) {
+        return Movimiento.builder()
+                .guid(movimientoRequest.getGuid())
+                .clienteGuid(movimientoRequest.getClienteGuid())
+                .domiciliacion(movimientoRequest.getDomiciliacion())
+                .ingresoDeNomina(movimientoRequest.getIngresoDeNomina())
+                .pagoConTarjeta(movimientoRequest.getPagoConTarjeta())
+                .transferencia(movimientoRequest.getTransferencia())
+                .isDeleted(false)
+                .createdAt(LocalDateTime.now())
                 .build();
     }
 
-    public Movimientos toMovimientos(Cliente cliente, Transacciones transacciones) {
-        return Movimientos.builder()
-                .cliente(cliente)
-                .transacciones(List.of(transacciones))
-                .build();
+    public MovimientoResponse toMovimientoResponse(Movimiento movimiento) {
+        return MovimientoResponse.builder()
+               .guid(movimiento.getGuid())
+               .clienteGuid(movimiento.getClienteGuid())
+               .domiciliacion(movimiento.getDomiciliacion())
+               .ingresoDeNomina(movimiento.getIngresoDeNomina())
+               .pagoConTarjeta(movimiento.getPagoConTarjeta())
+               .transferencia(movimiento.getTransferencia())
+               .isDeleted(movimiento.getIsDeleted())
+                .createdAt(String.valueOf(movimiento.getCreatedAt()))
+               .build();
     }
 }

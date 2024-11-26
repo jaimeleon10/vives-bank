@@ -1,29 +1,29 @@
 package org.example.vivesbankproject.movimientos.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
-import org.example.vivesbankproject.cliente.models.Cliente;
-import org.example.vivesbankproject.movimientos.models.Movimientos;
-import org.example.vivesbankproject.movimientos.models.Transacciones;
+import org.example.vivesbankproject.movimientos.dto.MovimientoRequest;
+import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
 import org.example.vivesbankproject.movimientos.services.MovimientosService;
 import org.example.vivesbankproject.movimientos.services.MovimientosServiceImpl;
 import org.example.vivesbankproject.utils.PageResponse;
 import org.example.vivesbankproject.utils.PaginationLinksUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Optional;
-import java.util.UUID;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("${api.version}/movimientos")
@@ -42,7 +42,7 @@ public class MovimientosController {
     }
 
     @GetMapping
-    public ResponseEntity<PageResponse<Movimientos>> getMovimientos(
+    public ResponseEntity<PageResponse<MovimientoResponse>> getMovimientos(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -64,27 +64,49 @@ public class MovimientosController {
 
 
     @GetMapping("/id/{id}")
-    public ResponseEntity<Movimientos> getMovimientoById(@PathVariable String id) {
+    public ResponseEntity<MovimientoResponse> getMovimientoById(@PathVariable ObjectId id) {
         log.info("Obteniendo movimiento con id: " + id);
-        Movimientos movimiento = service.getById(id);
+        MovimientoResponse movimiento = service.getById(id);
         return ResponseEntity.ok(movimiento);
     }
 
     @GetMapping("/cliente/{clienteId}")
-    public ResponseEntity<Movimientos> getMovimientoByClienteId(@PathVariable String clienteId) {
+    public ResponseEntity<MovimientoResponse> getMovimientoByClienteGuid(@PathVariable String clienteId) {
         log.info("Obteniendo movimiento con id de cliente: " + clienteId);
-        Movimientos movimiento = service.getByClienteId(clienteId);
+        MovimientoResponse movimiento = service.getByClienteGuid(clienteId);
         return ResponseEntity.ok(movimiento);
     }
 
 
     @PostMapping
-    public ResponseEntity<Movimientos> createOrUpdateMovimientos(@RequestBody Movimientos movimiento) {
+    public ResponseEntity<MovimientoResponse> createOrUpdateMovimientos(@RequestBody MovimientoRequest movimiento) {
         log.info("Creando/actualizando movimiento: " + movimiento);
-        Movimientos savedMovimiento = service.save(movimiento);
+        MovimientoResponse savedMovimiento = service.save(movimiento);
         return ResponseEntity.ok(savedMovimiento);
     }
 
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
+    public Map<String, String> handleValidationExceptions(Exception ex) {
+        Map<String, String> errors = new HashMap<>();
+
+        if (ex instanceof MethodArgumentNotValidException methodArgumentNotValidException) {
+            methodArgumentNotValidException.getBindingResult().getAllErrors().forEach((error) -> {
+                String fieldName = ((FieldError) error).getField();
+                String errorMessage = error.getDefaultMessage();
+                errors.put(fieldName, errorMessage);
+            });
+        } else if (ex instanceof ConstraintViolationException constraintViolationException) {
+            constraintViolationException.getConstraintViolations().forEach(violation -> {
+                String fieldName = violation.getPropertyPath().toString();
+                String errorMessage = violation.getMessage();
+                errors.put(fieldName, errorMessage);
+            });
+        }
+
+        return errors;
+    }
 
 
 }
