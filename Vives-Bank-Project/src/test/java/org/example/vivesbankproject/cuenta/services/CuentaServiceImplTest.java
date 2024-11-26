@@ -129,9 +129,14 @@ class CuentaServiceImplTest {
         cuentaRequest.setClienteId("cliente1");
 
         TipoCuenta tipoCuenta = new TipoCuenta();
-        Tarjeta tarjeta = new Tarjeta();
         Cliente cliente = new Cliente();
+        Tarjeta tarjeta = new Tarjeta();
+
         Cuenta cuenta = new Cuenta();
+        cuenta.setIban("ES1234567890");
+        cuenta.setTipoCuenta(tipoCuenta);
+        cuenta.setCliente(cliente);
+        cuenta.setTarjeta(tarjeta);
 
         when(tipoCuentaRepository.findByGuid(cuentaRequest.getTipoCuentaId())).thenReturn(Optional.of(tipoCuenta));
         when(tarjetaRepository.findByGuid(cuentaRequest.getTarjetaId())).thenReturn(Optional.of(tarjeta));
