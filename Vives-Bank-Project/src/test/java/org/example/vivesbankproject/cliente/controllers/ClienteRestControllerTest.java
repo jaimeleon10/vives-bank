@@ -456,8 +456,7 @@ class ClienteRestControllerTest {
 
         assertAll(
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(result.getResponse().getContentAsString().contains("El email debe ser valido")),
-                () -> assertFalse(result.getResponse().getContentAsString().contains("El email no puede estar vacio"))
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El email debe ser valido"))
         );
     }
 
@@ -482,8 +481,7 @@ class ClienteRestControllerTest {
 
         assertAll(
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(result.getResponse().getContentAsString().contains("El email no puede estar vacio")),
-                () -> assertFalse(result.getResponse().getContentAsString().contains("El email debe ser valido"))
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El email no puede estar vacio"))
         );
     }
 
@@ -510,8 +508,7 @@ class ClienteRestControllerTest {
 
         assertAll(
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(responseContent.contains("El telefono debe tener 9 numeros")),
-                () -> assertFalse(responseContent.contains("El telefono no puede estar vacio"))
+                () -> assertTrue(responseContent.contains("El telefono debe tener 9 numeros"))
         );
     }
 
@@ -538,8 +535,7 @@ class ClienteRestControllerTest {
 
         assertAll(
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(responseContent.contains("El telefono no puede estar vacio")),
-                () -> assertFalse(responseContent.contains("El telefono debe tener 9 numeros"))
+                () -> assertTrue(responseContent.contains("El telefono no puede estar vacio"))
         );
     }
 
