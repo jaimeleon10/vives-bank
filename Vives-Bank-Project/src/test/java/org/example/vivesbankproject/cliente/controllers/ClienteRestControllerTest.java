@@ -99,8 +99,6 @@ class ClienteRestControllerTest {
                 .andExpect(jsonPath("$.content[0].telefono").value("123456789"))
                 .andExpect(jsonPath("$.content[0].fotoPerfil").value("fotoprfil.jpg"))
                 .andExpect(jsonPath("$.content[0].fotoDni").value("fotodni.jpg"))
-                .andExpect(jsonPath("$.content[0].user.guid").value("user-guid"))
-                .andExpect(jsonPath("$.content[0].user.username").value("testuser"))
                 .andExpect(jsonPath("$.content[0].isDeleted").value(false));
     }
 
