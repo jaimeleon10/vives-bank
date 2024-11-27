@@ -1,14 +1,11 @@
 package org.example.vivesbankproject.cliente.models;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
-import org.example.vivesbankproject.users.models.Role;
 import org.example.vivesbankproject.users.models.User;
-import org.example.vivesbankproject.utils.IdGenerator;
+import org.example.vivesbankproject.utils.generators.IdGenerator;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
