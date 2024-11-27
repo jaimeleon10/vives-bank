@@ -47,6 +47,10 @@ public class Cliente {
     @NotBlank(message = "Los apellidos no pueden estar vacío")
     private String apellidos;
 
+    @Embedded
+    @NotNull(message = "La dirección no puede ser nula")
+    private Direccion direccion;
+
     @Column(unique = true, nullable = false)
     @Email(regexp = ".*@.*\\..*", message = "El email debe ser válido")
     @NotBlank(message = "El email no puede estar vacío")
@@ -73,9 +77,6 @@ public class Cliente {
     @NotNull(message = "El usuario no puede ser un campo nulo")
     private User user;
 
-    @Column(name = "id_movimientos")
-    private ObjectId idMovimientos;
-
     @CreationTimestamp
     @Column(updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Builder.Default
@@ -89,9 +90,4 @@ public class Cliente {
     @Column(nullable = false)
     @Builder.Default
     private Boolean isDeleted = false;
-
-    @JsonProperty("idMovimientos")
-    public String getIdMovimientos() {
-        return idMovimientos != null ? idMovimientos.toHexString() : null;
-    }
 }

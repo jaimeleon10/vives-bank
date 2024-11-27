@@ -2,6 +2,7 @@ package org.example.vivesbankproject.cliente.mappers;
 
 import org.example.vivesbankproject.cliente.dto.*;
 import org.example.vivesbankproject.cliente.models.Cliente;
+import org.example.vivesbankproject.cliente.models.Direccion;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.models.User;
@@ -19,6 +20,11 @@ public class ClienteMapper {
                 .dni(cliente.getDni())
                 .nombre(cliente.getNombre())
                 .apellidos(cliente.getApellidos())
+                .calle(cliente.getDireccion().getCalle())
+                .numero(cliente.getDireccion().getNumero())
+                .codigoPostal(cliente.getDireccion().getCodigoPostal())
+                .piso(cliente.getDireccion().getPiso())
+                .letra(cliente.getDireccion().getLetra())
                 .email(cliente.getEmail())
                 .telefono(cliente.getTelefono())
                 .fotoPerfil(cliente.getFotoPerfil())
@@ -31,11 +37,12 @@ public class ClienteMapper {
     }
 
 
-    public Cliente toCliente(ClienteRequestSave clienteRequestSave, User user) {
+    public Cliente toCliente(ClienteRequestSave clienteRequestSave, User user, Direccion direccion) {
         return Cliente.builder()
                 .dni(clienteRequestSave.getDni())
                 .nombre(clienteRequestSave.getNombre())
                 .apellidos(clienteRequestSave.getApellidos())
+                .direccion(direccion)
                 .email(clienteRequestSave.getEmail())
                 .telefono(clienteRequestSave.getTelefono())
                 .fotoPerfil(clienteRequestSave.getFotoPerfil())
@@ -45,13 +52,14 @@ public class ClienteMapper {
                 .build();
     }
 
-    public Cliente toClienteUpdate(ClienteRequestUpdate clienteRequestUpdate, Cliente cliente, User user) {
+    public Cliente toClienteUpdate(ClienteRequestUpdate clienteRequestUpdate, Cliente cliente, User user, Direccion direccion) {
         return Cliente.builder()
                 .id(cliente.getId())
                 .guid(cliente.getGuid())
                 .dni(cliente.getDni())
                 .nombre(clienteRequestUpdate.getNombre())
                 .apellidos(clienteRequestUpdate.getApellidos())
+                .direccion(direccion)
                 .email(clienteRequestUpdate.getEmail())
                 .telefono(clienteRequestUpdate.getTelefono())
                 .fotoPerfil(clienteRequestUpdate.getFotoPerfil())

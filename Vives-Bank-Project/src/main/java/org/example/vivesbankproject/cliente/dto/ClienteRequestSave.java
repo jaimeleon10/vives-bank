@@ -27,6 +27,22 @@ public class ClienteRequestSave {
     @NotBlank(message = "Los apellidos no pueden estar vacio")
     private String apellidos;
 
+    @NotBlank(message = "La calle no puede estar vacia")
+    private String calle;
+
+    @NotBlank(message = "El número no puede estar vacio")
+    private String numero;
+
+    @NotBlank(message = "El código postal no puede estar vacio")
+    @Pattern(regexp = "^\\d{5}$", message = "El codigo postal debe tener 5 numeros")
+    private String codigoPostal;
+
+    @NotBlank(message = "El piso no puede estar vacio")
+    private String piso;
+
+    @NotBlank(message = "La letra no puede estar vacia")
+    private String letra;
+
     @Email(regexp = ".*@.*\\..*", message = "El email debe ser valido")
     @NotBlank(message = "El email no puede estar vacio")
     private String email;
