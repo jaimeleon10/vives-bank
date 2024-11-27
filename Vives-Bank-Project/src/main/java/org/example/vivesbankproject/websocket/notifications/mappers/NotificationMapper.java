@@ -1,21 +1,23 @@
+/*
 package org.example.vivesbankproject.websocket.notifications.mappers;
 
 
-import org.example.vivesbankproject.movimientos.models.Movimientos;
+import org.example.vivesbankproject.movimientos.models.Movimiento;
 import org.example.vivesbankproject.websocket.notifications.dto.NotificationDto;
 import org.springframework.stereotype.Component;
 
 @Component
 public class NotificationMapper {
-    public NotificationDto toNotificationDto(Movimientos movimientos) {
+    public NotificationDto toNotificationDto(Movimiento movimiento) {
         return new NotificationDto(
-                movimientos.getId(),
-                movimientos.getIdUsuario(),
-                movimientos.getCliente().toString(),
-                movimientos.getTotalItems(),
-                movimientos.getIsDeleted().toString(),
-                movimientos.getCreatedAt().toString(),
-                movimientos.getUpdatedAt().toString()
+                movimiento.getId(),
+                movimiento.getIdUsuario(),
+                movimiento.getCliente().toString(),
+                movimiento.getTotalItems(),
+                movimiento.getIsDeleted().toString(),
+                movimiento.getCreatedAt().toString(),
+                movimiento.getUpdatedAt().toString()
         );
     }
 }
+*/

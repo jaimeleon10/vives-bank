@@ -22,11 +22,17 @@ public class CuentaRequestUpdate {
     @PositiveOrZero(message = "El saldo no puede ser negativo")
     private BigDecimal saldo;
 
-    @NotBlank(message = "El campo del tipo de cuenta no puede estar vacio")
-    private String tipoCuentaId;
+    @NotNull(message = "El campo del tipo de cuenta debe contener un id de tipo de cuenta")
+    @Builder.Default
+    private String tipoCuentaId = "";
 
-    @NotBlank(message = "El campo tarjeta no puede estar vacio")
-    private String tarjetaId;
+    @NotNull(message = "El campo tarjeta debe contener un id de tarjeta")
+    @Builder.Default
+    private String tarjetaId = "";
+
+    @NotNull(message = "El campo cliente debe contener un id de cliente")
+    @Builder.Default
+    private String clienteId = "";
 
     @NotNull(message = "El campo de borrado lógico no puede ser nulo")
     @Builder.Default

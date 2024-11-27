@@ -16,13 +16,13 @@ public class TarjetaMapper {
         return TarjetaResponse.builder()
                 .guid(tarjeta.getGuid())
                 .numeroTarjeta(tarjeta.getNumeroTarjeta())
-                .fechaCaducidad(tarjeta.getFechaCaducidad())
-                .limiteDiario(tarjeta.getLimiteDiario())
-                .limiteSemanal(tarjeta.getLimiteSemanal())
-                .limiteMensual(tarjeta.getLimiteMensual())
+                .fechaCaducidad(tarjeta.getFechaCaducidad().toString())
+                .limiteDiario(tarjeta.getLimiteDiario().toString())
+                .limiteSemanal(tarjeta.getLimiteSemanal().toString())
+                .limiteMensual(tarjeta.getLimiteMensual().toString())
                 .tipoTarjeta(tarjeta.getTipoTarjeta())
-                .createdAt(tarjeta.getCreatedAt())
-                .updatedAt(tarjeta.getUpdatedAt())
+                .createdAt(tarjeta.getCreatedAt().toString())
+                .updatedAt(tarjeta.getUpdatedAt().toString())
                 .isDeleted(tarjeta.getIsDeleted())
                 .build();
     }
@@ -58,7 +58,7 @@ public class TarjetaMapper {
     public TarjetaResponsePrivado toTarjetaPrivado(Tarjeta tarjeta) {
         return TarjetaResponsePrivado.builder()
                 .guid(tarjeta.getGuid())
-                .cvv(tarjeta.getCvv())
+                .cvv(tarjeta.getCvv().toString())
                 .pin(tarjeta.getPin())
                 .build();
     }

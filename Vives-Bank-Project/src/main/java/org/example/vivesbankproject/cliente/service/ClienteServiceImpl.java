@@ -7,7 +7,6 @@ import org.example.vivesbankproject.cliente.exceptions.*;
 import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaForClienteResponse;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.exceptions.CuentaNotFound;
 import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
@@ -15,7 +14,6 @@ import org.example.vivesbankproject.cuenta.mappers.TipoCuentaMapper;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
-import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.exceptions.UserNotFoundById;
 import org.example.vivesbankproject.users.exceptions.UserNotFoundException;
@@ -40,22 +38,12 @@ public class ClienteServiceImpl implements ClienteService {
 
     private final ClienteRepository clienteRepository;
     private final ClienteMapper clienteMapper;
-    private final UserMapper userMapper;
     private final UserRepository userRepository;
-    private final CuentaMapper cuentaMapper;
-    private final CuentaRepository cuentaRepository;
-    private final TipoCuentaMapper tipoCuentaMapper;
-    private final TarjetaMapper tarjetaMapper;
 
-    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserMapper userMapper, UserRepository userRepository, CuentaMapper cuentaMapper, CuentaRepository cuentaRepository, TipoCuentaMapper tipoCuentaMapper, TarjetaMapper tarjetaMapper) {
+    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserRepository userRepository) {
         this.clienteRepository = clienteRepository;
         this.clienteMapper = clienteMapper;
-        this.userMapper = userMapper;
         this.userRepository = userRepository;
-        this.cuentaMapper = cuentaMapper;
-        this.cuentaRepository = cuentaRepository;
-        this.tipoCuentaMapper = tipoCuentaMapper;
-        this.tarjetaMapper = tarjetaMapper;
     }
 
     @Override
@@ -89,12 +77,8 @@ public class ClienteServiceImpl implements ClienteService {
         Page<Cliente> clientePage = clienteRepository.findAll(criterio, pageable);
 
         return clientePage.map(cliente -> {
-            UserResponse userResponse = userMapper.toUserResponse(cliente.getUser());
-            Set<CuentaForClienteResponse> cuentasResponse = cliente.getCuentas().stream()
-                    .map(cuenta -> cuentaMapper.toCuentaForClienteResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
-                    .collect(Collectors.toSet());
-
-            return clienteMapper.toClienteResponse(cliente, userResponse, cuentasResponse);
+            String userId = cliente.getUser().getGuid();
+            return clienteMapper.toClienteResponse(cliente, userId);
         });
     }
 
@@ -102,12 +86,9 @@ public class ClienteServiceImpl implements ClienteService {
     @Cacheable
     public ClienteResponse getById(String id) {
         var cliente = clienteRepository.findByGuid(id).orElseThrow(() -> new ClienteNotFound(id));
-        var user = userMapper.toUserResponse(cliente.getUser());
-        Set<CuentaForClienteResponse> cuentasResponse = cliente.getCuentas().stream()
-               .map(cuenta -> cuentaMapper.toCuentaForClienteResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
-               .collect(Collectors.toSet());
+        String userId = cliente.getUser().getGuid();
 
-        return clienteMapper.toClienteResponse(cliente, user, cuentasResponse);
+        return clienteMapper.toClienteResponse(cliente, userId);
     }
 
     @Override
@@ -118,57 +99,20 @@ public class ClienteServiceImpl implements ClienteService {
             throw new ClienteUserAlreadyAssigned(clienteRequestSave.getUserId());
         }
 
-        // Buscamos si las cuentas existen
-        clienteRequestSave.getCuentasIds().forEach(cuentaGuid -> {
-                if (cuentaRepository.findByGuid(cuentaGuid).isEmpty()) {
-                    throw new CuentaNotFound(cuentaGuid);
-                }
-            }
-        );
-
-        // Buscamos si las cuentas adjuntadas están asignadas a algún cliente y en ese caso lanzamos excepcion
-        List<Cuenta> cuentas = clienteRepository.findCuentasAsignadas(clienteRequestSave.getCuentasIds());
-
-        if (!cuentas.isEmpty()) {
-            String cuentasAsignadas = cuentas.stream()
-                    .map(Cuenta::getGuid)
-                    .collect(Collectors.joining(", "));
-
-            throw new ClienteCuentasAlreadyAssigned(cuentasAsignadas);
-        }
-
         // Buscamos si existe el usuario por la id ajuntada en el cliente request
         var usuarioExistente = userRepository.findByGuid(clienteRequestSave.getUserId()).orElseThrow(
                 () -> new UserNotFoundById(clienteRequestSave.getUserId())
         );
 
-        // Creamos listado de cuentas
-        Set<Cuenta> cuentasExistentes = new HashSet<>();
-
-        // Buscamos si existen los ids de las cuentas adjuntadas en el cliente request y si existen las guardamos en el listado de cuentas
-        if (!clienteRequestSave.getCuentasIds().isEmpty()) {
-            for (String cuentaId : clienteRequestSave.getCuentasIds()) {
-                Cuenta cuenta = cuentaRepository.findByGuid(cuentaId).orElseThrow(
-                        () -> new CuentaNotFound(cuentaId)
-                );
-                cuentasExistentes.add(cuenta);
-            }
-        }
-
         // Mapeamos a cliente con el cliente request, el usuario existente y las cuentas existentes
-        var cliente = clienteMapper.toCliente(clienteRequestSave, usuarioExistente, cuentasExistentes);
+        var cliente = clienteMapper.toCliente(clienteRequestSave, usuarioExistente);
 
         // Validamos datos (dni, email y teléfono) existentes
         validarClienteExistente(cliente);
 
-        // Mapeamos el Set<Cuenta> a Set<CuentaResponse>
-        Set<CuentaForClienteResponse> cuentasResponse = cuentasExistentes.stream()
-                .map(cuenta -> cuentaMapper.toCuentaForClienteResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
-                .collect(Collectors.toSet());
-
         // Guardamos el cliente y lo mapeamos a response para devolverlo
         var clienteSaved = clienteRepository.save(cliente);
-        return clienteMapper.toClienteResponse(clienteSaved, userMapper.toUserResponse(usuarioExistente), cuentasResponse);
+        return clienteMapper.toClienteResponse(clienteSaved, usuarioExistente.getGuid());
     }
 
     @Override
@@ -201,16 +145,11 @@ public class ClienteServiceImpl implements ClienteService {
             }
         }
 
-        // Mapeamos el Set<Cuenta> a Set<CuentaResponse>
-        Set<CuentaForClienteResponse> cuentasResponse = clienteExistente.getCuentas().stream()
-                .map(cuenta -> cuentaMapper.toCuentaForClienteResponse(cuenta, tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()), tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
-                .collect(Collectors.toSet());
-
         // Guardamos el cliente mapeado a update
         var clienteSave = clienteRepository.save(clienteMapper.toClienteUpdate(clienteRequestUpdate, clienteExistente, usuarioExistente));
 
         // Devolvemos el cliente response con los datos necesarios
-        return clienteMapper.toClienteResponse(clienteSave, userMapper.toUserResponse(usuarioExistente), cuentasResponse);
+        return clienteMapper.toClienteResponse(clienteSave, usuarioExistente.getGuid());
     }
 
     @Override
@@ -225,13 +164,13 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
-    @Cacheable(key = "#guid") // Añadimos caché para mejorar el rendimiento en llamadas repetidas
+    @Cacheable // Añadimos caché para mejorar el rendimiento en llamadas repetidas
     public ClienteResponse getUserByGuid(String guid) {
         log.info("Buscando cliente por user guid: {}", guid);
 
         // Buscamos el cliente directamente por el userGuid
         var cliente = clienteRepository.findByUserGuid(guid)
-                .orElseThrow(() -> new ClienteNotFound("No se encontró cliente para el usuario con guid: " + guid));
+                .orElseThrow(() -> new ClienteNotFoundByUser(guid));
 
         // Obtenemos el usuario asociado al cliente
         var usuarioExistente = cliente.getUser();
@@ -239,19 +178,7 @@ public class ClienteServiceImpl implements ClienteService {
             throw new UserNotFoundById(guid);
         }
 
-        // Obtenemos las cuentas del cliente
-        Set<CuentaForClienteResponse> cuentasResponse = cliente.getCuentas().stream()
-                .map(cuenta -> cuentaMapper.toCuentaForClienteResponse(
-                        cuenta,
-                        tipoCuentaMapper.toTipoCuentaResponse(cuenta.getTipoCuenta()),
-                        tarjetaMapper.toTarjetaResponse(cuenta.getTarjeta())))
-                .collect(Collectors.toSet());
-
-        return clienteMapper.toClienteResponse(
-                cliente,
-                userMapper.toUserResponse(usuarioExistente),
-                cuentasResponse
-        );
+        return clienteMapper.toClienteResponse(cliente, usuarioExistente.getGuid());
     }
 
     private void validarClienteExistente(Cliente cliente) {

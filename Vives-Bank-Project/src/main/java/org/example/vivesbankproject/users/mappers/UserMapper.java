@@ -15,8 +15,8 @@ public class UserMapper {
                 .username(user.getUsername())
                 .password(user.getPassword())
                 .roles(user.getRoles())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
+                .createdAt(user.getCreatedAt().toString())
+                .updatedAt(user.getUpdatedAt().toString())
                 .isDeleted(user.getIsDeleted())
                 .build();
     }

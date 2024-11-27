@@ -6,7 +6,7 @@ import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.movimientos.exceptions.ClienteHasNoMovements;
 import org.example.vivesbankproject.movimientos.exceptions.MovimientoNotFound;
-import org.example.vivesbankproject.movimientos.models.Movimientos;
+import org.example.vivesbankproject.movimientos.models.Movimiento;
 import org.example.vivesbankproject.movimientos.repositories.MovimientosRepository;
 import org.example.vivesbankproject.users.models.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +28,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-class MovimientosServiceImplTest {
+class MovimientoServiceImplTest {
 
     @MockBean
     private MovimientosRepository movimientosRepository;
@@ -41,12 +41,12 @@ class MovimientosServiceImplTest {
 
     private Cliente cliente;
 
-    private Movimientos movimiento;
+    private Movimiento movimiento;
 
     private ObjectId movimientoId;
 
     @Autowired
-    public MovimientosServiceImplTest(MovimientosRepository movimientosRepository, ClienteRepository clienteRepository) {
+    public MovimientoServiceImplTest(MovimientosRepository movimientosRepository, ClienteRepository clienteRepository) {
         this.clienteRepository = clienteRepository;
         this.movimientosRepository = movimientosRepository;
     }
@@ -70,7 +70,7 @@ class MovimientosServiceImplTest {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
-       movimiento = Movimientos.builder()
+       movimiento = Movimiento.builder()
                 .id(movimientoId)
                 .guid("hola")
                 .idUsuario("idusuario")
@@ -87,10 +87,10 @@ class MovimientosServiceImplTest {
     @Test
     void getAll() {
         Pageable pageable = PageRequest.of(0, 2);
-        Page<Movimientos> mockPage = new PageImpl<>(List.of(movimiento));
+        Page<Movimiento> mockPage = new PageImpl<>(List.of(movimiento));
         when(movimientosRepository.findAll(pageable)).thenReturn(mockPage);
 
-        Page<Movimientos> result = movimientosService.getAll(pageable);
+        Page<Movimiento> result = movimientosService.getAll(pageable);
 
         assertAll(
                 () -> assertEquals(1, result.getTotalElements())
@@ -103,7 +103,7 @@ class MovimientosServiceImplTest {
     void getById() {
         when(movimientosRepository.findByGuid(movimiento.getGuid())).thenReturn(Optional.of(movimiento));
 
-        Movimientos result = movimientosService.getById(movimiento.getGuid());
+        Movimiento result = movimientosService.getById(movimiento.getGuid());
 
         assertAll(
                 () -> assertEquals(movimientoId, result.getId())
@@ -181,7 +181,7 @@ class MovimientosServiceImplTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        Movimientos movimiento = Movimientos.builder()
+        Movimiento movimiento = Movimiento.builder()
                 .id(new ObjectId())
                 .guid("mama")
                 .idUsuario("idusuario")
@@ -196,13 +196,13 @@ class MovimientosServiceImplTest {
         when(clienteRepository.findById(cliente.getId())).thenReturn(Optional.of(cliente));
         when(movimientosRepository.save(movimiento)).thenReturn(movimiento);
 
-        Movimientos result = movimientosService.save(movimiento);
+        Movimiento result = movimientosService.save(movimiento);
 
         assertAll(
                 () -> assertEquals(movimiento.getId(), result.getId())
         );
 
-        verify(movimientosRepository, times(2)).save(any(Movimientos.class));
+        verify(movimientosRepository, times(2)).save(any(Movimiento.class));
         verify(clienteRepository, times(1)).findById(cliente.getId());
     }
 
@@ -211,29 +211,29 @@ class MovimientosServiceImplTest {
         cliente.setIdMovimientos(null);
 
         when(clienteRepository.findById(cliente.getId())).thenReturn(Optional.of(cliente));
-        when(movimientosRepository.save(any(Movimientos.class))).thenReturn(movimiento);
+        when(movimientosRepository.save(any(Movimiento.class))).thenReturn(movimiento);
 
-        Movimientos result = movimientosService.save(movimiento);
+        Movimiento result = movimientosService.save(movimiento);
 
         assertAll(
                 () -> assertEquals(movimientoId, result.getId()),
                 () -> assertEquals(movimiento.getId().toHexString(), result.getCliente().getIdMovimientos())
         );
 
-        verify(movimientosRepository, times(2)).save(any(Movimientos.class));
+        verify(movimientosRepository, times(2)).save(any(Movimiento.class));
         verify(clienteRepository, times(1)).findById(cliente.getId());
     }
 
     @Test
     void create_ClienteNotFound() {
-        when(movimientosRepository.save(any(Movimientos.class))).thenReturn(movimiento);
+        when(movimientosRepository.save(any(Movimiento.class))).thenReturn(movimiento);
         when(clienteRepository.findById(cliente.getId())).thenReturn(Optional.empty());
 
         var result = assertThrows(ClienteNotFound.class, () -> movimientosService.save(movimiento));
 
         assertEquals("Cliente con id '5f8761020988676500000001' no encontrado", result.getMessage());
 
-        verify(movimientosRepository, times(0)).save(any(Movimientos.class));
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
         verify(clienteRepository, times(1)).findById(cliente.getId());
     }
 }

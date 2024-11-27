@@ -4,18 +4,34 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.vivesbankproject.cliente.dto.ClienteResponse;
+import org.example.vivesbankproject.movimientos.models.Domiciliacion;
+import org.example.vivesbankproject.movimientos.models.IngresoDeNomina;
+import org.example.vivesbankproject.movimientos.models.PagoConTarjeta;
+import org.example.vivesbankproject.movimientos.models.Transferencia;
+import org.example.vivesbankproject.utils.IdGenerator;
 
-import java.util.List;
 
 @Data
-@Builder
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class MovimientoResponse {
-    private String guid;
-    private String idUsuario;
-    private ClienteResponse clienteResponse;
-    private List<TransaccionResponse> transacciones;
-    private Boolean isDeleted;
+
+    @Builder.Default
+    private String guid = IdGenerator.generarId();
+
+    private String clienteGuid;
+
+    private Domiciliacion domiciliacion;
+
+    private IngresoDeNomina ingresoDeNomina;
+
+    private PagoConTarjeta pagoConTarjeta;
+
+    private Transferencia transferencia;
+
+    @Builder.Default
+    private Boolean isDeleted = false;
+
+    private String createdAt;
 }

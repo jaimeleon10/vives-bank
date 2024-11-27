@@ -5,12 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TarjetaResponsePrivado {
+public class TarjetaResponsePrivado implements Serializable {
     private String guid;
-    private Integer cvv;
+    private String cvv;
     private String pin;
 }

@@ -4,19 +4,14 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-@SuperBuilder
-@JsonTypeName("TRANSFERENCIA")
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Transferencia extends Transacciones {
+public class Transferencia {
     @NotBlank
     @Pattern(
             regexp = "^ES\\d{22}$",

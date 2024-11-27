@@ -5,54 +5,81 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
-
+import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
-@DataJpaTest
+@SpringBootTest
 @ExtendWith(SpringExtension.class)
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class TipoCuentaRepositoryTest {
+@Transactional
+public class TipoCuentaRepositoryTest {
 
     @Autowired
-    private TipoCuentaRepository repository;
+    private TipoCuentaRepository tipoCuentaRepository;
 
-    @Autowired
-    private TestEntityManager entityManager;
-
-    private TipoCuenta tipoCuentaTest = new TipoCuenta();
+    private TipoCuenta tipoCuenta;
 
     @BeforeEach
     void setUp() {
-        tipoCuentaTest.setGuid("hola");
-        tipoCuentaTest.setNombre("normal");
-        tipoCuentaTest.setInteres(BigDecimal.valueOf(2.0));
-
-        tipoCuentaTest = entityManager.merge(tipoCuentaTest);
-        entityManager.flush();
+        tipoCuenta = new TipoCuenta();
+        tipoCuenta.setNombre("Cuenta de Ahorros");
+        tipoCuenta.setInteres(new BigDecimal("1.5"));
+        tipoCuenta = tipoCuentaRepository.save(tipoCuenta);
     }
 
     @Test
     void findByNombre() {
-        var result = repository.findByNombre("normal");
+        String nombre = "Cuenta de Ahorros";
 
-        assertAll(
-                () -> assertNotNull(result),
-                () -> assertEquals(tipoCuentaTest.getGuid(), result.get().getGuid()),
-                () -> assertEquals(tipoCuentaTest.getNombre(), result.get().getNombre()),
-                () -> assertEquals(tipoCuentaTest.getInteres(), result.get().getInteres())
-        );
+        Optional<TipoCuenta> result = tipoCuentaRepository.findByNombre(nombre);
+
+        assertTrue(result.isPresent());
+        assertEquals(nombre, result.get().getNombre());
     }
 
     @Test
     void findByNombreNotFound() {
-        var result = repository.findByNombre("ahorro");
+        String nombre = "Cuenta Inexistente";
+
+        Optional<TipoCuenta> result = tipoCuentaRepository.findByNombre(nombre);
 
         assertFalse(result.isPresent());
+    }
+
+    @Test
+    void findByGuid() {
+        String guid = tipoCuenta.getGuid();
+
+        Optional<TipoCuenta> result = tipoCuentaRepository.findByGuid(guid);
+
+        assertTrue(result.isPresent());
+        assertEquals(guid, result.get().getGuid());
+    }
+
+    @Test
+    void findByGuidNotFound() {
+        String guid = "non-existent-guid";
+
+        Optional<TipoCuenta> result = tipoCuentaRepository.findByGuid(guid);
+
+        assertFalse(result.isPresent());
+    }
+
+    @Test
+    void FindAllConSpecification() {
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Specification<TipoCuenta> spec = (root, query, criteriaBuilder) -> criteriaBuilder.like(root.get("nombre"), "%Cuenta%");
+        Page<TipoCuenta> result = tipoCuentaRepository.findAll(spec, pageable);
+
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
     }
 }

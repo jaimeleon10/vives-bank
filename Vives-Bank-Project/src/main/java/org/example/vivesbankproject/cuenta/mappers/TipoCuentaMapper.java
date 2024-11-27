@@ -14,9 +14,9 @@ public class TipoCuentaMapper {
         return TipoCuentaResponse.builder()
                 .guid(tipoCuenta.getGuid())
                 .nombre(tipoCuenta.getNombre())
-                .interes(tipoCuenta.getInteres())
-                .createdAt(tipoCuenta.getCreatedAt())
-                .updatedAt(tipoCuenta.getUpdatedAt())
+                .interes(tipoCuenta.getInteres().toString())
+                .createdAt(tipoCuenta.getCreatedAt().toString())
+                .updatedAt(tipoCuenta.getUpdatedAt().toString())
                 .isDeleted(tipoCuenta.getIsDeleted())
                 .build();
     }

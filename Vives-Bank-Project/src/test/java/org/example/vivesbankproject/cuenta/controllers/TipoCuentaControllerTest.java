@@ -1,230 +1,242 @@
 package org.example.vivesbankproject.cuenta.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
-import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.services.TipoCuentaService;
 import org.example.vivesbankproject.utils.PageResponse;
 import org.example.vivesbankproject.utils.PaginationLinksUtils;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import static com.mongodb.assertions.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@ExtendWith(MockitoExtension.class)
 class TipoCuentaControllerTest {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Mock
+    private TipoCuentaService tipoCuentaService;
+
+    @Mock
+    private PaginationLinksUtils paginationLinksUtils;
+
+    @InjectMocks
+    private TipoCuentaController tipoCuentaController;
+
+    private TipoCuentaResponse tipoCuentaResponse;
+    private TipoCuentaRequest tipoCuentaRequest;
+    private MockHttpServletRequest request;
 
     @MockBean
-    TipoCuentaService tipoCuentaService;
+    private MockMvc mockMvc;
 
-    @Autowired
-    MockMvc mvc;
-
-    String myEndpoint = "/v1/tipocuentas";
-
-    private TipoCuenta tipoCuentaTest;
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
-        tipoCuentaTest = new TipoCuenta();
-        tipoCuentaTest.setGuid("hola");
-        tipoCuentaTest.setNombre("normal");
-        tipoCuentaTest.setInteres(BigDecimal.valueOf(2.0));
+        request = new MockHttpServletRequest();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
 
-        objectMapper.registerModule(new JavaTimeModule());
+        tipoCuentaResponse = TipoCuentaResponse.builder()
+                .nombre("Cuenta Ahorros")
+                .guid("guidTest")
+                .interes(new BigDecimal("2.5"))
+                .build();
+
+        tipoCuentaRequest = TipoCuentaRequest.builder()
+                .nombre("Cuenta Ahorros")
+                .interes(new BigDecimal("2.5"))
+                .build();
     }
 
     @Test
-    void getAllPageable() throws Exception {
-        TipoCuentaResponse tipoCuentaResponse = new TipoCuentaResponse();
-        tipoCuentaResponse.setGuid(tipoCuentaTest.getGuid());
-        tipoCuentaResponse.setNombre(tipoCuentaTest.getNombre());
-        tipoCuentaResponse.setInteres(tipoCuentaTest.getInteres());
+    void getAllPageableDevuelvePageResponse() {
+        List<TipoCuentaResponse> tipoCuentas = List.of(tipoCuentaResponse);
+        Page<TipoCuentaResponse> page = new PageImpl<>(tipoCuentas);
+        when(tipoCuentaService.getAll(any(), any(), any())).thenReturn(page);
+        when(paginationLinksUtils.createLinkHeader(any(), any())).thenReturn("");
 
-        String nombre = "normal";
-        BigDecimal interes = BigDecimal.valueOf(2.0);
-
-        PageRequest pageRequest = PageRequest.of(0, 10, Sort.by("id").ascending());
-        Page<TipoCuentaResponse> cuentaPage = new PageImpl<>(List.of(tipoCuentaResponse));
-
-        when(tipoCuentaService.getAll(
-                Optional.of(nombre),
-                Optional.of(interes),
-                pageRequest
-        )).thenReturn(cuentaPage);
-
-        MockHttpServletResponse response = mvc.perform(
-                        get(myEndpoint)
-                                .param("nombre", nombre)
-                                .param("interes", String.valueOf(interes))
-                                .param("page", "0")
-                                .param("size", "10")
-                                .param("sortBy", "id")
-                                .param("direction", "asc")
-                                .accept(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse();
-
-        PageResponse<TipoCuentaResponse> pageResponse = objectMapper.readValue(
-                response.getContentAsString(),
-                objectMapper.getTypeFactory().constructParametricType(PageResponse.class, TipoCuentaResponse.class)
+        ResponseEntity<PageResponse<TipoCuentaResponse>> response = tipoCuentaController.getAllPageable(
+                Optional.empty(), Optional.empty(), 0, 10, "id", "asc", request
         );
 
-        List<TipoCuentaResponse> res = pageResponse.content();
-
-        assertAll(
-                () -> assertEquals(response.getStatus(), HttpStatus.OK.value()),
-                () -> assertFalse(res.isEmpty()),
-                () -> assertTrue(res.stream().anyMatch(r -> r.getGuid().equals(tipoCuentaTest.getGuid())))
-        );
-
-        verify(tipoCuentaService, times(1)).getAll(
-                Optional.of(nombre),
-                Optional.of(interes),
-                pageRequest
-        );
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        verify(tipoCuentaService).getAll(any(), any(), any());
     }
 
     @Test
-    void getById() throws Exception {
-        TipoCuentaResponse tipoCuentaResponse = new TipoCuentaResponse();
-        tipoCuentaResponse.setGuid(tipoCuentaTest.getGuid());
-        tipoCuentaResponse.setNombre(tipoCuentaTest.getNombre());
-        tipoCuentaResponse.setInteres(tipoCuentaTest.getInteres());
+    void getTipoCuentaById() {
+        when(tipoCuentaService.getById(anyString())).thenReturn(tipoCuentaResponse);
 
-        when(tipoCuentaService.getById("hola")).thenReturn(tipoCuentaResponse);
+        ResponseEntity<TipoCuentaResponse> response = tipoCuentaController.getById("guidTest");
 
-        MockHttpServletResponse response = mvc.perform(
-                        get(myEndpoint + "/hola")
-                                .accept(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse();
-
-        TipoCuenta res = objectMapper.readValue(response.getContentAsString(), TipoCuenta.class);
-
-        assertAll(
-                () -> assertEquals(HttpStatus.OK.value(), response.getStatus()),
-                () -> assertEquals(tipoCuentaTest.getId(), res.getId()),
-                () -> assertEquals(tipoCuentaTest.getNombre(), res.getNombre()),
-                () -> assertEquals(tipoCuentaTest.getInteres(), res.getInteres())
-        );
-
-        verify(tipoCuentaService, times(1)).getById("hola");
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(tipoCuentaResponse, response.getBody());
+        verify(tipoCuentaService).getById("guidTest");
     }
 
     @Test
-    void save() throws Exception {
-        TipoCuenta tipoCuenta = new TipoCuenta();
-        tipoCuenta.setGuid("hola");
-        tipoCuenta.setNombre("normal");
-        tipoCuenta.setInteres(BigDecimal.valueOf(2.0));
+    void saveTipoCuenta() {
+        when(tipoCuentaService.save(any(TipoCuentaRequest.class))).thenReturn(tipoCuentaResponse);
 
-        TipoCuentaRequest tipoCuentaRequest = new TipoCuentaRequest();
-        tipoCuentaRequest.setNombre(tipoCuenta.getNombre());
-        tipoCuentaRequest.setInteres(tipoCuenta.getInteres());
+        ResponseEntity<TipoCuentaResponse> response = tipoCuentaController.save(tipoCuentaRequest);
 
-        TipoCuentaResponse tipoCuentaResponse = new TipoCuentaResponse();
-        tipoCuentaResponse.setGuid(tipoCuenta.getGuid());
-        tipoCuentaResponse.setNombre(tipoCuenta.getNombre());
-        tipoCuentaResponse.setInteres(tipoCuenta.getInteres());
+        assertNotNull(response);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(tipoCuentaResponse, response.getBody());
+        verify(tipoCuentaService).save(tipoCuentaRequest);
+    }
 
-        when(tipoCuentaService.save(tipoCuentaRequest)).thenReturn(tipoCuentaResponse);
+    @Test
+    void updateTipoCuenta() {
+        when(tipoCuentaService.update(anyString(), any(TipoCuentaRequest.class))).thenReturn(tipoCuentaResponse);
 
-        MockHttpServletResponse response = mvc.perform(
-                        post(myEndpoint)
+        ResponseEntity<TipoCuentaResponse> response = tipoCuentaController.update("guidTest", tipoCuentaRequest);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(tipoCuentaResponse, response.getBody());
+        verify(tipoCuentaService).update("guidTest", tipoCuentaRequest);
+    }
+
+    @Test
+    void deleteTipoCuenta() {
+        TipoCuentaResponse tipoCuentaResponse = TipoCuentaResponse.builder()
+                .guid("guidTest")
+                .nombre("Cuenta de prueba")
+                .interes(new BigDecimal("5.0"))
+                .build();
+
+        when(tipoCuentaService.deleteById(anyString())).thenReturn(tipoCuentaResponse);
+
+        ResponseEntity<TipoCuentaResponse> response = tipoCuentaController.delete("guidTest");
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(tipoCuentaResponse, response.getBody());
+        verify(tipoCuentaService).deleteById("guidTest");
+    }
+    @Test
+    void handleValidationExceptionError() {
+        MethodArgumentNotValidException ex = mock(MethodArgumentNotValidException.class);
+        BindingResult bindingResult = mock(BindingResult.class);
+        when(ex.getBindingResult()).thenReturn(bindingResult);
+
+        Map<String, String> errors = tipoCuentaController.handleValidationExceptions(ex);
+
+        Assertions.assertNotNull(errors);
+        assertInstanceOf(HashMap.class, errors);
+        verify(ex).getBindingResult();
+    }
+
+    @Test
+    void getAllTipoCuentasConFiltros() {
+        List<TipoCuentaResponse> tipoCuentas = List.of(tipoCuentaResponse);
+        Page<TipoCuentaResponse> page = new PageImpl<>(tipoCuentas);
+        when(tipoCuentaService.getAll(any(), any(), any())).thenReturn(page);
+        when(paginationLinksUtils.createLinkHeader(any(), any())).thenReturn("");
+
+        ResponseEntity<PageResponse<TipoCuentaResponse>> response = tipoCuentaController.getAllPageable(
+                Optional.of("Cuenta Ahorros"),
+                Optional.of(new BigDecimal("2.5")),
+                0, 10, "id", "asc", request
+        );
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        verify(tipoCuentaService).getAll(any(), any(), any());
+    }
+
+   /* @Test
+    void InvalidNombreTipoCuenta() throws Exception {
+        TipoCuentaRequest tipoCuentaRequest = TipoCuentaRequest.builder()
+                .nombre("")
+                .interes(new BigDecimal("2.5"))
+                .build();
+
+        MvcResult result = mockMvc.perform(
+                        post("/v1/tipocuentas")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(tipoCuenta)))
-                .andReturn().getResponse();
-
-        TipoCuenta res = objectMapper.readValue(response.getContentAsString(), TipoCuenta.class);
+                                .content(objectMapper.writeValueAsString(tipoCuentaRequest)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
 
         assertAll(
-                () -> assertEquals( HttpStatus.CREATED.value(), response.getStatus()),
-                () -> assertEquals(tipoCuenta.getGuid(), res.getGuid()),
-                () -> assertEquals(tipoCuenta.getNombre(), res.getNombre()),
-                () -> assertEquals(tipoCuenta.getInteres(), res.getInteres())
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El nombre del tipo de cuenta no puede estar vacío"))  // Verifica el mensaje de error para 'nombre'
         );
-
-        verify(tipoCuentaService, times(1)).save(tipoCuentaRequest);
     }
 
     @Test
-    void update() throws Exception {
-        TipoCuenta tipoCuenta = new TipoCuenta();
-        tipoCuenta.setGuid("adios");
-        tipoCuenta.setNombre("normal");
-        tipoCuenta.setInteres(BigDecimal.valueOf(3.0));
+    void InvalidInteresTipoCuenta() throws Exception {
+        TipoCuentaRequest tipoCuentaRequest = TipoCuentaRequest.builder()
+                .nombre("Cuenta Ahorro")
+                .interes(new BigDecimal("-2.5"))
+                .build();
 
-        TipoCuentaRequest tipoCuentaRequest = new TipoCuentaRequest();
-        tipoCuentaRequest.setNombre(tipoCuenta.getNombre());
-        tipoCuentaRequest.setInteres(tipoCuenta.getInteres());
-
-        TipoCuentaResponse tipoCuentaResponse = new TipoCuentaResponse();
-        tipoCuentaResponse.setGuid(tipoCuenta.getGuid());
-        tipoCuentaResponse.setNombre(tipoCuenta.getNombre());
-        tipoCuentaResponse.setInteres(tipoCuenta.getInteres());
-
-        when(tipoCuentaService.update(tipoCuenta.getGuid(), tipoCuentaRequest)).thenReturn(tipoCuentaResponse);
-
-        MockHttpServletResponse response = mvc.perform(
-                        put(myEndpoint + "/adios")
+        MvcResult result = mockMvc.perform(
+                        post("/v1/tipocuentas")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(tipoCuenta)))
-                .andReturn().getResponse();
-
-        String responseBody = response.getContentAsString();
-
-        TipoCuenta res = objectMapper.readValue(responseBody, TipoCuenta.class);
+                                .content(objectMapper.writeValueAsString(tipoCuentaRequest)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
 
         assertAll(
-                () -> assertEquals(HttpStatus.OK.value(), response.getStatus()),
-                () -> assertEquals(tipoCuenta.getNombre(), res.getNombre()),
-                () -> assertEquals(tipoCuenta.getInteres(), res.getInteres())
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El interés no puede ser negativo"))  // Verifica el mensaje de error para 'interes'
         );
-
-        verify(tipoCuentaService, times(1)).update(tipoCuenta.getGuid(), tipoCuentaRequest);
     }
 
     @Test
-    void delete() throws Exception {
-        TipoCuenta tipoCuenta = new TipoCuenta();
-        tipoCuenta.setGuid("6c257ab6-e588-4cef-a479-c2f8fcd7379a");
-        tipoCuenta.setNombre("ahorro");
-        tipoCuenta.setInteres(BigDecimal.valueOf(3.0));
+    void InvalidInteresDecimalTipoCuenta() throws Exception {
+        TipoCuentaRequest tipoCuentaRequest = TipoCuentaRequest.builder()
+                .nombre("Cuenta Ahorro")
+                .interes(new BigDecimal("2.555"))
+                .build();
 
-        doNothing().when(tipoCuentaService).deleteById("6c257ab6-e588-4cef-a479-c2f8fcd7379a");
+        MvcResult result = mockMvc.perform(
+                        post("/v1/tipocuentas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(tipoCuentaRequest)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
 
-        MockHttpServletResponse response = mvc.perform(
-                        MockMvcRequestBuilders.delete(myEndpoint + "/6c257ab6-e588-4cef-a479-c2f8fcd7379a")
-                                .contentType(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse();
-
-        assertEquals(HttpStatus.OK.value(), response.getStatus());
-        assertEquals("", response.getContentAsString());
-
-        verify(tipoCuentaService, times(1)).deleteById("6c257ab6-e588-4cef-a479-c2f8fcd7379a");
-    }
-
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El interés debe ser un número válido"))  // Verifica el mensaje de error para el campo 'interes'
+        );
+    } */
 }

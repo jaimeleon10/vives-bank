@@ -70,11 +70,8 @@ dependencies {
     implementation("com.auth0:java-jwt:4.4.0")
 
     // Redis
-    // implementation ("org.springframework.boot:spring-boot-starter-data-redis")
-    // implementation ("org.hibernate:hibernate-core:6.2.8.Final")
-
-    // Redis Cache con Redisson
-    // implementation ("org.redisson:redisson-hibernate-53:3.20.1")
+    implementation ("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("redis.clients:jedis:5.2.0")
 
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
