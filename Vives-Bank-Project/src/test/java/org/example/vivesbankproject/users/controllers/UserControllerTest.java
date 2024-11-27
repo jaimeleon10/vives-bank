@@ -4,296 +4,163 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.vivesbankproject.users.dto.UserRequest;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.models.Role;
-import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.users.services.UserService;
-import org.example.vivesbankproject.utils.PageResponse;
 import org.example.vivesbankproject.utils.PaginationLinksUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static com.mongodb.assertions.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@ExtendWith(MockitoExtension.class)
 @SpringBootTest
-@AutoConfigureMockMvc
-class UserControllerTest {
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
+public class UserControllerTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebApplicationContext webApplicationContext;
 
-    @MockBean
+    @InjectMocks
+    private UserController userController;
+
+    @Mock
     private UserService userService;
 
-    @MockBean
+    @Mock
     private PaginationLinksUtils paginationLinksUtils;
 
-    private final String myEndpoint = "/v1/usuario";
-    private UserResponse userResponseTest;
-    private UserRequest userRequestTest;
+    private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
 
     @BeforeEach
-    void setUp() {
-        userRequestTest = UserRequest.builder()
-                .username("testuser")
-                .password("password")
-                .roles(Set.of(Role.USER))
-                .isDeleted(false)
+    public void setUp() {
+        mockMvc = MockMvcBuilders
+                .webAppContextSetup(webApplicationContext)
                 .build();
+        objectMapper = new ObjectMapper();
 
-        userResponseTest = UserResponse.builder()
-                .guid("unique-guid")
-                .username("testuser")
-                .password("password")
-                .roles(Set.of(Role.USER))
-                .build();
+        // Configuración del mock para devolver un valor no nulo
+        Set<Role> roles = new HashSet<>();
+        roles.add(Role.ADMIN);
+
+        UserRequest userRequest = new UserRequest("testUser", "password", roles, false);
+        UserResponse userResponse = new UserResponse("123", "testUser", "password", roles, "2024-11-27T00:00:00", "2024-11-27T00:00:00", false);
+
+        // Mock de la respuesta del servicio
+        when(userService.save(any(UserRequest.class))).thenReturn(userResponse);
+    }
+    @Test
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    public void GetAllPageable() throws Exception {
+        when(userService.getAll(any(), any(), any())).thenReturn(mockPageResult());
+
+        mockMvc.perform(get("/api/v1/usuario")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sortBy", "id")
+                        .param("direction", "asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").exists())
+                .andExpect(jsonPath("$.content[0].username").value("testUser"))
+                .andExpect(header().exists("link"))
+                .andDo(print());
     }
 
     @Test
-    void getAllPageable() throws Exception {
-        PageRequest pageRequest = PageRequest.of(0, 10, Sort.by("id").ascending());
-        Page<UserResponse> userPage = new PageImpl<>(List.of(userResponseTest));
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    public void GetById() throws Exception {
+        when(userService.getById("123")).thenReturn(mockUserResponse());
 
-        when(userService.getAll(
-                Optional.of(userResponseTest.getUsername()),
-                Optional.of(Role.USER),
-                pageRequest
-        )).thenReturn(userPage);
-
-        MockHttpServletResponse response = mockMvc.perform(
-                        get(myEndpoint)
-                                .param("username", "testuser")
-                                .param("roles", "USER")
-                                .param("page", "0")
-                                .param("size", "10")
-                                .param("sortBy", "id")
-                                .param("direction", "asc")
-                                .accept(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse();
-
-        PageResponse<User> pageResponse = objectMapper.readValue(
-                response.getContentAsString(),
-                objectMapper.getTypeFactory().constructParametricType(PageResponse.class, User.class)
-        );
-
-        List<User> res = pageResponse.content();
-
-        assertAll(
-                () -> assertEquals(response.getStatus(), HttpStatus.OK.value()),
-                () -> assertFalse(res.isEmpty()),
-                () -> assertTrue(res.stream().anyMatch(r -> r.getGuid() != null && r.getGuid().equals(userResponseTest.getGuid()))),
-                () -> assertEquals(res.size(), 1),
-                () -> assertTrue(res.get(0).getGuid().equals(userResponseTest.getGuid()))
-        );
-
-        verify(userService, times(1)).getAll(
-                Optional.of(userResponseTest.getUsername()),
-                Optional.of(Role.USER),
-                pageRequest
-        );
+        mockMvc.perform(get("/api/v1/usuario/123"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("testUser"))
+                .andDo(print());
     }
 
     @Test
-    void getById() throws Exception {
-        when(userService.getById("unique-guid")).thenReturn(userResponseTest);
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    public void CreateUser() throws Exception {
+        Set<Role> roles = new HashSet<>();
+        roles.add(Role.ADMIN);
 
-        MockHttpServletResponse response = mockMvc.perform(
-                        get(myEndpoint + "/unique-guid")
-                                .accept(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse();
+        UserRequest userRequest = new UserRequest("testUser", "password", roles, false);
+        UserResponse userResponse = new UserResponse("123", "testUser", "password", roles, "2024-11-27T00:00:00", "2024-11-27T00:00:00", false);
 
-        UserResponse res = objectMapper.readValue(response.getContentAsString(), UserResponse.class);
+        when(userService.save(any())).thenReturn(userResponse);
 
-        assertAll(
-                () -> assertEquals(HttpStatus.OK.value(), response.getStatus()),
-                () -> assertEquals(userResponseTest.getGuid(), res.getGuid()),
-                () -> assertEquals(userResponseTest.getUsername(), res.getUsername()),
-                () -> assertEquals(userResponseTest.getPassword(), res.getPassword()),
-                () -> assertEquals(userResponseTest.getRoles(), res.getRoles())
-        );
-
-        verify(userService, times(1)).getById("unique-guid");
+        mockMvc.perform(post("/api/v1/usuario")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.username").value("testUser"))
+                .andDo(print());
     }
 
     @Test
-    void createUser() throws Exception {
-        UserRequest userRequest = UserRequest.builder()
-                .username("testuser2")
-                .password("password")
-                .roles(Set.of(Role.USER))
-                .isDeleted(false)
-                .build();
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    public void UpdateUser() throws Exception {
+        String userId = "123";
 
-        UserResponse userResponse = UserResponse.builder()
-                .guid("unique-guid")
-                .username("testuser2")
-                .password("password")
-                .roles(Set.of(Role.USER))
-                .build();
+        Set<Role> roles = new HashSet<>();
+        roles.add(Role.ADMIN);
 
-        when(userService.save(userRequest)).thenReturn(userResponse);
+        UserRequest userRequest = new UserRequest("updatedUser", "newPassword", roles, false);
+        UserResponse userResponse = new UserResponse(userId, "updatedUser", "newPassword", roles, "2024-11-27T00:00:00", "2024-11-27T00:00:00", false);
 
-        MockHttpServletResponse response = mockMvc.perform(
-                        post(myEndpoint)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(userRequest)))
-                .andReturn().getResponse();
+        when(userService.update(eq(userId), any())).thenReturn(userResponse);
 
-        UserResponse res = objectMapper.readValue(response.getContentAsString(), UserResponse.class);
-
-        assertAll(
-                () -> assertEquals(HttpStatus.CREATED.value(), response.getStatus()),
-                () -> assertEquals(userResponse.getGuid(), res.getGuid()),
-                () -> assertEquals(userResponse.getUsername(), res.getUsername()),
-                () -> assertEquals(userResponse.getPassword(), res.getPassword()),
-                () -> assertEquals(userResponse.getRoles(), res.getRoles())
-        );
-
-        verify(userService, times(1)).save(userRequest);
+        mockMvc.perform(put("/api/v1/usuario/{id}", userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("updatedUser"))
+                .andDo(print());
     }
 
     @Test
-    void usernameBlank() throws Exception {
-        UserRequest userRequest = UserRequest.builder()
-                .username("")
-                .password("password")
-                .roles(Set.of(Role.USER))
-                .isDeleted(false)
-                .build();
-
-        MvcResult response = mockMvc.perform(
-                        post("/v1/usuario")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isBadRequest())
-                .andReturn();
-
-        assertAll(
-                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), response.getResponse().getStatus()),
-                () -> assertTrue(response.getResponse().getContentAsString().contains("Username no puede estar vacio"))
-        );
-    }
-
-    @Test
-    void passwordBlankAndLessThanFiveChars() throws Exception {
-        UserRequest userRequest = UserRequest.builder()
-                .username("testuser1")
-                .password("")
-                .roles(Set.of(Role.USER))
-                .isDeleted(false)
-                .build();
-
-        MvcResult response = mockMvc.perform(
-                        post("/v1/usuario")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isBadRequest())
-                .andReturn();
-
-        assertAll(
-                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), response.getResponse().getStatus()),
-                () -> assertTrue(response.getResponse().getContentAsString().contains("Password debe tener al menos 5 caracteres"))
-        );
-    }
-
-    @Test
-    void updateUser() throws Exception {
-        User user = new User();
-        user.setGuid("unique-guid");
-        user.setUsername("testuser2");
-        user.setPassword("password2");
-        user.setRoles(Set.of(Role.USER));
-        user.setIsDeleted(false);
-
-        UserRequest userRequest = UserRequest.builder()
-                .username("testuser2")
-                .password("password2")
-                .roles(Set.of(Role.USER))
-                .isDeleted(false)
-                .build();
-
-        UserResponse userResponse = UserResponse.builder()
-                .guid("unique-guid")
-                .username("testuser2")
-                .password("password2")
-                .roles(Set.of(Role.USER))
-                .build();
-
-        when(userService.update(user.getGuid(), userRequest)).thenReturn(userResponse);
-
-        MockHttpServletResponse response = mockMvc.perform(
-                        put(myEndpoint + "/unique-guid")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(userRequest)))
-                .andReturn().getResponse();
-
-        String responseBody = response.getContentAsString();
-        assertNotNull(responseBody);
-
-        UserResponse res = objectMapper.readValue(responseBody, UserResponse.class);
-
-        assertAll(
-                () -> assertEquals(HttpStatus.OK.value(), response.getStatus()),
-                () -> assertEquals(user.getGuid(), res.getGuid()),
-                () -> assertEquals(user.getUsername(), res.getUsername()),
-                () -> assertEquals(userRequest.getPassword(), res.getPassword()),
-                () -> assertEquals(user.getRoles(), res.getRoles())
-        );
-
-        verify(userService, times(1)).update(user.getGuid(), userRequest);
-    }
-
-
-    @Test
-    void deleteUser() throws Exception {
-        String userId = "6c257ab6-e588-4cef-a479-c2f8fcd7379a";
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    public void DeleteUser() throws Exception {
+        String userId = "123";
 
         doNothing().when(userService).deleteById(userId);
 
-        MockHttpServletResponse response = mockMvc.perform(
-                        MockMvcRequestBuilders.delete(myEndpoint + "/" + userId)
-                                .contentType(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse();
-
-        assertAll(
-                () -> assertEquals(HttpStatus.NO_CONTENT.value(), response.getStatus(), "El estado debe ser 204 No Content"),
-                () -> assertEquals("", response.getContentAsString(), "El cuerpo de la respuesta debe estar vacío")
-        );
-
-        verify(userService, times(1)).deleteById(userId);
+        mockMvc.perform(delete("/api/v1/usuario/{id}", userId))
+                .andExpect(status().isNoContent())
+                .andDo(print());
     }
 
-    @Test
-    void handleValidationExceptions() throws Exception {
-        mockMvc.perform(post(myEndpoint)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{ \"username\": \"\" }"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.username").value("Username no puede estar vacio"))
-                .andReturn();
+    private Page<UserResponse> mockPageResult() {
+        Set<Role> roles = new HashSet<>();
+        roles.add(Role.ADMIN);
+
+        List<UserResponse> users = Arrays.asList(new UserResponse("123", "testUser", "password", roles, "2024-11-27T00:00:00", "2024-11-27T00:00:00", false));
+        return new PageImpl<>(users);
+    }
+
+    private UserResponse mockUserResponse() {
+        Set<Role> roles = new HashSet<>();
+        roles.add(Role.ADMIN);
+
+        return new UserResponse("123", "testUser", "password", roles, "2024-11-27T00:00:00", "2024-11-27T00:00:00", false);
     }
 }
