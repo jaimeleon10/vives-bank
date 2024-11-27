@@ -12,6 +12,8 @@ public interface ClienteService {
 
     ClienteResponse getById(String id);
 
+    ClienteResponse getByDni(String dni);
+
     ClienteResponse save(ClienteRequestSave cliente);
 
     ClienteResponse update(String id, ClienteRequestUpdate clienteRequestUpdate);
