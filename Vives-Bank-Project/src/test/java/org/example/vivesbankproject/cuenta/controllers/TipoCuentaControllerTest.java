@@ -13,17 +13,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -37,8 +33,6 @@ import java.util.Optional;
 import static com.mongodb.assertions.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 class TipoCuentaControllerTest {
@@ -69,7 +63,7 @@ class TipoCuentaControllerTest {
         tipoCuentaResponse = TipoCuentaResponse.builder()
                 .nombre("Cuenta Ahorros")
                 .guid("guidTest")
-                .interes(new BigDecimal("2.5"))
+                .interes("2.5")
                 .build();
 
         tipoCuentaRequest = TipoCuentaRequest.builder()
@@ -136,7 +130,7 @@ class TipoCuentaControllerTest {
         TipoCuentaResponse tipoCuentaResponse = TipoCuentaResponse.builder()
                 .guid("guidTest")
                 .nombre("Cuenta de prueba")
-                .interes(new BigDecimal("5.0"))
+                .interes("5.0")
                 .build();
 
         when(tipoCuentaService.deleteById(anyString())).thenReturn(tipoCuentaResponse);
