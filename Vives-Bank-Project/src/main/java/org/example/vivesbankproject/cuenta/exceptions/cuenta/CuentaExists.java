@@ -1,4 +1,4 @@
-package org.example.vivesbankproject.cuenta.exceptions;
+package org.example.vivesbankproject.cuenta.exceptions.cuenta;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
