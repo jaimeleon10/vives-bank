@@ -2,7 +2,7 @@ package org.example.vivesbankproject.cuenta.services;
 
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
-import org.example.vivesbankproject.cuenta.exceptions.TipoCuentaNotFound;
+import org.example.vivesbankproject.cuenta.exceptions.tipoCuenta.TipoCuentaNotFound;
 import org.example.vivesbankproject.cuenta.mappers.TipoCuentaMapper;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.TipoCuentaRepository;

@@ -177,7 +177,7 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
-    @Cacheable // Añadimos caché para mejorar el rendimiento en llamadas repetidas
+    @Cacheable
     public ClienteResponse getUserByGuid(String guid) {
         log.info("Buscando cliente por user guid: {}", guid);
 
