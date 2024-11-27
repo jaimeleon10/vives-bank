@@ -81,6 +81,14 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
+    public ClienteResponse getByDni(String dni) {
+        var cliente = clienteRepository.findByDni(dni).orElseThrow(() -> new ClienteNotFoundByDni(dni));
+        String userId = cliente.getUser().getGuid();
+
+        return clienteMapper.toClienteResponse(cliente, userId);
+    }
+
+    @Override
     @CachePut
     public ClienteResponse save(ClienteRequestSave clienteRequestSave) {
         // Buscamos si existe algún cliente con el usuario adjunto ya asignado
