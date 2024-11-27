@@ -6,18 +6,9 @@ import org.example.vivesbankproject.cliente.dto.*;
 import org.example.vivesbankproject.cliente.exceptions.*;
 import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.models.Cliente;
+import org.example.vivesbankproject.cliente.models.Direccion;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
-import org.example.vivesbankproject.cuenta.exceptions.CuentaNotFound;
-import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
-import org.example.vivesbankproject.cuenta.mappers.TipoCuentaMapper;
-import org.example.vivesbankproject.cuenta.models.Cuenta;
-import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
-import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
-import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.exceptions.UserNotFoundById;
-import org.example.vivesbankproject.users.exceptions.UserNotFoundException;
-import org.example.vivesbankproject.users.mappers.UserMapper;
 import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -27,9 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -104,8 +93,16 @@ public class ClienteServiceImpl implements ClienteService {
                 () -> new UserNotFoundById(clienteRequestSave.getUserId())
         );
 
+        var direccion = Direccion.builder()
+                .calle(clienteRequestSave.getCalle())
+                .numero(clienteRequestSave.getNumero())
+                .codigoPostal(clienteRequestSave.getCodigoPostal())
+                .piso(clienteRequestSave.getPiso())
+                .letra(clienteRequestSave.getLetra())
+                .build();
+
         // Mapeamos a cliente con el cliente request, el usuario existente y las cuentas existentes
-        var cliente = clienteMapper.toCliente(clienteRequestSave, usuarioExistente);
+        var cliente = clienteMapper.toCliente(clienteRequestSave, usuarioExistente, direccion);
 
         // Validamos datos (dni, email y teléfono) existentes
         validarClienteExistente(cliente);
@@ -145,8 +142,16 @@ public class ClienteServiceImpl implements ClienteService {
             }
         }
 
+        var direccion = Direccion.builder()
+                .calle(clienteRequestUpdate.getCalle())
+                .numero(clienteRequestUpdate.getNumero())
+                .codigoPostal(clienteRequestUpdate.getCodigoPostal())
+                .piso(clienteRequestUpdate.getPiso())
+                .letra(clienteRequestUpdate.getLetra())
+                .build();
+
         // Guardamos el cliente mapeado a update
-        var clienteSave = clienteRepository.save(clienteMapper.toClienteUpdate(clienteRequestUpdate, clienteExistente, usuarioExistente));
+        var clienteSave = clienteRepository.save(clienteMapper.toClienteUpdate(clienteRequestUpdate, clienteExistente, usuarioExistente, direccion));
 
         // Devolvemos el cliente response con los datos necesarios
         return clienteMapper.toClienteResponse(clienteSave, usuarioExistente.getGuid());
