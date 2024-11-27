@@ -70,6 +70,13 @@ public class MovimientosController {
         return ResponseEntity.ok(movimiento);
     }
 
+    @GetMapping("/guid/{guid}")
+    public ResponseEntity<MovimientoResponse> getMovimientoByGuid(@PathVariable String guidMovimiento) {
+        log.info("Obteniendo movimiento con guid: " + guidMovimiento);
+        MovimientoResponse movimiento = service.getByGuid(guidMovimiento);
+        return ResponseEntity.ok(movimiento);
+    }
+
     @GetMapping("/cliente/{clienteId}")
     public ResponseEntity<MovimientoResponse> getMovimientoByClienteGuid(@PathVariable String clienteId) {
         log.info("Obteniendo movimiento con id de cliente: " + clienteId);
