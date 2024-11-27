@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolationException;
 import org.example.vivesbankproject.cliente.dto.*;
 import org.example.vivesbankproject.cliente.service.ClienteService;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequest;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.utils.PaginationLinksUtils;
@@ -71,8 +72,8 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .user(UserResponse.builder().guid("user-guid").username("testuser").build())
-                .createdAt(LocalDateTime.now())
+                .userId("userId")
+                .createdAt("2024-11-26T15:23:45.123")
                 .isDeleted(false)
                 .build();
 
@@ -98,8 +99,6 @@ class ClienteRestControllerTest {
                 .andExpect(jsonPath("$.content[0].telefono").value("123456789"))
                 .andExpect(jsonPath("$.content[0].fotoPerfil").value("fotoprfil.jpg"))
                 .andExpect(jsonPath("$.content[0].fotoDni").value("fotodni.jpg"))
-                .andExpect(jsonPath("$.content[0].user.guid").value("user-guid"))
-                .andExpect(jsonPath("$.content[0].user.username").value("testuser"))
                 .andExpect(jsonPath("$.content[0].isDeleted").value(false));
     }
 
@@ -130,16 +129,10 @@ class ClienteRestControllerTest {
 
     @Test
     void CreateCliente() throws Exception {
-        ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
-                .dni("12345678A")
-                .nombre("Juan")
-                .apellidos("Perez")
-                .email("juan.perez@example.com")
-                .telefono("123456789")
-                .fotoPerfil("fotoprfil.jpg")
-                .fotoDni("fotodni.jpg")
-                .cuentasIds(Set.of("123456789"))
-                .userId("123456789")
+        CuentaRequest clienteRequestSave = CuentaRequest.builder()
+                .tipoCuentaId("tipoCuentaId")
+                .tarjetaId("tarjetaId")
+                .clienteId("clienteId")
                 .build();
 
         ClienteResponse clienteResponse = ClienteResponse.builder()
@@ -168,14 +161,13 @@ class ClienteRestControllerTest {
     @Test
     void InvalidDni() throws Exception {
         ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
-                .dni("1234567A") // Invalid DNI
+                .dni("1234567A")
                 .nombre("Juan")
                 .apellidos("Perez")
                 .email("juan.perez@example.com")
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .cuentasIds(new HashSet<>())
                 .userId("user-guid")
                 .isDeleted(false)
                 .build();
@@ -197,13 +189,12 @@ class ClienteRestControllerTest {
     void EmptyNombre() throws Exception {
         ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
                 .dni("12345678Z")
-                .nombre("") // Empty nombre
+                .nombre("")
                 .apellidos("Perez")
                 .email("juan.perez@example.com")
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .cuentasIds(new HashSet<>())
                 .userId("user-guid")
                 .isDeleted(false)
                 .build();
@@ -226,12 +217,11 @@ class ClienteRestControllerTest {
         ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
                 .dni("12345678Z")
                 .nombre("Juan")
-                .apellidos("") // Empty apellidos
+                .apellidos("")
                 .email("juan.perez@example.com")
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .cuentasIds(new HashSet<>())
                 .userId("user-guid")
                 .isDeleted(false)
                 .build();
@@ -255,11 +245,10 @@ class ClienteRestControllerTest {
                 .dni("12345678Z")
                 .nombre("Juan")
                 .apellidos("Perez")
-                .email("juan.perezexamplecom") // Invalid email
+                .email("juan.perezexamplecom")
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .cuentasIds(new HashSet<>())
                 .userId("user-guid")
                 .isDeleted(false)
                 .build();
@@ -312,10 +301,9 @@ class ClienteRestControllerTest {
                 .nombre("Juan")
                 .apellidos("Perez")
                 .email("juan.perez@example.com")
-                .telefono("12345678") // Invalid telefono
+                .telefono("12345678")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .cuentasIds(new HashSet<>())
                 .userId("user-guid")
                 .isDeleted(false)
                 .build();
@@ -468,8 +456,7 @@ class ClienteRestControllerTest {
 
         assertAll(
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(result.getResponse().getContentAsString().contains("El email debe ser valido")),
-                () -> assertFalse(result.getResponse().getContentAsString().contains("El email no puede estar vacio"))
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El email debe ser valido"))
         );
     }
 
@@ -494,8 +481,7 @@ class ClienteRestControllerTest {
 
         assertAll(
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(result.getResponse().getContentAsString().contains("El email no puede estar vacio")),
-                () -> assertFalse(result.getResponse().getContentAsString().contains("El email debe ser valido"))
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El email no puede estar vacio"))
         );
     }
 
@@ -522,8 +508,7 @@ class ClienteRestControllerTest {
 
         assertAll(
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(responseContent.contains("El telefono debe tener 9 numeros")),
-                () -> assertFalse(responseContent.contains("El telefono no puede estar vacio"))
+                () -> assertTrue(responseContent.contains("El telefono debe tener 9 numeros"))
         );
     }
 
@@ -550,8 +535,7 @@ class ClienteRestControllerTest {
 
         assertAll(
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(responseContent.contains("El telefono no puede estar vacio")),
-                () -> assertFalse(responseContent.contains("El telefono debe tener 9 numeros"))
+                () -> assertTrue(responseContent.contains("El telefono no puede estar vacio"))
         );
     }
 

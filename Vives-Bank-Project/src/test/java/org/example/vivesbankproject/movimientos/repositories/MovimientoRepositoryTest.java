@@ -1,7 +1,7 @@
 package org.example.vivesbankproject.movimientos.repositories;
 
 import org.example.vivesbankproject.cliente.models.Cliente;
-import org.example.vivesbankproject.movimientos.models.Movimiento;
+import org.example.vivesbankproject.movimientos.models.*;
 import org.example.vivesbankproject.utils.IdGenerator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +11,8 @@ import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,41 +31,42 @@ class MovimientoRepositoryTest {
 
     private String clienteId;
     private Movimiento movimiento;
+    private Cliente cliente = new Cliente();
 
     @BeforeEach
     void setUp() {
-        clienteId = IdGenerator.generarId();
-        Cliente cliente = new Cliente();
+        clienteId = "clienteGuid";
+
         cliente.setGuid(clienteId);
 
         movimiento = new Movimiento();
-        movimiento.setCliente(cliente);
+        movimiento.setClienteGuid(cliente.getGuid());
+        movimiento.setGuid("BF0HTp1DON1");
+        movimiento.setDomiciliacion(new Domiciliacion());
+        movimiento.setIngresoDeNomina(new IngresoDeNomina());
+        movimiento.setPagoConTarjeta(new PagoConTarjeta());
+        movimiento.setTransferencia(new Transferencia());
+        movimiento.setIsDeleted(false);
+        movimiento.setCreatedAt(LocalDateTime.now());
 
         mongoTemplate.insert(movimiento);
     }
 
-    @AfterEach
-    void tearDown() {
-        mongoTemplate.dropCollection(Movimiento.class);
-    }
-
     @Test
     void findMovimientosByClienteId_shouldReturnMovimientos_whenClienteExists() {
-        System.out.println("Saved movimientos: " + mongoTemplate.findAll(Movimiento.class));
+        Optional<Movimiento> result = movimientosRepository.findMovimientosByClienteGuid(movimiento.getClienteGuid());
 
-        Optional<Movimiento> result = movimientosRepository.findMovimientosByClienteId(clienteId);
+        assertTrue(result.isPresent(), "El resultado debería estar presente");
 
-        assertAll(
-                () -> assertTrue(result.isPresent(), "El resultado debería estar presente"),
-                () -> assertEquals(clienteId, result.get().getCliente().getGuid(), "El ID del cliente debería coincidir")
-        );
+        Movimiento movimientoEncontrado = result.get();
+        assertEquals(cliente.getGuid(), movimientoEncontrado.getClienteGuid(), "El ID del cliente debería coincidir");
     }
 
     @Test
     void findMovimientosByClienteId_shouldReturnEmpty_whenClienteDoesNotExist() {
         String nonExistentClienteId = IdGenerator.generarId();
 
-        Optional<Movimiento> result = movimientosRepository.findMovimientosByClienteId(nonExistentClienteId);
+        Optional<Movimiento> result = movimientosRepository.findMovimientosByClienteGuid(nonExistentClienteId);
 
         assertTrue(result.isEmpty(), "El resultado debería estar vacío para un cliente inexistente");
     }

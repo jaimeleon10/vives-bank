@@ -4,9 +4,11 @@ import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cliente.exceptions.ClienteNotFound;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
+import org.example.vivesbankproject.movimientos.dto.MovimientoRequest;
+import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
 import org.example.vivesbankproject.movimientos.exceptions.ClienteHasNoMovements;
 import org.example.vivesbankproject.movimientos.exceptions.MovimientoNotFound;
-import org.example.vivesbankproject.movimientos.models.Movimiento;
+import org.example.vivesbankproject.movimientos.models.*;
 import org.example.vivesbankproject.movimientos.repositories.MovimientosRepository;
 import org.example.vivesbankproject.users.models.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,13 +75,13 @@ class MovimientoServiceImplTest {
        movimiento = Movimiento.builder()
                 .id(movimientoId)
                 .guid("hola")
-                .idUsuario("idusuario")
-                .cliente(cliente)
-                .transacciones(new ArrayList<>())
+                .clienteGuid(cliente.getGuid())
+                .domiciliacion(new Domiciliacion())
+                .ingresoDeNomina(new IngresoDeNomina())
+                .pagoConTarjeta(new PagoConTarjeta())
+                .transferencia(new Transferencia())
                 .isDeleted(false)
-                .totalItems(0)
                 .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .build();
 
     }
@@ -90,7 +92,7 @@ class MovimientoServiceImplTest {
         Page<Movimiento> mockPage = new PageImpl<>(List.of(movimiento));
         when(movimientosRepository.findAll(pageable)).thenReturn(mockPage);
 
-        Page<Movimiento> result = movimientosService.getAll(pageable);
+        Page<MovimientoResponse> result = movimientosService.getAll(pageable);
 
         assertAll(
                 () -> assertEquals(1, result.getTotalElements())
@@ -103,10 +105,10 @@ class MovimientoServiceImplTest {
     void getById() {
         when(movimientosRepository.findByGuid(movimiento.getGuid())).thenReturn(Optional.of(movimiento));
 
-        Movimiento result = movimientosService.getById(movimiento.getGuid());
+        MovimientoResponse result = movimientosService.getById(movimiento.getId());
 
         assertAll(
-                () -> assertEquals(movimientoId, result.getId())
+                () -> assertEquals(movimientoId, result.getGuid())
         );
 
         verify(movimientosRepository, times(1)).findByGuid(movimiento.getGuid());
@@ -116,7 +118,7 @@ class MovimientoServiceImplTest {
     void getById_notFound() {
         when(movimientosRepository.findById(any(ObjectId.class))).thenReturn(Optional.empty());
 
-        var result = assertThrows(MovimientoNotFound.class, () -> movimientosService.getById(movimiento.getGuid()));
+        var result = assertThrows(MovimientoNotFound.class, () -> movimientosService.getById(movimiento.getId()));
 
         assertEquals("El movimiento con id hola no existe", result.getMessage());
 
@@ -126,24 +128,24 @@ class MovimientoServiceImplTest {
     @Test
     void getMovimientosByClienteId() {
         when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.of(cliente));
-        when(movimientosRepository.findMovimientosByClienteId(cliente.getGuid())).thenReturn(Optional.of(movimiento));
+        when(movimientosRepository.findMovimientosByClienteGuid(cliente.getGuid())).thenReturn(Optional.of(movimiento));
 
-        var result = movimientosService.getByClienteId(cliente.getGuid());
+        var result = movimientosService.getByClienteGuid(cliente.getGuid());
 
         assertAll(
-                () -> assertEquals(movimientoId, result.getId())
+                () -> assertEquals(movimientoId, result.getGuid())
         );
 
-        verify(movimientosRepository, times(1)).findMovimientosByClienteId(cliente.getGuid());
+        verify(movimientosRepository, times(1)).findMovimientosByClienteGuid(cliente.getGuid());
         verify(clienteRepository, times(1)).findByGuid(cliente.getGuid());
     }
 
     @Test
     void getMovimientos_ByClienteNotFound() {
-        when(movimientosRepository.findMovimientosByClienteId("cliente.getGuid()")).thenReturn(Optional.empty());
+        when(movimientosRepository.findMovimientosByClienteGuid("cliente.getGuid()")).thenReturn(Optional.empty());
         when(clienteRepository.findById(cliente.getId())).thenReturn(Optional.empty());
 
-        var result = assertThrows(ClienteNotFound.class, () -> movimientosService.getByClienteId("cliente.getGuid()"));
+        var result = assertThrows(ClienteNotFound.class, () -> movimientosService.getByClienteGuid("cliente.getGuid()"));
 
         assertEquals("Cliente con id 'cliente.getGuid()' no encontrado", result.getMessage());
 
@@ -154,13 +156,13 @@ class MovimientoServiceImplTest {
     @Test
     void getMovimientos_ByClienteHasNoMovimientos() {
         when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.of(cliente));
-        when(movimientosRepository.findMovimientosByClienteId(cliente.getGuid())).thenReturn(Optional.empty());
+        when(movimientosRepository.findMovimientosByClienteGuid(cliente.getGuid())).thenReturn(Optional.empty());
 
-        var result = assertThrows(ClienteHasNoMovements.class, () -> movimientosService.getByClienteId(cliente.getGuid()));
+        var result = assertThrows(ClienteHasNoMovements.class, () -> movimientosService.getByClienteGuid(cliente.getGuid()));
 
         assertEquals("El cliente con Id5f8761020988676500000001 no tiene movimientos", result.getMessage());
 
-        verify(movimientosRepository, times(1)).findMovimientosByClienteId(cliente.getGuid());
+        verify(movimientosRepository, times(1)).findMovimientosByClienteGuid(cliente.getGuid());
         verify(clienteRepository, times(1)).findByGuid(cliente.getGuid());
     }
 
@@ -182,24 +184,33 @@ class MovimientoServiceImplTest {
                 .build();
 
         Movimiento movimiento = Movimiento.builder()
-                .id(new ObjectId())
+                .id(movimientoId)
                 .guid("mama")
-                .idUsuario("idusuario")
-                .cliente(cliente)
-                .transacciones(new ArrayList<>())
+                .clienteGuid(cliente.getGuid())
+                .domiciliacion(new Domiciliacion())
+                .ingresoDeNomina(new IngresoDeNomina())
+                .pagoConTarjeta(new PagoConTarjeta())
+                .transferencia(new Transferencia())
                 .isDeleted(false)
-                .totalItems(0)
                 .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .build();
+
+        MovimientoRequest movimientoRequest = MovimientoRequest.builder()
+                .guid(movimiento.getGuid())
+                .clienteGuid(cliente.getGuid())
+                .domiciliacion(movimiento.getDomiciliacion())
+                .ingresoDeNomina(movimiento.getIngresoDeNomina())
+                .pagoConTarjeta(movimiento.getPagoConTarjeta())
+                .transferencia(movimiento.getTransferencia())
                 .build();
 
         when(clienteRepository.findById(cliente.getId())).thenReturn(Optional.of(cliente));
         when(movimientosRepository.save(movimiento)).thenReturn(movimiento);
 
-        Movimiento result = movimientosService.save(movimiento);
+        MovimientoResponse result = movimientosService.save(movimientoRequest);
 
         assertAll(
-                () -> assertEquals(movimiento.getId(), result.getId())
+                () -> assertEquals(movimiento.getId(), result.getGuid())
         );
 
         verify(movimientosRepository, times(2)).save(any(Movimiento.class));
@@ -210,14 +221,23 @@ class MovimientoServiceImplTest {
     void create_ClienteWithNoMovimientos() {
         cliente.setIdMovimientos(null);
 
+        MovimientoRequest movimientoRequest = MovimientoRequest.builder()
+                .guid(movimiento.getGuid())
+                .clienteGuid(cliente.getGuid())
+                .domiciliacion(movimiento.getDomiciliacion())
+                .ingresoDeNomina(movimiento.getIngresoDeNomina())
+                .pagoConTarjeta(movimiento.getPagoConTarjeta())
+                .transferencia(movimiento.getTransferencia())
+                .build();
+
         when(clienteRepository.findById(cliente.getId())).thenReturn(Optional.of(cliente));
         when(movimientosRepository.save(any(Movimiento.class))).thenReturn(movimiento);
 
-        Movimiento result = movimientosService.save(movimiento);
+        MovimientoResponse result = movimientosService.save(movimientoRequest);
 
         assertAll(
-                () -> assertEquals(movimientoId, result.getId()),
-                () -> assertEquals(movimiento.getId().toHexString(), result.getCliente().getIdMovimientos())
+                () -> assertEquals(movimientoId, result.getGuid()),
+                () -> assertEquals(movimiento.getId().toHexString(), result.getClienteGuid())
         );
 
         verify(movimientosRepository, times(2)).save(any(Movimiento.class));
@@ -226,10 +246,19 @@ class MovimientoServiceImplTest {
 
     @Test
     void create_ClienteNotFound() {
+        MovimientoRequest movimientoRequest = MovimientoRequest.builder()
+                .guid(movimiento.getGuid())
+                .clienteGuid("cliente.getGuid()")
+                .domiciliacion(movimiento.getDomiciliacion())
+                .ingresoDeNomina(movimiento.getIngresoDeNomina())
+                .pagoConTarjeta(movimiento.getPagoConTarjeta())
+                .transferencia(movimiento.getTransferencia())
+                .build();
+
         when(movimientosRepository.save(any(Movimiento.class))).thenReturn(movimiento);
         when(clienteRepository.findById(cliente.getId())).thenReturn(Optional.empty());
 
-        var result = assertThrows(ClienteNotFound.class, () -> movimientosService.save(movimiento));
+        var result = assertThrows(ClienteNotFound.class, () -> movimientosService.save(movimientoRequest));
 
         assertEquals("Cliente con id '5f8761020988676500000001' no encontrado", result.getMessage());
 

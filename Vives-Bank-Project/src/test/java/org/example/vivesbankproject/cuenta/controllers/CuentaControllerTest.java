@@ -13,7 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,8 +26,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-/*
 @ExtendWith(MockitoExtension.class)
+@WebMvcTest(CuentaController.class)
 class CuentaControllerTest {
 
     @Mock
@@ -39,28 +39,39 @@ class CuentaControllerTest {
     @InjectMocks
     private CuentaController cuentaController;
 
-    @MockBean
+    @Autowired
     private MockMvc mockMvc;
 
     private ObjectMapper objectMapper;
 
     private CuentaRequest cuentaRequest;
     private CuentaRequestUpdate cuentaRequestUpdate;
+    private CuentaResponse cuentaResponse;
 
     @BeforeEach
     void setUp() {
         cuentaRequest = new CuentaRequest();
-        cuentaRequest.setIban("ES1234567890123456789012");
-        cuentaRequest.setSaldo(new BigDecimal("1000"));
-        cuentaRequest.setTipoCuenta("Cuenta Ahorros");
+        cuentaRequest.setTipoCuentaId("tipoCuentaId");
+        cuentaRequest.setTarjetaId("tarjetaId");
+        cuentaRequest.setClienteId("clienteId");
 
         cuentaRequestUpdate = new CuentaRequestUpdate();
         cuentaRequestUpdate.setSaldo(new BigDecimal("1500"));
+
+        cuentaResponse = new CuentaResponse();
+        cuentaResponse.setGuid("cuentaResponseId");
+        cuentaResponse.setIban("ES123456789");
+        cuentaResponse.setSaldo("1000");
+        cuentaResponse.setTipoCuentaId(cuentaRequest.getTipoCuentaId());
+        cuentaResponse.setTarjetaId(cuentaRequest.getTarjetaId());
+        cuentaResponse.setClienteId(cuentaRequest.getClienteId());
+
+        objectMapper = new ObjectMapper();
     }
 
     @Test
     void getAllCuentas() throws Exception {
-        List<CuentaResponse> cuentas = List.of(new CuentaResponse("1", "Cuenta Ahorros", new BigDecimal("1000")));
+        List<CuentaResponse> cuentas = List.of(cuentaResponse);
         Page<CuentaResponse> page = new PageImpl<>(cuentas);
         when(cuentaService.getAll(any(), any(), any(), any(), any())).thenReturn(page);
         when(paginationLinksUtils.createLinkHeader(any(), any())).thenReturn("link-header");
@@ -79,20 +90,26 @@ class CuentaControllerTest {
 
     @Test
     void getCuentaById() throws Exception {
-        CuentaResponse cuentaResponse = new CuentaResponse("1", "Cuenta Ahorros", new BigDecimal("1000"));
-        when(cuentaService.getById("1")).thenReturn(cuentaResponse);
+        when(cuentaService.getById("cuentaResponseId")).thenReturn(cuentaResponse);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/v1/cuentas/1"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.nombre").value("Cuenta Ahorros"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.saldo").value("1000"));
 
-        verify(cuentaService).getById("1");
+        verify(cuentaService).getById("cuentaResponseId");
     }
 
     @Test
     void saveCuenta() throws Exception {
-        CuentaResponse cuentaResponse = new CuentaResponse("1", "Cuenta Ahorros", new BigDecimal("1000"));
+        CuentaResponse cuentaResponse = new CuentaResponse();
+        cuentaResponse.setGuid("nuevoCuentaResponseId");
+        cuentaResponse.setIban("ES987654321");
+        cuentaResponse.setSaldo("5000");
+        cuentaResponse.setTipoCuentaId(cuentaRequest.getTipoCuentaId());
+        cuentaResponse.setTarjetaId(cuentaRequest.getTarjetaId());
+        cuentaResponse.setClienteId(cuentaRequest.getClienteId());
+
         when(cuentaService.save(any(CuentaRequest.class))).thenReturn(cuentaResponse);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/v1/cuentas")
@@ -106,10 +123,17 @@ class CuentaControllerTest {
 
     @Test
     void updateCuenta() throws Exception {
-        CuentaResponse cuentaResponse = new CuentaResponse("1", "Cuenta Ahorros", new BigDecimal("1500"));
-        when(cuentaService.update(eq("1"), any(CuentaRequestUpdate.class))).thenReturn(cuentaResponse);
+        CuentaResponse cuentaResponse = new CuentaResponse();
+        cuentaResponse.setGuid("nuevoCuentaResponseId");
+        cuentaResponse.setIban("ES987654321");
+        cuentaResponse.setSaldo("3000");
+        cuentaResponse.setTipoCuentaId(cuentaRequest.getTipoCuentaId());
+        cuentaResponse.setTarjetaId(cuentaRequest.getTarjetaId());
+        cuentaResponse.setClienteId(cuentaRequest.getClienteId());
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/v1/cuentas/1")
+        when(cuentaService.update(eq("nuevoCuentaResponseId"), any(CuentaRequestUpdate.class))).thenReturn(cuentaResponse);
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/v1/cuentas/nuevoCuentaResponseId")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(cuentaRequestUpdate)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -131,7 +155,7 @@ class CuentaControllerTest {
     void handleValidationException() throws Exception {
 
         CuentaRequest invalidCuentaRequest = new CuentaRequest();
-        invalidCuentaRequest.setIban("INVALID_IBAN");  // Iban inválido
+        invalidCuentaRequest.setTipoCuentaId("mama");  // Iban inválido
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/v1/cuentas")
                         .contentType("application/json")
@@ -142,4 +166,4 @@ class CuentaControllerTest {
         String responseBody = result.getResponse().getContentAsString();
         assertTrue(responseBody.contains("El formato del IBAN es inválido"));
     }
-} */
+}
