@@ -1,5 +1,6 @@
 package org.example.vivesbankproject.users.services;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.users.dto.UserRequest;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.exceptions.UserExists;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 @Primary
 @CacheConfig(cacheNames = {"usuario"})
@@ -38,6 +40,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Page<UserResponse> getAll(Optional<String> username, Optional<Role> roles, Pageable pageable) {
+        log.info("Obteniendo todos los usuarios");
         Specification<User> specUsername = (root, query, criteriaBuilder) ->
                 username.map(u -> criteriaBuilder.like(criteriaBuilder.lower(root.get("nombre")), "%" + u.toLowerCase() + "%"))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
@@ -56,6 +59,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Cacheable
     public UserResponse getById(String id) {
+        log.info("Obteniendo usuarios por id: {}", id);
         var user = userRepository.findByGuid(id).orElseThrow(() -> new UserNotFoundById(id));
         return userMapper.toUserResponse(user);
     }
@@ -63,6 +67,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Cacheable
     public UserResponse getByUsername(String username) {
+        log.info("Obteniendo usuarios por username: {}", username);
         var user = userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundByUsername(username));
         return userMapper.toUserResponse(user);
     }
@@ -70,6 +75,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @CachePut
     public UserResponse save(UserRequest userRequest) {
+        log.info("Guardando usuario");
         if (userRepository.findByUsername(userRequest.getUsername()).isPresent()) {
             throw new UserExists(userRequest.getUsername());
         }
@@ -80,6 +86,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @CachePut
     public UserResponse update(String id, UserRequest userRequest) {
+        log.info("Actualizando usuario con id: {}", id);
         var user = userRepository.findByGuid(id).orElseThrow(
                 () -> new UserNotFoundById(id)
         );
@@ -93,6 +100,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @CacheEvict
     public void deleteById(String id) {
+        log.info("Borrando usuario con id: {}", id);
         var user = userRepository.findByGuid(id).orElseThrow(
                 () -> new UserNotFoundById(id)
         );

@@ -37,6 +37,7 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     public Page<ClienteResponse> getAll(Optional<String> dni, Optional<String> nombre, Optional<String> apellidos, Optional<String> email, Optional<String> telefono, Pageable pageable) {
+        log.info("Obteniendo todos los clientes");
         Specification<Cliente> specDniCliente = (root, query, criteriaBuilder) ->
                 dni.map(m -> criteriaBuilder.like(criteriaBuilder.lower(root.get("dni")), "%" + m.toLowerCase() + "%"))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
@@ -74,6 +75,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @Cacheable
     public ClienteResponse getById(String id) {
+        log.info("Obteniendo cliente con guid: {}", id);
         var cliente = clienteRepository.findByGuid(id).orElseThrow(() -> new ClienteNotFound(id));
         String userId = cliente.getUser().getGuid();
 
@@ -82,6 +84,7 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     public ClienteResponse getByDni(String dni) {
+        log.info("Obteniendo cliente con dni: {}", dni);
         var cliente = clienteRepository.findByDni(dni).orElseThrow(() -> new ClienteNotFoundByDni(dni));
         String userId = cliente.getUser().getGuid();
 
@@ -91,6 +94,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @CachePut
     public ClienteResponse save(ClienteRequestSave clienteRequestSave) {
+        log.info("Guardando cliente");
         // Buscamos si existe algún cliente con el usuario adjunto ya asignado
         if (clienteRepository.existsByUserGuid(clienteRequestSave.getUserId())) {
             throw new ClienteUserAlreadyAssigned(clienteRequestSave.getUserId());
@@ -123,6 +127,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @CachePut
     public ClienteResponse update(String id, ClienteRequestUpdate clienteRequestUpdate) {
+        log.info("Actualizando cliente con guid: {}", id);
         // Buscamos si existe el cliente con la el parámetro id
         var clienteExistente = clienteRepository.findByGuid(id).orElseThrow(
                 () -> new ClienteNotFound(id)
@@ -169,6 +174,7 @@ public class ClienteServiceImpl implements ClienteService {
     @CacheEvict
     @Transactional
     public void deleteById(String id) {
+        log.info("Borrando cliente con guid: {}", id);
         var cliente = clienteRepository.findByGuid(id).orElseThrow(
                 () -> new ClienteNotFound(id)
         );
