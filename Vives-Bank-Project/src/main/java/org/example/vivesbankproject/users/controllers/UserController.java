@@ -29,7 +29,7 @@ import java.util.Optional;
 @Slf4j
 @Validated
 @RestController
-@RequestMapping("${api.version}/usuario")
+@RequestMapping("${api.version}/usuarios")
 @PreAuthorize("hasRole('ADMIN')")
 public class UserController {
 

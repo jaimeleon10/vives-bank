@@ -40,13 +40,12 @@ public class MovimientosServiceImpl implements MovimientosService {
     @Override
     public Page<MovimientoResponse> getAll(Pageable pageable) {
         log.info("Encontrando todos los Movimientos");
-        var movimientos = movimientosRepository.findAll(pageable).map(movimientosMapper::toMovimientoResponse);
-        return movimientos;
+        return movimientosRepository.findAll(pageable).map(movimientosMapper::toMovimientoResponse);
     }
 
 
     @Override
-    @Cacheable(key = "#result.guid")
+    @Cacheable
     public MovimientoResponse getById(ObjectId _id) {
         log.info("Encontrando Movimiento por id: {}", _id);
         return movimientosRepository.findById(_id)
@@ -55,16 +54,16 @@ public class MovimientosServiceImpl implements MovimientosService {
     }
 
     @Override
-    @Cacheable(key = "#guidMovimiento")
+    @Cacheable
     public MovimientoResponse getByGuid(String guidMovimiento) {
-        log.info("Encontrando Movimiento por id: {}", guidMovimiento);
+        log.info("Encontrando Movimiento por guid: {}", guidMovimiento);
         return movimientosRepository.findByGuid(guidMovimiento)
                 .map(movimientosMapper::toMovimientoResponse)
                 .orElseThrow(() -> new MovimientoNotFound(guidMovimiento));
     }
 
     @Override
-    @Cacheable(key = "#idCliente")
+    @Cacheable
     public MovimientoResponse getByClienteGuid(String ClienteGuid) {
         log.info("Encontrando Movimientos por idCliente: {}", ClienteGuid);
         clienteService.getById(ClienteGuid);
@@ -74,7 +73,7 @@ public class MovimientosServiceImpl implements MovimientosService {
     }
 
     @Override
-    @CachePut(key = "#result.guid")
+    @CachePut
     public MovimientoResponse save(MovimientoRequest movimientoRequest) {
         log.info("Guardando Movimiento: {}", movimientoRequest);
         clienteService.getById(movimientoRequest.getClienteGuid());
