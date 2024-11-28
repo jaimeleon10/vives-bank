@@ -28,7 +28,7 @@ public class Domiciliacion {
     private String guid = IdGenerator.generarId();
 
     @Pattern(
-            regexp = "^ES\\d{22}$",
+            regexp = "^ES\\d{20}$",
             message = "El IBAN español debe comenzar con 'ES' seguido de 22 dígitos"
     )
     private String ibanOrigen;
@@ -44,7 +44,8 @@ public class Domiciliacion {
     private String nombreAcreedor;
 
     @NotNull
-    private LocalDateTime fechaInicio;
+    @Builder.Default
+    private LocalDateTime fechaInicio = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
