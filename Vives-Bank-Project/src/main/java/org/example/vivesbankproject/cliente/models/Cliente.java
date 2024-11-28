@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
+import org.example.vivesbankproject.users.models.Role;
 import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.utils.generators.IdGenerator;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -68,6 +69,10 @@ public class Cliente {
     @OneToMany(mappedBy = "cliente")
     @Builder.Default
     private Set<Cuenta> cuentas = new HashSet<>();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Builder.Default
+    private Set<String> domiciliacionesIds = Set.of();
 
     @OneToOne
     @JoinColumn(name = "user_id")
