@@ -3,19 +3,16 @@ package org.example.vivesbankproject.tarjeta.models;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import org.example.vivesbankproject.cuenta.models.Cuenta;
-import org.example.vivesbankproject.utils.IdGenerator;
-import org.example.vivesbankproject.utils.TarjetaGenerator;
+import org.example.vivesbankproject.utils.generators.IdGenerator;
+import org.example.vivesbankproject.utils.generators.TarjetaGenerator;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.Cache;
-import org.hibernate.validator.constraints.Length;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Data
 @Builder

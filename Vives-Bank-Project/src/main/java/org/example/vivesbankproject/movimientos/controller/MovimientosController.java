@@ -8,8 +8,8 @@ import org.example.vivesbankproject.movimientos.dto.MovimientoRequest;
 import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
 import org.example.vivesbankproject.movimientos.services.MovimientosService;
 import org.example.vivesbankproject.movimientos.services.MovimientosServiceImpl;
-import org.example.vivesbankproject.utils.PageResponse;
-import org.example.vivesbankproject.utils.PaginationLinksUtils;
+import org.example.vivesbankproject.utils.pagination.PageResponse;
+import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -67,6 +67,13 @@ public class MovimientosController {
     public ResponseEntity<MovimientoResponse> getMovimientoById(@PathVariable ObjectId id) {
         log.info("Obteniendo movimiento con id: " + id);
         MovimientoResponse movimiento = service.getById(id);
+        return ResponseEntity.ok(movimiento);
+    }
+
+    @GetMapping("/guid/{guid}")
+    public ResponseEntity<MovimientoResponse> getMovimientoByGuid(@PathVariable String guidMovimiento) {
+        log.info("Obteniendo movimiento con guid: " + guidMovimiento);
+        MovimientoResponse movimiento = service.getByGuid(guidMovimiento);
         return ResponseEntity.ok(movimiento);
     }
 

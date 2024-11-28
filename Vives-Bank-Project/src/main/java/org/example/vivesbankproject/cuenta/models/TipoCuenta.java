@@ -3,7 +3,7 @@ package org.example.vivesbankproject.cuenta.models;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import org.example.vivesbankproject.utils.IdGenerator;
+import org.example.vivesbankproject.utils.generators.IdGenerator;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;

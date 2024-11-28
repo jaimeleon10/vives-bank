@@ -9,8 +9,8 @@ import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequestUpdate;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.services.CuentaService;
-import org.example.vivesbankproject.utils.PageResponse;
-import org.example.vivesbankproject.utils.PaginationLinksUtils;
+import org.example.vivesbankproject.utils.pagination.PageResponse;
+import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -69,6 +69,11 @@ public class CuentaController {
     @GetMapping("{id}")
     public ResponseEntity<CuentaResponse> getById(@PathVariable String id) {
         return ResponseEntity.ok(cuentaService.getById(id));
+    }
+
+    @GetMapping("/iban/{iban}")
+    public ResponseEntity<CuentaResponse> getByIban(@PathVariable String iban) {
+        return ResponseEntity.ok(cuentaService.getByIban(iban));
     }
 
     @PostMapping

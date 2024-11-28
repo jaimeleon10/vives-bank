@@ -1,4 +1,4 @@
-package org.example.vivesbankproject.utils;
+package org.example.vivesbankproject.utils.pagination;
 
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;

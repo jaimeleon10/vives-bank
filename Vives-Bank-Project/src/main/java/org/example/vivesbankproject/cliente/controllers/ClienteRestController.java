@@ -6,11 +6,10 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cliente.dto.*;
-import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.service.ClienteService;
 import org.example.vivesbankproject.users.models.User;
-import org.example.vivesbankproject.utils.PageResponse;
-import org.example.vivesbankproject.utils.PaginationLinksUtils;
+import org.example.vivesbankproject.utils.pagination.PageResponse;
+import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -70,6 +69,11 @@ public class ClienteRestController {
     @GetMapping("{id}")
     public ResponseEntity<ClienteResponse> getById(@PathVariable String id) {
         return ResponseEntity.ok(clienteService.getById(id));
+    }
+
+    @GetMapping("/dni/{dni}")
+    public ResponseEntity<ClienteResponse> getByDni(@PathVariable String dni) {
+        return ResponseEntity.ok(clienteService.getByDni(dni));
     }
 
     @PostMapping
