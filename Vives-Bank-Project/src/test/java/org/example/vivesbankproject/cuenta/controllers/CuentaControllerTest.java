@@ -133,6 +133,51 @@ class CuentaControllerTest {
     }
 
     @Test
+    void save_InvalidTipoCuentaId() throws Exception {
+        CuentaRequest cuentaRequest = CuentaRequest.builder()
+                .tipoCuentaId("")
+                .tarjetaId("tarjeta-123")
+                .clienteId("cliente-456")
+                .build();
+
+        mockMvc.perform(post("/v1/cuentas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cuentaRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.tipoCuentaId").value("El campo tipo de cuenta no puede estar vacío"));
+    }
+
+    @Test
+    void save_InvalidTarjetaId() throws Exception {
+        CuentaRequest cuentaRequest = CuentaRequest.builder()
+                .tipoCuentaId("tipo-123")
+                .tarjetaId("")
+                .clienteId("cliente-456")
+                .build();
+
+        mockMvc.perform(post("/v1/cuentas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cuentaRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.tarjetaId").value("El campo tarjeta no puede estar vacío"));
+    }
+
+    @Test
+    void save_InvalidClienteId() throws Exception {
+        CuentaRequest cuentaRequest = CuentaRequest.builder()
+                .tipoCuentaId("tipo-123")
+                .tarjetaId("tarjeta-456")
+                .clienteId("")
+                .build();
+
+        mockMvc.perform(post("/v1/cuentas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cuentaRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.clienteId").value("El campo cliente no puede estar vacío"));
+    }
+
+    @Test
     void Update() throws Exception {
         CuentaRequestUpdate cuentaRequestUpdate = CuentaRequestUpdate.builder()
                 .saldo(BigDecimal.valueOf(1500.75))
@@ -165,6 +210,91 @@ class CuentaControllerTest {
     }
 
     @Test
+    void update_InvalidSaldo() throws Exception {
+        CuentaRequestUpdate cuentaRequestUpdate = CuentaRequestUpdate.builder()
+                .saldo(new BigDecimal("-10.00"))
+                .tipoCuentaId("tipo-123")
+                .tarjetaId("tarjeta-456")
+                .clienteId("cliente-789")
+                .isDeleted(false)
+                .build();
+
+        mockMvc.perform(put("/v1/cuentas/unique-guid")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cuentaRequestUpdate)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.saldo").value("El saldo no puede ser negativo"));
+    }
+
+    @Test
+    void update_InvalidTipoCuentaId() throws Exception {
+        CuentaRequestUpdate cuentaRequestUpdate = CuentaRequestUpdate.builder()
+                .saldo(new BigDecimal("100.00"))
+                .tipoCuentaId(null)
+                .tarjetaId("tarjeta-456")
+                .clienteId("cliente-789")
+                .isDeleted(false)
+                .build();
+
+        mockMvc.perform(put("/v1/cuentas/unique-guid")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cuentaRequestUpdate)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.tipoCuentaId").value("El campo del tipo de cuenta debe contener un id de tipo de cuenta"));
+    }
+
+    @Test
+    void update_InvalidTarjetaId() throws Exception {
+        CuentaRequestUpdate cuentaRequestUpdate = CuentaRequestUpdate.builder()
+                .saldo(new BigDecimal("100.00"))
+                .tipoCuentaId("tipo-123")
+                .tarjetaId(null) // No se permite nulo
+                .clienteId("cliente-789")
+                .isDeleted(false)
+                .build();
+
+        mockMvc.perform(put("/v1/cuentas/unique-guid")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cuentaRequestUpdate)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.tarjetaId").value("El campo tarjeta debe contener un id de tarjeta"));
+    }
+
+    @Test
+    void update_InvalidClienteId() throws Exception {
+        CuentaRequestUpdate cuentaRequestUpdate = CuentaRequestUpdate.builder()
+                .saldo(new BigDecimal("100.00"))
+                .tipoCuentaId("tipo-123")
+                .tarjetaId("tarjeta-456")
+                .clienteId(null)
+                .isDeleted(false)
+                .build();
+
+        mockMvc.perform(put("/v1/cuentas/unique-guid")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cuentaRequestUpdate)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.clienteId").value("El campo cliente debe contener un id de cliente"));
+    }
+
+    @Test
+    void update_InvalidIsDeleted() throws Exception {
+        CuentaRequestUpdate cuentaRequestUpdate = CuentaRequestUpdate.builder()
+                .saldo(new BigDecimal("100.00"))
+                .tipoCuentaId("tipo-123")
+                .tarjetaId("tarjeta-456")
+                .clienteId("cliente-789")
+                .isDeleted(null)
+                .build();
+
+        mockMvc.perform(put("/v1/cuentas/unique-guid")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cuentaRequestUpdate)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.isDeleted").value("El campo de borrado lógico no puede ser nulo"));
+    }
+
+    @Test
     void Delete() throws Exception {
         Mockito.doNothing().when(cuentaService).deleteById("unique-guid");
 
@@ -173,22 +303,18 @@ class CuentaControllerTest {
     }
     @Test
     void handleValidationExceptionUpdateError() throws Exception {
-        var result = mockMvc.perform(MockMvcRequestBuilders.put("/v1/cliente/1")
+        var result = mockMvc.perform(MockMvcRequestBuilders.put("/v1/cuentas/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{ \"nombre\": \"\", \"apellidos\": \"\", \"email\": \"\", \"telefono\": \"\" }"))
+                        .content("{ \"saldo\": \"-1500.75\"}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.nombre").value("El nombre no puede estar vacio"))
-                .andExpect(jsonPath("$.apellidos").value("Los apellidos no pueden estar vacio"))
+                .andExpect(jsonPath("$.saldo").value("El saldo no puede ser negativo"))
                 .andReturn();
 
         String responseContent = result.getResponse().getContentAsString();
         System.out.println(responseContent);
 
         assertAll(
-                () -> assertTrue(responseContent.contains("\"email\":\"El email no puede estar vacio\"")
-                        || responseContent.contains("\"email\":\"El email debe ser valido\"")),
-                () -> assertTrue(responseContent.contains("\"telefono\":\"El telefono no puede estar vacio\"")
-                        || responseContent.contains("\"telefono\":\"El telefono debe tener 9 numeros\""))
+                () -> assertTrue(responseContent.contains("\"saldo\":\"El saldo no puede ser negativo\""))
         );
     }
 }
