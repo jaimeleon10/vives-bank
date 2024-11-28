@@ -1,32 +1,32 @@
-package org.example.vivesbankproject.storage.config;
+package org.example.vivesbankproject.storage.images.config;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.storage.services.StorageService;
+import org.example.vivesbankproject.storage.images.services.StorageImagesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @Slf4j
-public class StorageConfig {
-    private final StorageService storageService;
+public class StorageImagesConfig {
+    private final StorageImagesService storageImagesService;
 
     @Value("${upload.delete}")
     private String deleteAll;
 
     @Autowired
-    public StorageConfig(StorageService storageService) {
-        this.storageService = storageService;
+    public StorageImagesConfig(StorageImagesService storageImagesService) {
+        this.storageImagesService = storageImagesService;
     }
 
     @PostConstruct
     public void init() {
         if (deleteAll.equals("true")) {
             log.info("Borrando ficheros de almacenamiento...");
-            storageService.deleteAll();
+            storageImagesService.deleteAll();
         }
 
-        storageService.init(); // inicializamos
+        storageImagesService.init();
     }
 }

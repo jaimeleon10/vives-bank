@@ -8,6 +8,7 @@ import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.models.Direccion;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
+import org.example.vivesbankproject.storage.images.services.StorageImagesService;
 import org.example.vivesbankproject.users.exceptions.UserNotFoundById;
 import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.springframework.cache.annotation.CacheConfig;
@@ -18,6 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.*;
 
 @Slf4j
@@ -28,11 +31,13 @@ public class ClienteServiceImpl implements ClienteService {
     private final ClienteRepository clienteRepository;
     private final ClienteMapper clienteMapper;
     private final UserRepository userRepository;
+    private final StorageImagesService storageImagesService;
 
-    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserRepository userRepository) {
+    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserRepository userRepository, StorageImagesService storageImagesService) {
         this.clienteRepository = clienteRepository;
         this.clienteMapper = clienteMapper;
         this.userRepository = userRepository;
+        this.storageImagesService = storageImagesService;
     }
 
     @Override
@@ -210,5 +215,43 @@ public class ClienteServiceImpl implements ClienteService {
         if (clienteRepository.findByEmail(cliente.getEmail()).isPresent()) {
             throw new ClienteExistsByEmail(cliente.getEmail());
         }
+    }
+
+    @CachePut
+    @Override
+    public ClienteResponse updateDniFoto(String id, MultipartFile file) {
+        var cliente = clienteRepository.findByGuid(id).orElseThrow(
+                () -> new ClienteNotFound(id)
+        );
+
+        if (cliente.getFotoDni() != null && !cliente.getFotoDni().isEmpty()) {
+            storageImagesService.delete(cliente.getFotoDni());
+        }
+
+        String filename = storageImagesService.store(file);
+        cliente.setFotoDni(filename);
+
+        var clienteSaved = clienteRepository.save(cliente);
+
+        return clienteMapper.toClienteResponse(clienteSaved, cliente.getUser().getGuid());
+    }
+
+    @CachePut
+    @Override
+    public ClienteResponse updateProfileFoto(String id, MultipartFile file) {
+        var cliente = clienteRepository.findByGuid(id).orElseThrow(
+                () -> new ClienteNotFound(id)
+        );
+
+        if (cliente.getFotoPerfil() != null && !cliente.getFotoPerfil().isEmpty()) {
+            storageImagesService.delete(cliente.getFotoPerfil());
+        }
+
+        String filename = storageImagesService.store(file);
+        cliente.setFotoPerfil(filename);
+
+        var clienteSaved = clienteRepository.save(cliente);
+
+        return clienteMapper.toClienteResponse(clienteSaved, cliente.getUser().getGuid());
     }
 }

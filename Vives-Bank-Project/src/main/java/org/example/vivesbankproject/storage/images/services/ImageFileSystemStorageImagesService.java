@@ -1,10 +1,10 @@
-package org.example.vivesbankproject.storage.services;
+package org.example.vivesbankproject.storage.images.services;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.storage.controller.StorageController;
 import org.example.vivesbankproject.storage.exceptions.StorageBadRequest;
 import org.example.vivesbankproject.storage.exceptions.StorageInternal;
 import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
+import org.example.vivesbankproject.storage.images.controller.StorageImagesController;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -25,12 +25,12 @@ import java.util.stream.Stream;
 
 @Service
 @Slf4j
-public class FileSystemStorageService implements StorageService {
+public class ImageFileSystemStorageImagesService implements StorageImagesService {
 
     private final Path rootLocation;
 
 
-    public FileSystemStorageService(@Value("${upload.root-location}") String path) {
+    public ImageFileSystemStorageImagesService(@Value("${upload.root-location}") String path) {
         this.rootLocation = Paths.get(path);
     }
 
@@ -132,7 +132,7 @@ public class FileSystemStorageService implements StorageService {
     public String getUrl(String filename) {
         log.info("Obteniendo URL del fichero " + filename);
         return MvcUriComponentsBuilder
-                .fromMethodName(StorageController.class, "serveFile", filename, null)
+                .fromMethodName(StorageImagesController.class, "serveFile", filename, null)
                 .build().toUriString();
     }
 

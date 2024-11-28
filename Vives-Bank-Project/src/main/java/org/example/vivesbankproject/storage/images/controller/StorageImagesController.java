@@ -1,8 +1,9 @@
-package org.example.vivesbankproject.storage.controller;
+package org.example.vivesbankproject.storage.images.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.storage.services.StorageService;
+import org.example.vivesbankproject.storage.images.services.StorageImagesService;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -14,17 +15,28 @@ import java.io.IOException;
 @RestController
 @Slf4j
 @RequestMapping("/storage")
-public class StorageController {
-    private final StorageService storageService;
+public class StorageImagesController {
+    private final StorageImagesService storageService;
 
     @Autowired
-    public StorageController(StorageService storageService) {
-        this.storageService = storageService;
+    public StorageImagesController(StorageImagesService storageImagesService) {
+        this.storageService = storageImagesService;
     }
 
-    @GetMapping(value = "{filename:.+}")
+    @GetMapping(value = "/dni/{filename:.+}")
     @ResponseBody
-    public ResponseEntity<Resource> serveFile(@PathVariable String filename, HttpServletRequest request) {
+    public ResponseEntity<Resource> UploadFotoDni(@PathVariable String filename, HttpServletRequest request) {
+        return getResourceResponseEntity(filename, request);
+    }
+
+    @GetMapping(value = "/imgPerfil/{filename:.+}")
+    @ResponseBody
+    public ResponseEntity<Resource> UploadFotoPerfil(@PathVariable String filename, HttpServletRequest request) {
+        return getResourceResponseEntity(filename, request);
+    }
+
+    @NotNull
+    private ResponseEntity<Resource> getResourceResponseEntity(@PathVariable String filename, HttpServletRequest request) {
         Resource file = storageService.loadAsResource(filename);
 
         String contentType = null;
