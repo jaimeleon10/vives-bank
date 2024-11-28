@@ -45,7 +45,7 @@ public class UserController {
     @GetMapping()
     public ResponseEntity<PageResponse<UserResponse>> getAllPageable(
             @RequestParam(required = false) Optional<String> username,
-            @RequestParam(required = false) Optional<Role> roles,
+            @RequestParam(required = false) Optional<String> roles,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
