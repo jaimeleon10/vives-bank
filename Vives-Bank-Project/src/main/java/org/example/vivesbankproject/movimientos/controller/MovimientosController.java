@@ -42,7 +42,7 @@ public class MovimientosController {
     }
 
     @GetMapping
-    public ResponseEntity<PageResponse<MovimientoResponse>> getMovimientos(
+    public ResponseEntity<PageResponse<MovimientoResponse>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -62,31 +62,23 @@ public class MovimientosController {
                 .body(PageResponse.of(movimientos, sortBy, direction));
     }
 
-
-    @GetMapping("/id/{id}")
-    public ResponseEntity<MovimientoResponse> getMovimientoById(@PathVariable ObjectId id) {
-        log.info("Obteniendo movimiento con id: " + id);
-        MovimientoResponse movimiento = service.getById(id);
-        return ResponseEntity.ok(movimiento);
-    }
-
-    @GetMapping("/guid/{guid}")
-    public ResponseEntity<MovimientoResponse> getMovimientoByGuid(@PathVariable String guidMovimiento) {
-        log.info("Obteniendo movimiento con guid: " + guidMovimiento);
-        MovimientoResponse movimiento = service.getByGuid(guidMovimiento);
+    @GetMapping("/{guid}")
+    public ResponseEntity<MovimientoResponse> getById(@PathVariable String guid) {
+        log.info("Obteniendo movimiento con guid: {}", guid);
+        MovimientoResponse movimiento = service.getByGuid(guid);
         return ResponseEntity.ok(movimiento);
     }
 
     @GetMapping("/cliente/{clienteId}")
-    public ResponseEntity<MovimientoResponse> getMovimientoByClienteGuid(@PathVariable String clienteId) {
-        log.info("Obteniendo movimiento con id de cliente: " + clienteId);
+    public ResponseEntity<MovimientoResponse> getByClienteGuid(@PathVariable String clienteId) {
+        log.info("Obteniendo movimiento con id de cliente: {}", clienteId);
         MovimientoResponse movimiento = service.getByClienteGuid(clienteId);
         return ResponseEntity.ok(movimiento);
     }
 
 
     @PostMapping
-    public ResponseEntity<MovimientoResponse> createOrUpdateMovimientos(@RequestBody MovimientoRequest movimiento) {
+    public ResponseEntity<MovimientoResponse> save(@RequestBody MovimientoRequest movimiento) {
         log.info("Creando/actualizando movimiento: " + movimiento);
         MovimientoResponse savedMovimiento = service.save(movimiento);
         return ResponseEntity.ok(savedMovimiento);

@@ -92,7 +92,7 @@ public class TarjetaRestController {
     }
 
     @DeleteMapping("{id}")
-    public ResponseEntity<TarjetaResponse> deleteTarjeta(@PathVariable String id) {
+    public ResponseEntity<TarjetaResponse> delete(@PathVariable String id) {
         log.info("Tarjeta borrada con id: {}", id);
         tarjetaService.deleteById(id);
         return ResponseEntity.noContent().build();
