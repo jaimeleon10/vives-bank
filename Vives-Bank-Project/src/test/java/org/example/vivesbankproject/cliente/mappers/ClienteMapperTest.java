@@ -1,25 +1,22 @@
 package org.example.vivesbankproject.cliente.mappers;
 
 import static org.junit.jupiter.api.Assertions.*;
-
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-
 import org.example.vivesbankproject.cliente.dto.ClienteRequestSave;
 import org.example.vivesbankproject.cliente.dto.ClienteRequestUpdate;
 import org.example.vivesbankproject.cliente.dto.ClienteResponse;
 import org.example.vivesbankproject.cliente.models.Cliente;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
-import org.example.vivesbankproject.cuenta.models.Cuenta;
+import org.example.vivesbankproject.cliente.models.Direccion;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.models.Role;
 import org.example.vivesbankproject.users.models.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class ClienteMapperTest {
+class ClienteMapperTest {
 
     private ClienteMapper clienteMapper;
 
@@ -30,6 +27,14 @@ public class ClienteMapperTest {
 
     @Test
     void testToClienteResponse() {
+        Direccion direccion = Direccion.builder()
+                .calle("Calle Falsa")
+                .numero("123")
+                .codigoPostal("28080")
+                .piso("2")
+                .letra("A")
+                .build();
+
         Cliente cliente = Cliente.builder()
                 .guid(UUID.randomUUID().toString())
                 .dni("12345678A")
@@ -39,6 +44,7 @@ public class ClienteMapperTest {
                 .telefono("123456789")
                 .fotoPerfil("fotoPerfil.jpg")
                 .fotoDni("fotoDni.jpg")
+                .direccion(direccion)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .isDeleted(false)
@@ -65,6 +71,11 @@ public class ClienteMapperTest {
         assertEquals(cliente.getTelefono(), clienteResponse.getTelefono());
         assertEquals(cliente.getFotoPerfil(), clienteResponse.getFotoPerfil());
         assertEquals(cliente.getFotoDni(), clienteResponse.getFotoDni());
+        assertEquals(cliente.getDireccion().getCalle(), clienteResponse.getCalle());
+        assertEquals(cliente.getDireccion().getNumero(), clienteResponse.getNumero());
+        assertEquals(cliente.getDireccion().getCodigoPostal(), clienteResponse.getCodigoPostal());
+        assertEquals(cliente.getDireccion().getPiso(), clienteResponse.getPiso());
+        assertEquals(cliente.getDireccion().getLetra(), clienteResponse.getLetra());
         assertEquals(cliente.getCreatedAt().toString(), clienteResponse.getCreatedAt());
         assertEquals(cliente.getUpdatedAt().toString(), clienteResponse.getUpdatedAt());
         assertEquals(cliente.getIsDeleted(), clienteResponse.getIsDeleted());
@@ -72,6 +83,14 @@ public class ClienteMapperTest {
 
     @Test
     void testToCliente() {
+        Direccion direccion = Direccion.builder()
+                .calle("Calle Falsa")
+                .numero("123")
+                .codigoPostal("28080")
+                .piso("2")
+                .letra("A")
+                .build();
+
         ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
                 .dni("12345678A")
                 .nombre("Juan")
@@ -94,9 +113,7 @@ public class ClienteMapperTest {
                 .isDeleted(false)
                 .build();
 
-        Set<Cuenta> cuentas = new HashSet<>();
-
-        Cliente cliente = clienteMapper.toCliente(clienteRequestSave, user);
+        Cliente cliente = clienteMapper.toCliente(clienteRequestSave, user, direccion);
 
         assertNotNull(cliente);
         assertEquals(clienteRequestSave.getDni(), cliente.getDni());
@@ -108,11 +125,19 @@ public class ClienteMapperTest {
         assertEquals(clienteRequestSave.getFotoDni(), cliente.getFotoDni());
         assertEquals(clienteRequestSave.getIsDeleted(), cliente.getIsDeleted());
         assertEquals(user, cliente.getUser());
-        assertEquals(cuentas, cliente.getCuentas());
+        assertEquals(direccion, cliente.getDireccion());
     }
 
     @Test
     void testToClienteUpdate() {
+        Direccion direccion = Direccion.builder()
+                .calle("Calle Falsa")
+                .numero("123")
+                .codigoPostal("28080")
+                .piso("2")
+                .letra("A")
+                .build();
+
         Cliente cliente = Cliente.builder()
                 .id(1L)
                 .guid(UUID.randomUUID().toString())
@@ -123,6 +148,7 @@ public class ClienteMapperTest {
                 .telefono("123456789")
                 .fotoPerfil("fotoPerfil.jpg")
                 .fotoDni("fotoDni.jpg")
+                .direccion(direccion)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .isDeleted(false)
@@ -148,7 +174,7 @@ public class ClienteMapperTest {
                 .isDeleted(false)
                 .build();
 
-        Cliente updatedCliente = clienteMapper.toClienteUpdate(clienteRequestUpdate, cliente, user);
+        Cliente updatedCliente = clienteMapper.toClienteUpdate(clienteRequestUpdate, cliente, user, direccion);
 
         assertNotNull(updatedCliente);
         assertEquals(cliente.getId(), updatedCliente.getId());
@@ -164,5 +190,6 @@ public class ClienteMapperTest {
         assertEquals(cliente.getIsDeleted(), updatedCliente.getIsDeleted());
         assertEquals(cliente.getCuentas(), updatedCliente.getCuentas());
         assertEquals(user, updatedCliente.getUser());
+        assertEquals(direccion, updatedCliente.getDireccion());
     }
 }

@@ -64,7 +64,7 @@ public class CuentaServiceImpl implements CuentaService{
                 saldoMin.map(s -> criteriaBuilder.greaterThanOrEqualTo(root.get("saldo"), s))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
-        Specification<Cuenta> specTipoCuentaFunko = (root, query, criteriaBuilder) ->
+        Specification<Cuenta> specTipoCuenta = (root, query, criteriaBuilder) ->
                 tipoCuenta.map(t -> {
                     Join<Cuenta, TipoCuenta> tipoCuentaJoin = root.join("tipoCuenta");
                     return criteriaBuilder.like(criteriaBuilder.lower(tipoCuentaJoin.get("nombre")), "%" + t.toLowerCase() + "%");
@@ -73,7 +73,7 @@ public class CuentaServiceImpl implements CuentaService{
         Specification<Cuenta> criterio = Specification.where(specIbanCuenta)
                 .and(specSaldoMaxCuenta)
                 .and(specSaldoMinCuenta)
-                .and(specTipoCuentaFunko);
+                .and(specTipoCuenta);
 
         Page<Cuenta> cuentaPage = cuentaRepository.findAll(criterio, pageable);
 

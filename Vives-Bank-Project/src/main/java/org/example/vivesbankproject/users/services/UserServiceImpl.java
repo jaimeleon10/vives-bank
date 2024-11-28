@@ -39,15 +39,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserResponse> getAll(Optional<String> username, Optional<Role> roles, Pageable pageable) {
+    public Page<UserResponse> getAll(Optional<String> username, Optional<String> roles, Pageable pageable) {
         log.info("Obteniendo todos los usuarios");
         Specification<User> specUsername = (root, query, criteriaBuilder) ->
-                username.map(u -> criteriaBuilder.like(criteriaBuilder.lower(root.get("nombre")), "%" + u.toLowerCase() + "%"))
+                username.map(u -> criteriaBuilder.like(criteriaBuilder.lower(root.get("username")), "%" + u.toLowerCase() + "%"))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
         Specification<User> specRole = (root, query, criteriaBuilder) ->
-                roles.map(r -> criteriaBuilder.equal(root.get("roles"), r))
-                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
+                roles.map(r -> {
+                    try {
+                        return criteriaBuilder.isMember(Role.valueOf(r.toUpperCase()), root.get("roles"));
+                    } catch (IllegalArgumentException e) {
+                        return criteriaBuilder.isFalse(criteriaBuilder.literal(true));
+                    }
+                }).orElse(null);
 
         Specification<User> criterio = Specification.where(specUsername).and(specRole);
 
