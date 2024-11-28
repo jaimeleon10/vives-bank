@@ -8,7 +8,9 @@ import java.util.stream.Stream;
 public interface JsonClientesStorageService {
     void init();
 
-    String store();
+    String storeAll();
+
+    String store(String guid);
 
     Stream<Path> loadAll();
 
@@ -17,6 +19,4 @@ public interface JsonClientesStorageService {
     Resource loadAsResource(String filename);
 
     void delete(String filename);
-
-    void deleteAll();
 }
