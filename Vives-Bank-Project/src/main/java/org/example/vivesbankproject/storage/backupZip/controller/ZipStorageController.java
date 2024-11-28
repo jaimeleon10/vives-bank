@@ -12,6 +12,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
+
 @RestController
 @Slf4j
 @RequestMapping("/storage/zip")
@@ -27,12 +32,27 @@ public class ZipStorageController {
     @PostMapping("/generate")
     public ResponseEntity<String> generateZip() {
         try {
-            String storedFilename = zipStorageService.store();
+            String storedFilename = zipStorageService.export();
             return ResponseEntity.ok("Archivo ZIP generado con éxito: " + storedFilename);
         } catch (StorageInternal e) {
             log.error("Error al generar el archivo ZIP: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al generar el archivo ZIP.");
+        }
+    }
+
+    @PostMapping("/import/{filename:.+}")
+    public ResponseEntity<List<Object>> importFromZip(@PathVariable String filename) {
+        try {
+            Path path = Path.of("data", "clientes.zip");
+
+            List<Object> data = zipStorageService.loadFromZip(path.toFile());
+
+            return ResponseEntity.ok(data);
+        } catch (Exception e) {
+            log.error("Error desconocido al procesar el archivo ZIP: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
         }
     }
 

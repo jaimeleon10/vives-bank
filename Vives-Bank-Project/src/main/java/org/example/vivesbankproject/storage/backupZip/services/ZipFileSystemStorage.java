@@ -16,16 +16,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 @Service
@@ -50,7 +56,7 @@ public class ZipFileSystemStorage implements ZipStorageService {
     }
 
     @Override
-    public String store() {
+    public String export() {
         String storedFilename = "clientes.zip";
         Path zipPath = this.rootLocation.resolve(storedFilename);
 
@@ -81,6 +87,63 @@ public class ZipFileSystemStorage implements ZipStorageService {
 
         } catch (IOException e) {
             throw new StorageInternal("Error al crear archivo ZIP para clientes: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<Object> loadFromZip(File fileToUnzip) {
+        log.info("Importando desde ZIP " + fileToUnzip);
+
+        Path dataDir = Paths.get("data");
+
+        if (!Files.exists(dataDir)) {
+            throw new StorageNotFound("El directorio 'data' no existe.");
+        }
+
+        List<Object> listado = new ArrayList<>();
+
+        try (ZipFile zipFile = new ZipFile(fileToUnzip)) {
+            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = entries.nextElement();
+                log.info("Archivo encontrado en el ZIP: {}", entry.getName());
+
+                try (InputStream inputStream = zipFile.getInputStream(entry)) {
+                    if (!entry.isDirectory()) {
+                        Path outputPath = dataDir.resolve(entry.getName());
+                        Files.createDirectories(outputPath.getParent());
+                        Files.copy(inputStream, outputPath, StandardCopyOption.REPLACE_EXISTING);
+
+                        if (entry.getName().endsWith(".json")) {
+                            File jsonFile = outputPath.toFile();
+                            List<Object> dataProductos = loadJson(jsonFile);
+                            listado.addAll(dataProductos);
+                        }
+                    }
+                }
+            }
+
+        } catch (IOException e) {
+            log.error("Error al procesar el archivo ZIP: ", e);
+            throw new StorageNotFound("Error al procesar el archivo ZIP: " + e.getMessage());
+        }
+
+        if (listado.isEmpty()) {
+            throw new StorageNotFound("No se encontraron archivos JSON dentro del archivo ZIP.");
+        }
+
+        return listado;
+    }
+
+    @Override
+    public List<Object> loadJson(File jsonFile) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.readValue(jsonFile, List.class);
+        } catch (IOException e) {
+            log.error("Error al deserializar el archivo JSON: ", e);
+            throw new StorageNotFound("Error al deserializar el archivo JSON: " + e.getMessage());
         }
     }
 
