@@ -1,12 +1,13 @@
 package org.example.vivesbankproject.storage.backupZip.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
-import org.example.vivesbankproject.storage.service.ZipStorageService;
-import org.example.vivesbankproject.storage.exceptions.StorageBadRequest;
 import org.example.vivesbankproject.storage.exceptions.StorageInternal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -17,12 +18,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -49,14 +50,20 @@ public class ZipFileSystemStorage implements ZipStorageService {
     }
 
     @Override
-    public String store(MultipartFile file) {
-        String storedFilename = System.currentTimeMillis() + "_clientes.zip";
+    public String store() {
+        String storedFilename = "clientes.zip";
         Path zipPath = this.rootLocation.resolve(storedFilename);
 
         try {
             List<Cliente> clientes = clienteRepository.findAll();
 
             ObjectMapper objectMapper = new ObjectMapper();
+            JavaTimeModule module = new JavaTimeModule();
+            module.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            objectMapper.registerModule(module);
+
+            objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+            objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
             String clientesJson = objectMapper.writeValueAsString(clientes);
 
             try (FileOutputStream fos = new FileOutputStream(zipPath.toFile());
@@ -64,15 +71,16 @@ public class ZipFileSystemStorage implements ZipStorageService {
 
                 ZipEntry zipEntry = new ZipEntry("clientes.json");
                 zos.putNextEntry(zipEntry);
+
                 zos.write(clientesJson.getBytes());
                 zos.closeEntry();
             }
 
-            log.info("Archivo ZIP creado y almacenado: " + storedFilename);
+            log.info("Archivo ZIP con JSON de clientes creado y almacenado: " + storedFilename);
             return storedFilename;
 
         } catch (IOException e) {
-            throw new StorageInternal("Error al crear archivo ZIP para clientes " + e);
+            throw new StorageInternal("Error al crear archivo ZIP para clientes: " + e.getMessage());
         }
     }
 
