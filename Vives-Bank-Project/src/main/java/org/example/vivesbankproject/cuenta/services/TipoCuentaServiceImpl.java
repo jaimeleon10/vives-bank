@@ -84,7 +84,7 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
     @Override
     @CacheEvict
     public TipoCuentaResponse deleteById(String id) {
-        log.info("Eliminando tipo de cuenta con id {}", id);
+        log.info("Borrando tipo de cuenta con id {}", id);
         var tipoCuentaExistente = tipoCuentaRepository.findByGuid(id).orElseThrow(() -> new TipoCuentaNotFound(id));
         tipoCuentaExistente.setIsDeleted(true);
        var tipoCuentaSave= tipoCuentaRepository.save(tipoCuentaExistente);
