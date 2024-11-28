@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.storage.exceptions.StorageInternal;
 import org.example.vivesbankproject.storage.backupZip.services.ZipStorageService;
+import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -42,19 +43,22 @@ public class ZipStorageController {
     }
 
     @PostMapping("/import/{filename:.+}")
-    public ResponseEntity<List<Object>> importFromZip(@PathVariable String filename) {
+    public ResponseEntity<Void> importFromZip(@PathVariable String filename) {
         try {
-            Path path = Path.of("data", "clientes.zip");
+            zipStorageService.loadFromZip(new File(filename));
 
-            List<Object> data = zipStorageService.loadFromZip(path.toFile());
-
-            return ResponseEntity.ok(data);
+            return ResponseEntity.noContent().build();
+        } catch (StorageNotFound e) {
+            log.error("Archivo no encontrado: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null);
         } catch (Exception e) {
-            log.error("Error desconocido al procesar el archivo ZIP: " + e.getMessage());
+            log.error("Error desconocido al procesar el archivo JSON: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(null);
         }
     }
+
 
     @GetMapping(value = "/{filename:.+}")
     @ResponseBody

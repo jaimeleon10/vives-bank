@@ -12,6 +12,6 @@ public interface ZipStorageService {
     Path load(String filename);
     Resource loadAsResource(String filename);
     void delete(String filename);
-    List<Object> loadFromZip(File fileToUnzip);
+    void loadFromZip(File fileToUnzip);
     List<Object> loadJson(File jsonFile);
 }
