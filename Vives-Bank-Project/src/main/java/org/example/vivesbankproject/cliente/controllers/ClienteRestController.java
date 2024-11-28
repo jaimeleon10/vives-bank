@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("${api.version}/cliente")
+@RequestMapping("${api.version}/clientes")
 @Validated
 @Slf4j
 @PreAuthorize("hasRole('ADMIN')")
@@ -77,27 +77,27 @@ public class ClienteRestController {
     }
 
     @PostMapping
-    public ResponseEntity<ClienteResponse> createCliente(@Valid @RequestBody ClienteRequestSave clienteRequestSave) {
+    public ResponseEntity<ClienteResponse> save(@Valid @RequestBody ClienteRequestSave clienteRequestSave) {
         var result = clienteService.save(clienteRequestSave);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<ClienteResponse> updateCliente(@PathVariable String id, @Valid @RequestBody ClienteRequestUpdate clienteRequest) {
+    public ResponseEntity<ClienteResponse> update(@PathVariable String id, @Valid @RequestBody ClienteRequestUpdate clienteRequest) {
         var result = clienteService.update(id, clienteRequest);
         return ResponseEntity.ok(result);
     }
 
     @DeleteMapping("{id}")
-    public ResponseEntity<Void> deleteCliente(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable String id) {
         clienteService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/me/profile")
+    @GetMapping("/me/perfil")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ClienteResponse> me(@AuthenticationPrincipal User user) {
-        log.info("Obteniendo datos del cliente con guid: " + user.getGuid());
+        log.info("Obteniendo datos del cliente con guid: {}", user.getGuid());
         return ResponseEntity.ok(clienteService.getUserByGuid(user.getGuid()));
     }
 

@@ -44,7 +44,7 @@ public class TipoCuentaController {
 
     @GetMapping()
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<PageResponse<TipoCuentaResponse>> getAllPageable(
+    public ResponseEntity<PageResponse<TipoCuentaResponse>> getAll(
             @RequestParam(required = false) Optional<String> nombre,
             @RequestParam(required = false) Optional<BigDecimal> interes,
             @RequestParam(defaultValue = "0") int page,
