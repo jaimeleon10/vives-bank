@@ -62,7 +62,7 @@ public class ZipFileSystemStorage implements ZipStorageService {
             try (FileOutputStream fos = new FileOutputStream(zipPath.toFile());
                  ZipOutputStream zos = new ZipOutputStream(fos)) {
 
-                ZipEntry zipEntry = new ZipEntry("clientes.json");
+                ZipEntry zipEntry = new ZipEntry("clientes" + System.currentTimeMillis() + ".json");
                 zos.putNextEntry(zipEntry);
                 zos.write(clientesJson.getBytes());
                 zos.closeEntry();
