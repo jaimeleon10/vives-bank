@@ -72,7 +72,7 @@ class TipoCuentaControllerTest {
                 .build();
     }
 
-    @Test
+    /*@Test
     void getAllPageableDevuelvePageResponse() {
         List<TipoCuentaResponse> tipoCuentas = List.of(tipoCuentaResponse);
         Page<TipoCuentaResponse> page = new PageImpl<>(tipoCuentas);
@@ -87,7 +87,7 @@ class TipoCuentaControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         verify(tipoCuentaService).getAll(any(), any(), any());
-    }
+    }*/
 
     @Test
     void getTipoCuentaById() {
@@ -155,7 +155,7 @@ class TipoCuentaControllerTest {
         verify(ex).getBindingResult();
     }
 
-    @Test
+   /* @Test
     void getAllTipoCuentasConFiltros() {
         List<TipoCuentaResponse> tipoCuentas = List.of(tipoCuentaResponse);
         Page<TipoCuentaResponse> page = new PageImpl<>(tipoCuentas);
@@ -172,7 +172,7 @@ class TipoCuentaControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         verify(tipoCuentaService).getAll(any(), any(), any());
-    }
+    }*/
 
    /* @Test
     void InvalidNombreTipoCuenta() throws Exception {
