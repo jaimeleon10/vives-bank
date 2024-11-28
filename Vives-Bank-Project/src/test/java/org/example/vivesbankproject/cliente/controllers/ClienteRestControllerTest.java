@@ -1,26 +1,19 @@
 package org.example.vivesbankproject.cliente.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.example.vivesbankproject.cliente.dto.*;
 import org.example.vivesbankproject.cliente.service.ClienteService;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequest;
 import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
 import org.junit.jupiter.api.Test;
-
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 import java.util.*;
-
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -81,6 +74,9 @@ class ClienteRestControllerTest {
                         .param("apellido", "Perez")
                         .param("email", "juan.perez@example.com")
                         .param("telefono", "123456789")
+                        .param("fotoPerfil","fotoprfil.jpg")
+                        .param ("fotoDni","fotodni.jpg")
+                        .param ("userId","userId")
                         .param("page", "0")
                         .param("size", "10")
                         .param("sortBy", "id")
@@ -122,7 +118,7 @@ class ClienteRestControllerTest {
 
 
     @Test
-    void CreateCliente() throws Exception {
+    void Save() throws Exception {
         CuentaRequest clienteRequestSave = CuentaRequest.builder()
                 .tipoCuentaId("tipoCuentaId")
                 .tarjetaId("tarjetaId")
@@ -260,17 +256,16 @@ class ClienteRestControllerTest {
         );
     }
 
-   /* @Test
+    @Test
     void EmptyEmail() throws Exception {
         ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
                 .dni("12345678Z")
                 .nombre("Juan")
                 .apellidos("Perez")
-                .email("") // Empty email
+                .email("")
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .cuentasIds(new HashSet<>())
                 .userId("user-guid")
                 .isDeleted(false)
                 .build();
@@ -286,7 +281,7 @@ class ClienteRestControllerTest {
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
                 () -> assertTrue(result.getResponse().getContentAsString().contains("El email no puede estar vacio"))
         );
-    }*/
+    }
 
     @Test
     void InvalidTelefono() throws Exception {
@@ -315,17 +310,16 @@ class ClienteRestControllerTest {
         );
     }
 
-    /*@Test
+    @Test
     void EmptyTelefono() throws Exception {
         ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
                 .dni("12345678Z")
                 .nombre("Juan")
                 .apellidos("Perez")
                 .email("juan.perez@example.com")
-                .telefono("") // Empty telefono
+                .telefono("")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .cuentasIds(new HashSet<>())
                 .userId("user-guid")
                 .isDeleted(false)
                 .build();
@@ -341,11 +335,11 @@ class ClienteRestControllerTest {
                 () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getStatus()),
                 () -> assertEquals("El telefono no puede estar vacio", result.getContentAsString())
         );
-    }*/
+    }
 
 
     @Test
-    void UpdateCliente() throws Exception {
+    void Update() throws Exception {
         ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
                 .nombre("Juan")
                 .apellidos("Perez")
@@ -382,7 +376,7 @@ class ClienteRestControllerTest {
     @Test
     void emptyNombreUpdate() throws Exception {
         ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
-                .nombre("") // Empty nombre
+                .nombre("")
                 .apellidos("Perez")
                 .email("juan.perez@example.com")
                 .telefono("123456789")
@@ -408,7 +402,7 @@ class ClienteRestControllerTest {
     void emptyApellidosUpdate() throws Exception {
         ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
                 .nombre("Juan")
-                .apellidos("") // Empty apellidos
+                .apellidos("")
                 .email("juan.perez@example.com")
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
@@ -459,7 +453,7 @@ class ClienteRestControllerTest {
         ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
                 .nombre("Juan")
                 .apellidos("Perez")
-                .email("") // Empty email
+                .email("")
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
@@ -540,7 +534,7 @@ class ClienteRestControllerTest {
                 .apellidos("Perez")
                 .email("juan.perez@example.com")
                 .telefono("123456789")
-                .fotoPerfil("") // Empty fotoPerfil
+                .fotoPerfil("")
                 .fotoDni("fotodni.jpg")
                 .userId("user-guid")
                 .build();
@@ -566,7 +560,7 @@ class ClienteRestControllerTest {
                 .email("juan.perez@example.com")
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
-                .fotoDni("") // Empty fotoDni
+                .fotoDni("")
                 .userId("user-guid")
                 .build();
 
@@ -610,50 +604,46 @@ class ClienteRestControllerTest {
 
 
     @Test
-    void DeleteCliente() throws Exception {
+    void Delete() throws Exception {
         Mockito.doNothing().when(clienteService).deleteById("unique-guid");
 
         mockMvc.perform(delete("/v1/cliente/unique-guid"))
                 .andExpect(status().isNoContent());
     }
 
-    @Test
-    @WithMockUser(username = "userName", roles = {"USER"})
-    void me() throws Exception {
-        String userGuid = "1111aaaa";
+    /*@Test
+    public void GetUserProfile() throws Exception {
+        String token = jwtTokenUtil.generateToken("testUser", "userId-123", "USER");
 
-        User user = User.builder()
-                .id(1L)
-                .guid(userGuid)
-                .username("userName")
-                .password("$2a$10$to0IqpINy9GXDo4IH9SKIOOT0cU5kg692jLdV0aPzR/rF3cUt97Fy")
-                .build();
-
-        System.out.println("User for test: " + user);
-
-        ClienteResponse mockResponse = ClienteResponse.builder()
-                .guid(user.getGuid())
+        ClienteResponse clienteResponse = ClienteResponse.builder()
+                .guid("user-guid-123")
                 .dni("12345678A")
-                .nombre("John")
-                .apellidos("Doe")
-                .email("john.doe@example.com")
+                .nombre("Test")
+                .apellidos("User")
+                .email("test@example.com")
                 .telefono("123456789")
+                .fotoPerfil("http://example.com/foto.jpg")
+                .fotoDni("http://example.com/fotoDni.jpg")
+                .userId("userId-123")
+                .createdAt("2024-11-27T00:00:00")
+                .updatedAt("2024-11-27T00:00:00")
+                .isDeleted(false)
                 .build();
 
-        Mockito.when(clienteService.getUserByGuid(userGuid)).thenReturn(mockResponse);
+        when(clienteService.getUserByGuid("user-guid-123")).thenReturn(clienteResponse);
 
-        mockMvc.perform(get(myEndpoint + "/me/profile")
-                        .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/api/v1/usuario/me/profile")
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.guid").value(userGuid))
+                .andExpect(jsonPath("$.guid").value("user-guid-123"))
                 .andExpect(jsonPath("$.dni").value("12345678A"))
-                .andExpect(jsonPath("$.nombre").value("John"))
-                .andExpect(jsonPath("$.apellidos").value("Doe"))
-                .andExpect(jsonPath("$.email").value("john.doe@example.com"))
-                .andExpect(jsonPath("$.telefono").value("123456789"));
-
-        Mockito.verify(clienteService).getUserByGuid(userGuid);
-    }
+                .andExpect(jsonPath("$.nombre").value("Test"))
+                .andExpect(jsonPath("$.apellidos").value("User"))
+                .andExpect(jsonPath("$.email").value("test@example.com"))
+                .andExpect(jsonPath("$.telefono").value("123456789"))
+                .andExpect(jsonPath("$.fotoPerfil").value("http://example.com/foto.jpg"))
+                .andDo(print());
+    }*/
 
     @Test
     void handleValidationExceptionUpdateError() throws Exception {

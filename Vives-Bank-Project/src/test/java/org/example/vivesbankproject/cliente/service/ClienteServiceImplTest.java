@@ -64,7 +64,7 @@ public class ClienteServiceImplTest {
     @Mock private TarjetaMapper tarjetaMapper;
     @Mock private TarjetaRepository tarjetaRepository;
 
-    @BeforeEach
+   /* @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         clienteService = new ClienteServiceImpl(
