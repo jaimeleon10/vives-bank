@@ -1,9 +1,7 @@
-package org.example.vivesbankproject.movimientos.exceptions;
+package org.example.vivesbankproject.movimientos.exceptions.movimientos;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
-
-import java.util.UUID;
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class ClienteHasNoMovements extends MovimientosException{
