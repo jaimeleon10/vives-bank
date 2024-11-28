@@ -1,6 +1,7 @@
 package org.example.vivesbankproject.users.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequest;
 import org.example.vivesbankproject.users.dto.UserRequest;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.models.Role;
@@ -85,7 +86,7 @@ class UserControllerTest {
 
         when(userService.getById("unique-guid")).thenReturn(userResponse);
 
-        mockMvc.perform(get("/v1/cuentas/unique-guid"))
+        mockMvc.perform(get("/v1/usuario/unique-guid"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("johndoe"))
                 .andExpect(jsonPath("$.password").value("password123"))
@@ -107,11 +108,41 @@ class UserControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders.post("/v1/usuario")
                         .contentType("application/json")
-                        .content("{ \"username\": \"johndoe\", \"password\": \"password123\", \"roles\": \"USER\" }"))
+                        .content("{ \"username\": \"johndoe\", \"password\": \"password123\", \"roles\": [\"USER\"] }"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.username").value("johndoe"))
                 .andExpect(jsonPath("$.password").value("password123"))
-                .andExpect(jsonPath("$.roles").value("USER"));
+                .andExpect(jsonPath("$.roles[0]").value("USER"));
+    }
+
+    @Test
+    void save_UsernameEmpty() throws Exception {
+        UserRequest userRequest = UserRequest.builder()
+                .username("")
+                .password("password123")
+                .roles(Set.of(Role.USER))
+                .build();
+
+        mockMvc.perform(post("/v1/usuario")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.username").value("Username no puede estar vacio"));
+    }
+
+    @Test
+    void save_PasswordTooShort() throws Exception {
+        UserRequest userRequest = UserRequest.builder()
+                .username("johndoe")
+                .password("123")
+                .roles(Set.of(Role.USER))
+                .build();
+
+        mockMvc.perform(post("/v1/usuario")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.password").value("Password debe tener al menos 5 caracteres"));
     }
 
 
@@ -130,23 +161,21 @@ class UserControllerTest {
                 .roles(Set.of(Role.USER))
                 .build();
 
-
         when(userService.update(eq("unique-guid"), any(UserRequest.class))).thenReturn(userResponse);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/v1/usuario/unique-guid")
                         .contentType("application/json")
-                        .content("{ \"username\": \"johndoe\", \"password\": \"password123\", \"roles\": \"USER\" }"))
+                        .content("{ \"username\": \"johndoe\", \"password\": \"password123\", \"roles\": [\"USER\"] }"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("johndoe"))
                 .andExpect(jsonPath("$.password").value("password123"))
-                .andExpect(jsonPath("$.roles").value("USER"));
+                .andExpect(jsonPath("$.roles[0]").value("USER"));
     }
 
     @Test
     void Delete() throws Exception {
         Mockito.doNothing().when(userService).deleteById("unique-guid");
-
-        mockMvc.perform(patch("/v1/usuario/unique-guid"))
+        mockMvc.perform(delete("/v1/usuario/unique-guid"))
                 .andExpect(status().isNoContent());
     }
     @Test
