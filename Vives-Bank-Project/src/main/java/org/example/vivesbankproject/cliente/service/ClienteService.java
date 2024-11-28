@@ -1,8 +1,10 @@
 package org.example.vivesbankproject.cliente.service;
 
 import org.example.vivesbankproject.cliente.dto.*;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
@@ -21,4 +23,10 @@ public interface ClienteService {
     void deleteById(String id);
 
     ClienteResponse getUserByGuid(String userGuid);
+
+    @CachePut
+    ClienteResponse updateDniFoto(String id, MultipartFile file);
+
+    @CachePut
+    ClienteResponse updateProfileFoto(String id, MultipartFile file);
 }
