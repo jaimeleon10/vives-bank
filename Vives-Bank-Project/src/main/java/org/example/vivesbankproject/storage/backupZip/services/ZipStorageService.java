@@ -1,14 +1,17 @@
-package org.example.vivesbankproject.storage.service;
+package org.example.vivesbankproject.storage.backupZip.services;
 
 import org.springframework.core.io.Resource;
-import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.nio.file.Path;
+import java.util.List;
 
 public interface ZipStorageService {
     void init();
-    String store(MultipartFile file);
+    String export();
     Path load(String filename);
     Resource loadAsResource(String filename);
     void delete(String filename);
+    List<Object> loadFromZip(File fileToUnzip);
+    List<Object> loadJson(File jsonFile);
 }
