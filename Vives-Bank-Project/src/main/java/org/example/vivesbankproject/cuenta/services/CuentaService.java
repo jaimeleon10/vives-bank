@@ -17,6 +17,8 @@ public interface CuentaService {
 
     CuentaResponse getById(String id);
 
+    CuentaResponse getByIban(String iban);
+
     CuentaResponse save(CuentaRequest cuentaRequest);
 
     CuentaResponse update(String id, CuentaRequestUpdate cuentaRequestUpdate);

@@ -3,25 +3,20 @@ package org.example.vivesbankproject.cuenta.services;
 import jakarta.persistence.criteria.Join;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cliente.exceptions.ClienteNotFound;
-import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequest;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequestUpdate;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
-import org.example.vivesbankproject.cuenta.exceptions.CuentaNotFound;
-import org.example.vivesbankproject.cuenta.exceptions.TipoCuentaNotFound;
+import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFound;
+import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFoundByIban;
+import org.example.vivesbankproject.cuenta.exceptions.tipoCuenta.TipoCuentaNotFound;
 import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
-import org.example.vivesbankproject.cuenta.mappers.TipoCuentaMapper;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.cuenta.repositories.TipoCuentaRepository;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
-import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
-import org.example.vivesbankproject.users.dto.UserResponse;
-import org.example.vivesbankproject.users.mappers.UserMapper;
-import org.example.vivesbankproject.users.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -31,11 +26,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -43,22 +35,16 @@ import java.util.stream.Collectors;
 public class CuentaServiceImpl implements CuentaService{
     private final CuentaRepository cuentaRepository;
     private final CuentaMapper cuentaMapper;
-    private final TipoCuentaMapper tipoCuentaMapper;
-    private final TarjetaMapper tarjetaMapper;
     private final TipoCuentaRepository tipoCuentaRepository;
     private final TarjetaRepository tarjetaRepository;
-    private final ClienteMapper clienteMapper;
     private final ClienteRepository clienteRepository;
 
     @Autowired
-    public CuentaServiceImpl(CuentaRepository cuentaRepository, CuentaMapper cuentaMapper, TipoCuentaMapper tipoCuentaMapper, TarjetaMapper tarjetaMapper, TipoCuentaRepository tipoCuentaRepository, TarjetaRepository tarjetaRepository, ClienteMapper clienteMapper, ClienteRepository clienteRepository) {
+    public CuentaServiceImpl(CuentaRepository cuentaRepository, CuentaMapper cuentaMapper, TipoCuentaRepository tipoCuentaRepository, TarjetaRepository tarjetaRepository, ClienteRepository clienteRepository) {
         this.cuentaRepository = cuentaRepository;
         this.cuentaMapper = cuentaMapper;
-        this.tipoCuentaMapper = tipoCuentaMapper;
-        this.tarjetaMapper = tarjetaMapper;
         this.tipoCuentaRepository = tipoCuentaRepository;
         this.tarjetaRepository = tarjetaRepository;
-        this.clienteMapper = clienteMapper;
         this.clienteRepository = clienteRepository;
     }
 
@@ -106,6 +92,12 @@ public class CuentaServiceImpl implements CuentaService{
     public CuentaResponse getById(String id) {
         log.info("Obteniendo la cuenta con id: {}", id);
         var cuenta = cuentaRepository.findByGuid(id).orElseThrow(() -> new CuentaNotFound(id));
+        return cuentaMapper.toCuentaResponse(cuenta, cuenta.getTipoCuenta().getGuid(), cuenta.getTarjeta().getGuid(), cuenta.getCliente().getGuid());
+    }
+
+    @Override
+    public CuentaResponse getByIban(String iban) {
+        var cuenta = cuentaRepository.findByIban(iban).orElseThrow(() -> new CuentaNotFoundByIban(iban));
         return cuentaMapper.toCuentaResponse(cuenta, cuenta.getTipoCuenta().getGuid(), cuenta.getTarjeta().getGuid(), cuenta.getCliente().getGuid());
     }
 

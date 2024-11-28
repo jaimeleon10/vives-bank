@@ -3,9 +3,8 @@ package org.example.vivesbankproject.cuenta.services;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
-import org.example.vivesbankproject.cuenta.exceptions.CuentaExists;
-import org.example.vivesbankproject.cuenta.exceptions.TipoCuentaExists;
-import org.example.vivesbankproject.cuenta.exceptions.TipoCuentaNotFound;
+import org.example.vivesbankproject.cuenta.exceptions.tipoCuenta.TipoCuentaExists;
+import org.example.vivesbankproject.cuenta.exceptions.tipoCuenta.TipoCuentaNotFound;
 import org.example.vivesbankproject.cuenta.mappers.TipoCuentaMapper;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.TipoCuentaRepository;
@@ -85,7 +84,7 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
     @Override
     @CacheEvict
     public TipoCuentaResponse deleteById(String id) {
-        log.info("Eliminando tipo de cuenta con id {}", id);
+        log.info("Borrando tipo de cuenta con id {}", id);
         var tipoCuentaExistente = tipoCuentaRepository.findByGuid(id).orElseThrow(() -> new TipoCuentaNotFound(id));
         tipoCuentaExistente.setIsDeleted(true);
        var tipoCuentaSave= tipoCuentaRepository.save(tipoCuentaExistente);

@@ -51,6 +51,7 @@ public class TarjetaServiceImpl implements TarjetaService {
                                 Optional<BigDecimal> minLimiteMensual,
                                 Optional<BigDecimal> maxLimiteMensual,
                                 Pageable pageable) {
+        log.info("Obteniendo todas las tarjetas");
 
         Specification<Tarjeta> specNumero = (root, query, criteriaBuilder) ->
                 numero.map(value -> criteriaBuilder.like(criteriaBuilder.lower(root.get("numeroTarjeta")), "%" + value.toLowerCase() + "%"))
@@ -107,7 +108,7 @@ public class TarjetaServiceImpl implements TarjetaService {
     @Override
     @Cacheable
     public TarjetaResponse getById(String id) {
-        log.info("Obteniendo la tarjeta con ID: {}", id);
+        log.info("Obteniendo la tarjeta con id: {}", id);
         var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
         return tarjetaMapper.toTarjetaResponse(tarjeta);
     }
@@ -116,7 +117,7 @@ public class TarjetaServiceImpl implements TarjetaService {
     @Cacheable
     public TarjetaResponsePrivado getPrivateData(String id, TarjetaRequestPrivado tarjetaRequestPrivado) {
         // Cambiar cuando añadamos autenticación
-        log.info("Obteniendo datos privados de la tarjeta con ID: {}", id);
+        log.info("Obteniendo datos privados de la tarjeta con id: {}", id);
         var user = userRepository.findByUsername(tarjetaRequestPrivado.getUsername());
         if (user.isEmpty()) {
             throw new UserNotFoundByUsername(tarjetaRequestPrivado.getUsername());
@@ -152,7 +153,7 @@ public class TarjetaServiceImpl implements TarjetaService {
     @Override
     @CacheEvict
     public void deleteById(String id) {
-        log.info("Eliminando tarjeta con ID: {}", id);
+        log.info("Borrando tarjeta con id: {}", id);
         var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
         tarjeta.setIsDeleted(true);
         tarjetaRepository.save(tarjeta);

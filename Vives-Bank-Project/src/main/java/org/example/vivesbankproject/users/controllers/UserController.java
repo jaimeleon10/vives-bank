@@ -6,10 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.users.dto.UserRequest;
 import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.models.Role;
-import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.users.services.UserService;
-import org.example.vivesbankproject.utils.PageResponse;
-import org.example.vivesbankproject.utils.PaginationLinksUtils;
+import org.example.vivesbankproject.utils.pagination.PageResponse;
+import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,7 +29,7 @@ import java.util.Optional;
 @Slf4j
 @Validated
 @RestController
-@RequestMapping("${api.version}/usuario")
+@RequestMapping("${api.version}/usuarios")
 @PreAuthorize("hasRole('ADMIN')")
 public class UserController {
 
@@ -68,17 +67,17 @@ public class UserController {
     }
 
     @PostMapping()
-    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest userRequest) {
+    public ResponseEntity<UserResponse> save(@Valid @RequestBody UserRequest userRequest) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.save(userRequest));
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable String id, @Valid @RequestBody UserRequest userRequest) {
+    public ResponseEntity<UserResponse> update(@PathVariable String id, @Valid @RequestBody UserRequest userRequest) {
         return ResponseEntity.ok(userService.update(id, userRequest));
     }
 
     @DeleteMapping("{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable String id) {
         userService.deleteById(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

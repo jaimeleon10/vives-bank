@@ -1,4 +1,4 @@
-package org.example.vivesbankproject.utils;
+package org.example.vivesbankproject.utils.generators;
 
 import lombok.experimental.UtilityClass;
 import java.security.SecureRandom;

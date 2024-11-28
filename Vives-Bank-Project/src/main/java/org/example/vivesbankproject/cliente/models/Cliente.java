@@ -1,14 +1,11 @@
 package org.example.vivesbankproject.cliente.models;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
-import org.example.vivesbankproject.users.models.Role;
 import org.example.vivesbankproject.users.models.User;
-import org.example.vivesbankproject.utils.IdGenerator;
+import org.example.vivesbankproject.utils.generators.IdGenerator;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -47,6 +44,10 @@ public class Cliente {
     @NotBlank(message = "Los apellidos no pueden estar vacío")
     private String apellidos;
 
+    @Embedded
+    @NotNull(message = "La dirección no puede ser nula")
+    private Direccion direccion;
+
     @Column(unique = true, nullable = false)
     @Email(regexp = ".*@.*\\..*", message = "El email debe ser válido")
     @NotBlank(message = "El email no puede estar vacío")
@@ -73,9 +74,6 @@ public class Cliente {
     @NotNull(message = "El usuario no puede ser un campo nulo")
     private User user;
 
-    @Column(name = "id_movimientos")
-    private ObjectId idMovimientos;
-
     @CreationTimestamp
     @Column(updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Builder.Default
@@ -89,9 +87,4 @@ public class Cliente {
     @Column(nullable = false)
     @Builder.Default
     private Boolean isDeleted = false;
-
-    @JsonProperty("idMovimientos")
-    public String getIdMovimientos() {
-        return idMovimientos != null ? idMovimientos.toHexString() : null;
-    }
 }

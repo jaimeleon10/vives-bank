@@ -6,18 +6,9 @@ import org.example.vivesbankproject.cliente.dto.*;
 import org.example.vivesbankproject.cliente.exceptions.*;
 import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.models.Cliente;
+import org.example.vivesbankproject.cliente.models.Direccion;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
-import org.example.vivesbankproject.cuenta.exceptions.CuentaNotFound;
-import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
-import org.example.vivesbankproject.cuenta.mappers.TipoCuentaMapper;
-import org.example.vivesbankproject.cuenta.models.Cuenta;
-import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
-import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
-import org.example.vivesbankproject.users.dto.UserResponse;
 import org.example.vivesbankproject.users.exceptions.UserNotFoundById;
-import org.example.vivesbankproject.users.exceptions.UserNotFoundException;
-import org.example.vivesbankproject.users.mappers.UserMapper;
 import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -27,9 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -48,6 +37,7 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     public Page<ClienteResponse> getAll(Optional<String> dni, Optional<String> nombre, Optional<String> apellidos, Optional<String> email, Optional<String> telefono, Pageable pageable) {
+        log.info("Obteniendo todos los clientes");
         Specification<Cliente> specDniCliente = (root, query, criteriaBuilder) ->
                 dni.map(m -> criteriaBuilder.like(criteriaBuilder.lower(root.get("dni")), "%" + m.toLowerCase() + "%"))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
@@ -85,7 +75,17 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @Cacheable
     public ClienteResponse getById(String id) {
+        log.info("Obteniendo cliente con guid: {}", id);
         var cliente = clienteRepository.findByGuid(id).orElseThrow(() -> new ClienteNotFound(id));
+        String userId = cliente.getUser().getGuid();
+
+        return clienteMapper.toClienteResponse(cliente, userId);
+    }
+
+    @Override
+    public ClienteResponse getByDni(String dni) {
+        log.info("Obteniendo cliente con dni: {}", dni);
+        var cliente = clienteRepository.findByDni(dni).orElseThrow(() -> new ClienteNotFoundByDni(dni));
         String userId = cliente.getUser().getGuid();
 
         return clienteMapper.toClienteResponse(cliente, userId);
@@ -94,6 +94,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @CachePut
     public ClienteResponse save(ClienteRequestSave clienteRequestSave) {
+        log.info("Guardando cliente");
         // Buscamos si existe algún cliente con el usuario adjunto ya asignado
         if (clienteRepository.existsByUserGuid(clienteRequestSave.getUserId())) {
             throw new ClienteUserAlreadyAssigned(clienteRequestSave.getUserId());
@@ -104,8 +105,16 @@ public class ClienteServiceImpl implements ClienteService {
                 () -> new UserNotFoundById(clienteRequestSave.getUserId())
         );
 
+        var direccion = Direccion.builder()
+                .calle(clienteRequestSave.getCalle())
+                .numero(clienteRequestSave.getNumero())
+                .codigoPostal(clienteRequestSave.getCodigoPostal())
+                .piso(clienteRequestSave.getPiso())
+                .letra(clienteRequestSave.getLetra())
+                .build();
+
         // Mapeamos a cliente con el cliente request, el usuario existente y las cuentas existentes
-        var cliente = clienteMapper.toCliente(clienteRequestSave, usuarioExistente);
+        var cliente = clienteMapper.toCliente(clienteRequestSave, usuarioExistente, direccion);
 
         // Validamos datos (dni, email y teléfono) existentes
         validarClienteExistente(cliente);
@@ -118,6 +127,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @CachePut
     public ClienteResponse update(String id, ClienteRequestUpdate clienteRequestUpdate) {
+        log.info("Actualizando cliente con guid: {}", id);
         // Buscamos si existe el cliente con la el parámetro id
         var clienteExistente = clienteRepository.findByGuid(id).orElseThrow(
                 () -> new ClienteNotFound(id)
@@ -145,8 +155,16 @@ public class ClienteServiceImpl implements ClienteService {
             }
         }
 
+        var direccion = Direccion.builder()
+                .calle(clienteRequestUpdate.getCalle())
+                .numero(clienteRequestUpdate.getNumero())
+                .codigoPostal(clienteRequestUpdate.getCodigoPostal())
+                .piso(clienteRequestUpdate.getPiso())
+                .letra(clienteRequestUpdate.getLetra())
+                .build();
+
         // Guardamos el cliente mapeado a update
-        var clienteSave = clienteRepository.save(clienteMapper.toClienteUpdate(clienteRequestUpdate, clienteExistente, usuarioExistente));
+        var clienteSave = clienteRepository.save(clienteMapper.toClienteUpdate(clienteRequestUpdate, clienteExistente, usuarioExistente, direccion));
 
         // Devolvemos el cliente response con los datos necesarios
         return clienteMapper.toClienteResponse(clienteSave, usuarioExistente.getGuid());
@@ -156,6 +174,7 @@ public class ClienteServiceImpl implements ClienteService {
     @CacheEvict
     @Transactional
     public void deleteById(String id) {
+        log.info("Borrando cliente con guid: {}", id);
         var cliente = clienteRepository.findByGuid(id).orElseThrow(
                 () -> new ClienteNotFound(id)
         );
@@ -164,7 +183,7 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
-    @Cacheable // Añadimos caché para mejorar el rendimiento en llamadas repetidas
+    @Cacheable
     public ClienteResponse getUserByGuid(String guid) {
         log.info("Buscando cliente por user guid: {}", guid);
 

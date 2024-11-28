@@ -8,9 +8,7 @@ import org.example.vivesbankproject.movimientos.models.Domiciliacion;
 import org.example.vivesbankproject.movimientos.models.IngresoDeNomina;
 import org.example.vivesbankproject.movimientos.models.PagoConTarjeta;
 import org.example.vivesbankproject.movimientos.models.Transferencia;
-import org.example.vivesbankproject.utils.IdGenerator;
-
-import java.time.LocalDateTime;
+import org.example.vivesbankproject.utils.generators.IdGenerator;
 
 
 @Data

@@ -6,11 +6,9 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
-import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.services.TipoCuentaService;
-import org.example.vivesbankproject.utils.PageResponse;
-import org.example.vivesbankproject.utils.PaginationLinksUtils;
-import org.example.vivesbankproject.websocket.notifications.models.Notification;
+import org.example.vivesbankproject.utils.pagination.PageResponse;
+import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,7 +44,7 @@ public class TipoCuentaController {
 
     @GetMapping()
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<PageResponse<TipoCuentaResponse>> getAllPageable(
+    public ResponseEntity<PageResponse<TipoCuentaResponse>> getAll(
             @RequestParam(required = false) Optional<String> nombre,
             @RequestParam(required = false) Optional<BigDecimal> interes,
             @RequestParam(defaultValue = "0") int page,
