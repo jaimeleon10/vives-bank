@@ -22,6 +22,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.HashMap;
@@ -121,5 +122,17 @@ public class ClienteRestController {
         }
 
         return errors;
+    }
+
+    @PutMapping("/me/dni_image")
+    public ResponseEntity<ClienteResponse> updateDniImage(@AuthenticationPrincipal User user, MultipartFile file) {
+        log.info("Actualizando imagen dni del cliente con guid: {}", user.getGuid());
+        return ResponseEntity.ok(clienteService.updateDniFoto(user.getGuid(), file));
+    }
+
+    @PutMapping("/me/foto_perfil")
+    public ResponseEntity<ClienteResponse> updateFotoPerfil(@AuthenticationPrincipal User user, MultipartFile file) {
+        log.info("Actualizando imagen de perfil del cliente con guid: {}", user.getGuid());
+        return ResponseEntity.ok(clienteService.updateProfileFoto(user.getGuid(), file));
     }
 }
