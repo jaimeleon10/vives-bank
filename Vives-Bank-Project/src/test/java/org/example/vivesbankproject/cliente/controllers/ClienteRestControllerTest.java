@@ -1,30 +1,18 @@
 package org.example.vivesbankproject.cliente.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import jakarta.validation.ConstraintViolationException;
 import org.example.vivesbankproject.cliente.dto.*;
 import org.example.vivesbankproject.cliente.service.ClienteService;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequest;
-import org.example.vivesbankproject.users.dto.UserResponse;
-import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.utils.PaginationLinksUtils;
 import org.junit.jupiter.api.Test;
-
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.time.LocalDateTime;
 import java.util.*;
-
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -39,9 +27,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
+
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -88,6 +74,9 @@ class ClienteRestControllerTest {
                         .param("apellido", "Perez")
                         .param("email", "juan.perez@example.com")
                         .param("telefono", "123456789")
+                        .param("fotoPerfil","fotoprfil.jpg")
+                        .param ("fotoDni","fotodni.jpg")
+                        .param ("userId","userId")
                         .param("page", "0")
                         .param("size", "10")
                         .param("sortBy", "id")
@@ -129,7 +118,7 @@ class ClienteRestControllerTest {
 
 
     @Test
-    void CreateCliente() throws Exception {
+    void Save() throws Exception {
         CuentaRequest clienteRequestSave = CuentaRequest.builder()
                 .tipoCuentaId("tipoCuentaId")
                 .tarjetaId("tarjetaId")
@@ -350,7 +339,7 @@ class ClienteRestControllerTest {
 
 
     @Test
-    void UpdateCliente() throws Exception {
+    void Update() throws Exception {
         ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
                 .nombre("Juan")
                 .apellidos("Perez")
@@ -615,7 +604,7 @@ class ClienteRestControllerTest {
 
 
     @Test
-    void DeleteCliente() throws Exception {
+    void Delete() throws Exception {
         Mockito.doNothing().when(clienteService).deleteById("unique-guid");
 
         mockMvc.perform(delete("/v1/cliente/unique-guid"))
