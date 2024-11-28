@@ -48,11 +48,11 @@ public class UserServiceImpl implements UserService {
         Specification<User> specRole = (root, query, criteriaBuilder) ->
                 roles.map(r -> {
                     try {
-                        return criteriaBuilder.equal(root.get("roles"), Role.valueOf(r.toUpperCase()));
+                        return criteriaBuilder.isMember(Role.valueOf(r.toUpperCase()), root.get("roles"));
                     } catch (IllegalArgumentException e) {
-                        return criteriaBuilder.isTrue(criteriaBuilder.literal(true));
+                        return criteriaBuilder.isFalse(criteriaBuilder.literal(true));
                     }
-                }).orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
+                }).orElse(null);
 
         Specification<User> criterio = Specification.where(specUsername).and(specRole);
 
