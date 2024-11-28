@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final String myEndpoint = "/v1/usuario";
+    private final String myEndpoint = "/v1/usuarios";
 
     @Autowired
     private MockMvc mockMvc;
@@ -60,7 +60,7 @@ class UserControllerTest {
         when(userService.getAll(any(), any(), any())).thenReturn(page);
         when(paginationLinksUtils.createLinkHeader(eq(page), any())).thenReturn("");
 
-        mockMvc.perform(get("/v1/usuario")
+        mockMvc.perform(get("/v1/usuarios")
                         .param("username", "johndoe")
                         .param("roles", "USER")
                         .param("page", "0")
@@ -88,7 +88,7 @@ class UserControllerTest {
 
         when(userService.getById("unique-guid")).thenReturn(userResponse);
 
-        mockMvc.perform(get("/v1/usuario/unique-guid"))
+        mockMvc.perform(get("/v1/usuarios/unique-guid"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("johndoe"))
                 .andExpect(jsonPath("$.password").value("password123"))
@@ -108,7 +108,7 @@ class UserControllerTest {
 
         when(userService.save(any(UserRequest.class))).thenReturn(userResponse);
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/v1/usuario")
+        mockMvc.perform(MockMvcRequestBuilders.post("/v1/usuarios")
                         .contentType("application/json")
                         .content("{ \"username\": \"johndoe\", \"password\": \"password123\", \"roles\": [\"USER\"] }"))
                 .andExpect(status().isCreated())
@@ -125,7 +125,7 @@ class UserControllerTest {
                 .roles(Set.of(Role.USER))
                 .build();
 
-        mockMvc.perform(post("/v1/usuario")
+        mockMvc.perform(post("/v1/usuarios")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userRequest)))
                 .andExpect(status().isBadRequest())
@@ -140,7 +140,7 @@ class UserControllerTest {
                 .roles(Set.of(Role.USER))
                 .build();
 
-        mockMvc.perform(post("/v1/usuario")
+        mockMvc.perform(post("/v1/usuarios")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userRequest)))
                 .andExpect(status().isBadRequest())
@@ -165,7 +165,7 @@ class UserControllerTest {
 
         when(userService.update(eq("unique-guid"), any(UserRequest.class))).thenReturn(userResponse);
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/v1/usuario/unique-guid")
+        mockMvc.perform(MockMvcRequestBuilders.put("/v1/usuarios/unique-guid")
                         .contentType("application/json")
                         .content("{ \"username\": \"johndoe\", \"password\": \"password123\", \"roles\": [\"USER\"] }"))
                 .andExpect(status().isOk())
@@ -177,12 +177,12 @@ class UserControllerTest {
     @Test
     void Delete() throws Exception {
         Mockito.doNothing().when(userService).deleteById("unique-guid");
-        mockMvc.perform(delete("/v1/usuario/unique-guid"))
+        mockMvc.perform(delete("/v1/usuarios/unique-guid"))
                 .andExpect(status().isNoContent());
     }
     @Test
     void handleValidationExceptionUpdateError() throws Exception {
-        var result = mockMvc.perform(MockMvcRequestBuilders.put("/v1/usuario/1")
+        var result = mockMvc.perform(MockMvcRequestBuilders.put("/v1/usuarios/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"username\": \"\"}"))
                 .andExpect(status().isBadRequest())
