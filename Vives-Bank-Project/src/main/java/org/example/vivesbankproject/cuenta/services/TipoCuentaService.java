@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @Service
 public interface TipoCuentaService {
-    Page<TipoCuentaResponse> getAll(Optional<String> nombre, Optional<BigDecimal> interes, Pageable pageable);
+    Page<TipoCuentaResponse> getAll(Optional<String> nombre, Optional<BigDecimal> interesMax, Optional<BigDecimal> interesMin, Pageable pageable);
     TipoCuentaResponse getById(String id);
     TipoCuentaResponse save(TipoCuentaRequest tipoCuentaRequest);
     TipoCuentaResponse update(String id, TipoCuentaRequest tipoCuentaRequest);
