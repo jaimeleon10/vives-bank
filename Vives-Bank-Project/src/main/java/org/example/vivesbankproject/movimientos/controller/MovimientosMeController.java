@@ -41,7 +41,7 @@ public class MovimientosMeController {
     }
 
     @PostMapping("/domiciliacion")
-    public ResponseEntity<MovimientoResponse> createMovimientoDomiciliacion(@AuthenticationPrincipal User user, @RequestBody @Valid Domiciliacion request) {
+    public ResponseEntity<Domiciliacion> createMovimientoDomiciliacion(@AuthenticationPrincipal User user, @RequestBody @Valid Domiciliacion request) {
         log.info("Creando Movimiento de Domiciliacion");
         return ResponseEntity.ok(movimientosService.saveDomiciliacion(user, request));
     }
