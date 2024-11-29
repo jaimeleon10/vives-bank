@@ -20,7 +20,7 @@ public interface MovimientosService {
 
     MovimientoResponse save(MovimientoRequest movimientoRequest);
 
-    MovimientoResponse saveDomiciliacion(User user, Domiciliacion domiciliacion);
+    Domiciliacion saveDomiciliacion(User user, Domiciliacion domiciliacion);
 
     MovimientoResponse saveIngresoDeNomina(User user, MovimientoRequest movimientoRequest);
 
