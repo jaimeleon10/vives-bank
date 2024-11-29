@@ -102,7 +102,7 @@ public class MovimientosServiceImpl implements MovimientosService {
     }
 
     @Override
-    public MovimientoResponse saveDomiciliacion(User user, Domiciliacion domiciliacion) {
+    public Domiciliacion saveDomiciliacion(User user, Domiciliacion domiciliacion) {
         log.info("Guardando Domiciliacion: {}", domiciliacion);
 
         // Validar que el cliente existe
@@ -118,8 +118,9 @@ public class MovimientosServiceImpl implements MovimientosService {
         }
 
         // Validar si la domiciliación ya existe
-        if (domiciliacionRepository.findByGuid(domiciliacion.getGuid()).isPresent()) {
-            throw new DuplicatedDomiciliacionException(domiciliacion.getGuid());
+        var clienteDomiciliaciones = domiciliacionRepository.findByClienteGuid(cliente.getGuid());
+        if (clienteDomiciliaciones.stream().anyMatch(d -> d.getIbanDestino().equals(domiciliacion.getIbanDestino()))) {
+            throw new DuplicatedDomiciliacionException(domiciliacion.getIbanDestino());
         }
 
         // Validar que la cantidad es mayor que cero
@@ -130,13 +131,11 @@ public class MovimientosServiceImpl implements MovimientosService {
 
         // Guardar la domiciliación
         domiciliacion.setUltimaEjecucion(LocalDateTime.now()); // Registro inicial
+        domiciliacion.setClienteGuid(cliente.getGuid()); // Asigno el id del cliente al domiciliación
         Domiciliacion saved = domiciliacionRepository.save(domiciliacion);
 
         // Retornar respuesta
-        return MovimientoResponse.builder()
-                .guid(saved.getGuid())
-                .domiciliacion(saved)
-                .build();
+        return saved;
     }
 
 
