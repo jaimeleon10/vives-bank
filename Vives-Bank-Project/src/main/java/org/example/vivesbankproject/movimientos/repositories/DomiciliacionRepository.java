@@ -10,4 +10,6 @@ import java.util.Optional;
 @Repository
 public interface DomiciliacionRepository extends MongoRepository<Domiciliacion, ObjectId> {
     Optional<Domiciliacion> findByGuid(String guid);
+
+    Optional<Domiciliacion> findByClienteGuid(String clienteGuid);
 }
