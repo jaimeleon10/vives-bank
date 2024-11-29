@@ -9,6 +9,8 @@ import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
 import org.example.vivesbankproject.movimientos.exceptions.ClienteHasNoMovements;
 import org.example.vivesbankproject.movimientos.exceptions.MovimientoNotFound;
 import org.example.vivesbankproject.movimientos.mappers.MovimientoMapper;
+import org.example.vivesbankproject.movimientos.exceptions.movimientos.ClienteHasNoMovements;
+import org.example.vivesbankproject.movimientos.exceptions.movimientos.MovimientoNotFound;
 import org.example.vivesbankproject.movimientos.models.*;
 import org.example.vivesbankproject.movimientos.repositories.MovimientosRepository;
 import org.example.vivesbankproject.users.models.User;
