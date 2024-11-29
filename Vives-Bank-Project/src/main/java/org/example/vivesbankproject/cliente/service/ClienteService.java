@@ -25,6 +25,8 @@ public interface ClienteService {
 
     ClienteResponse updateUserAuthenticated(String userGuid, ClienteRequestUpdate clienteRequestUpdate);
 
+    String derechoAlOlvido(String userGuid);
+
     ClienteResponse updateDniFoto(String id, MultipartFile file);
 
     ClienteResponse updateProfileFoto(String id, MultipartFile file);
