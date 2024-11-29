@@ -19,8 +19,6 @@ class TarjetaMapperTest {
 
     private TarjetaMapper tarjetaMapper;
     private Tarjeta tarjetaMock;
-    private final LocalDateTime NOW = LocalDateTime.now();
-    private final LocalDate CADUCIDAD = LocalDate.now().plusYears(10);
 
     @BeforeEach
     void setUp() {
@@ -29,15 +27,15 @@ class TarjetaMapperTest {
                 .id(1L)
                 .guid("test-guid")
                 .numeroTarjeta("1234567890123456")
-                .fechaCaducidad(CADUCIDAD)
+                .fechaCaducidad(LocalDate.now().plusYears(10))
                 .cvv(123)
                 .pin("123")
                 .limiteDiario(new BigDecimal("1000.00"))
                 .limiteSemanal(new BigDecimal("5000.00"))
                 .limiteMensual(new BigDecimal("20000.00"))
                 .tipoTarjeta(TipoTarjeta.DEBITO)
-                .createdAt(NOW)
-                .updatedAt(NOW)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .isDeleted(false)
                 .build();
     }

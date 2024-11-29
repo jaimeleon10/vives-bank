@@ -144,7 +144,7 @@ class TarjetaRestControllerTest {
     void deleteTarjeta() {
         doNothing().when(tarjetaService).deleteById(anyString());
 
-        ResponseEntity<TarjetaResponse> response = tarjetaRestController.deleteTarjeta("idTest");
+        ResponseEntity<TarjetaResponse> response = tarjetaRestController.delete("idTest");
 
         assertNotNull(response);
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
