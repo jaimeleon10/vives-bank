@@ -108,6 +108,13 @@ public class ClienteRestController {
         return ResponseEntity.ok(result);
     }
 
+    @DeleteMapping("/me/perfil")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<String> deleteMe(@AuthenticationPrincipal User user) {
+        var result = clienteService.derechoAlOlvido(user.getGuid());
+        return ResponseEntity.ok(result);
+    }
+
     @PutMapping("/me/dni_image")
     public ResponseEntity<ClienteResponse> updateDniImage(@AuthenticationPrincipal User user, MultipartFile file) {
         log.info("Actualizando imagen dni del cliente con guid: {}", user.getGuid());

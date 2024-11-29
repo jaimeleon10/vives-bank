@@ -8,8 +8,15 @@ import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.models.Direccion;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
+import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFoundByClienteGuid;
+import org.example.vivesbankproject.cuenta.models.Cuenta;
+import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.storage.images.services.StorageImagesService;
+import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
+import org.example.vivesbankproject.tarjeta.models.Tarjeta;
+import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.users.exceptions.UserNotFoundById;
+import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -32,12 +39,16 @@ public class ClienteServiceImpl implements ClienteService {
     private final ClienteMapper clienteMapper;
     private final UserRepository userRepository;
     private final StorageImagesService storageImagesService;
+    private final CuentaRepository cuentaRepository;
+    private final TarjetaRepository tarjetaRepository;
 
-    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserRepository userRepository, StorageImagesService storageImagesService) {
+    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserRepository userRepository, StorageImagesService storageImagesService, CuentaRepository cuentaRepository, TarjetaRepository tarjetaRepository) {
         this.clienteRepository = clienteRepository;
         this.clienteMapper = clienteMapper;
         this.userRepository = userRepository;
         this.storageImagesService = storageImagesService;
+        this.cuentaRepository = cuentaRepository;
+        this.tarjetaRepository = tarjetaRepository;
     }
 
     @Override
@@ -240,6 +251,37 @@ public class ClienteServiceImpl implements ClienteService {
 
         // Devolvemos el cliente response con los datos necesarios
         return clienteMapper.toClienteResponse(clienteSave, clienteSave.getUser().getGuid());
+    }
+
+    @Override
+    public String derechoAlOlvido(String userGuid) {
+        User usuario = userRepository.findByGuid(userGuid).orElseThrow(
+                () -> new UserNotFoundById(userGuid)
+        );
+        Cliente cliente = clienteRepository.findByUserGuid(userGuid).orElseThrow(
+                () -> new ClienteNotFoundByUser(userGuid)
+        );
+        ArrayList<Cuenta> cuentas = cuentaRepository.findAllByCliente_Guid(cliente.getGuid());
+
+        ArrayList<Tarjeta> tarjetas = new ArrayList<>();
+
+        cuentas.forEach(cuenta -> {
+            var tarjeta = tarjetaRepository.findByGuid(cuenta.getTarjeta().getGuid()).orElseThrow(
+                    () -> new TarjetaNotFound(cuenta.getTarjeta().getGuid())
+            );
+            tarjetas.add(tarjeta);
+        });
+
+        try {
+            tarjetaRepository.deleteAll(tarjetas);
+            cuentaRepository.deleteAll(cuentas);
+            clienteRepository.delete(cliente);
+            userRepository.delete(usuario);
+        } catch (Exception e) {
+            throw new ClienteNotDeleted(cliente.getGuid());
+        }
+
+        return "El cliente con guid '" + cliente.getGuid() + "' ejerció su derecho al olvido borrando todos sus datos personales";
     }
 
     private void validarClienteExistente(Cliente cliente) {
