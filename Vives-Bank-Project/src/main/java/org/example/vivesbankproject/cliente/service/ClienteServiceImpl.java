@@ -138,10 +138,13 @@ public class ClienteServiceImpl implements ClienteService {
                 () -> new ClienteNotFound(id)
         );
 
-        // Buscamos si existe el usuario por el parámetro id ajuntado en el cliente request
-        var usuarioExistente = userRepository.findByGuid(clienteRequestUpdate.getUserId()).orElseThrow(
-                () -> new UserNotFoundById(clienteRequestUpdate.getUserId())
-        );
+        // Buscamos si existe el usuario por el parámetro id adjuntado en el cliente request
+        var usuarioExistente = clienteExistente.getUser();
+        if (clienteRequestUpdate.getUserId() != null) {
+             usuarioExistente = userRepository.findByGuid(clienteRequestUpdate.getUserId()).orElseThrow(
+                    () -> new UserNotFoundById(clienteRequestUpdate.getUserId())
+            );
+        }
 
         // Buscamos si existe algún cliente con el usuario adjunto ya asignado
         if (clienteRepository.existsByUserGuid(clienteRequestUpdate.getUserId())) {
@@ -189,7 +192,7 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     @Cacheable
-    public ClienteResponse getUserByGuid(String guid) {
+    public ClienteResponse getUserAuthenticatedByGuid(String guid) {
         log.info("Buscando cliente por user guid: {}", guid);
 
         // Buscamos el cliente directamente por el userGuid
@@ -203,6 +206,40 @@ public class ClienteServiceImpl implements ClienteService {
         }
 
         return clienteMapper.toClienteResponse(cliente, usuarioExistente.getGuid());
+    }
+
+    @Override
+    @CachePut
+    public ClienteResponse updateUserAuthenticated(String guid, ClienteRequestUpdate clienteRequestUpdate) {
+        log.info("Actualizando cliente autenticado");
+        var clienteAutenticado = clienteRepository.findByUserGuid(guid).orElseThrow(
+                () -> new ClienteNotFound(guid)
+        );
+
+        if (!Objects.equals(clienteRequestUpdate.getTelefono(), clienteAutenticado.getTelefono())) {
+            if (clienteRepository.findByTelefono(clienteRequestUpdate.getTelefono()).isPresent()) {
+                throw new ClienteExistsByTelefono(clienteRequestUpdate.getTelefono());
+            }
+        }
+        if (!Objects.equals(clienteRequestUpdate.getEmail(), clienteAutenticado.getEmail())) {
+            if (clienteRepository.findByEmail(clienteRequestUpdate.getNombre()).isPresent()) {
+                throw new ClienteExistsByEmail(clienteRequestUpdate.getEmail());
+            }
+        }
+
+        var direccion = Direccion.builder()
+                .calle(clienteRequestUpdate.getCalle())
+                .numero(clienteRequestUpdate.getNumero())
+                .codigoPostal(clienteRequestUpdate.getCodigoPostal())
+                .piso(clienteRequestUpdate.getPiso())
+                .letra(clienteRequestUpdate.getLetra())
+                .build();
+
+        // Guardamos el cliente mapeado a update
+        var clienteSave = clienteRepository.save(clienteMapper.toClienteUpdate(clienteRequestUpdate, clienteAutenticado, clienteAutenticado.getUser(), direccion));
+
+        // Devolvemos el cliente response con los datos necesarios
+        return clienteMapper.toClienteResponse(clienteSave, clienteSave.getUser().getGuid());
     }
 
     private void validarClienteExistente(Cliente cliente) {
