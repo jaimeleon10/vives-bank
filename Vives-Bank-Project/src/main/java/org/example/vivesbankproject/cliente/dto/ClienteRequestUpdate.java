@@ -55,6 +55,5 @@ public class ClienteRequestUpdate {
     @NotBlank(message = "La foto del DNI no puede estar vacia")
     private String fotoDni;
 
-    @NotBlank(message = "El id de usuario no puede estar vacio")
     private String userId;
 }
