@@ -6,11 +6,10 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cliente.dto.*;
-import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.service.ClienteService;
 import org.example.vivesbankproject.users.models.User;
-import org.example.vivesbankproject.utils.PageResponse;
-import org.example.vivesbankproject.utils.PaginationLinksUtils;
+import org.example.vivesbankproject.utils.pagination.PageResponse;
+import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +22,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.HashMap;
@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("${api.version}/cliente")
+@RequestMapping("${api.version}/clientes")
 @Validated
 @Slf4j
 @PreAuthorize("hasRole('ADMIN')")
@@ -72,29 +72,59 @@ public class ClienteRestController {
         return ResponseEntity.ok(clienteService.getById(id));
     }
 
+    @GetMapping("/dni/{dni}")
+    public ResponseEntity<ClienteResponse> getByDni(@PathVariable String dni) {
+        return ResponseEntity.ok(clienteService.getByDni(dni));
+    }
+
     @PostMapping
-    public ResponseEntity<ClienteResponse> createCliente(@Valid @RequestBody ClienteRequestSave clienteRequestSave) {
+    public ResponseEntity<ClienteResponse> save(@Valid @RequestBody ClienteRequestSave clienteRequestSave) {
         var result = clienteService.save(clienteRequestSave);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<ClienteResponse> updateCliente(@PathVariable String id, @Valid @RequestBody ClienteRequestUpdate clienteRequest) {
-        var result = clienteService.update(id, clienteRequest);
+    public ResponseEntity<ClienteResponse> update(@PathVariable String id, @Valid @RequestBody ClienteRequestUpdate clienteRequestUpdate) {
+        var result = clienteService.update(id, clienteRequestUpdate);
         return ResponseEntity.ok(result);
     }
 
     @DeleteMapping("{id}")
-    public ResponseEntity<Void> deleteCliente(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable String id) {
         clienteService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/me/profile")
+    @GetMapping("/me/perfil")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ClienteResponse> me(@AuthenticationPrincipal User user) {
-        log.info("Obteniendo datos del cliente con guid: " + user.getGuid());
-        return ResponseEntity.ok(clienteService.getUserByGuid(user.getGuid()));
+        return ResponseEntity.ok(clienteService.getUserAuthenticatedByGuid(user.getGuid()));
+    }
+
+    @PutMapping("/me/perfil")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ClienteResponse> updateMe(@AuthenticationPrincipal User user, @Valid @RequestBody ClienteRequestUpdate clienteRequestUpdate) {
+        var result = clienteService.updateUserAuthenticated(user.getGuid(), clienteRequestUpdate);
+        return ResponseEntity.ok(result);
+    }
+
+    @DeleteMapping("/me/perfil")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<String> deleteMe(@AuthenticationPrincipal User user) {
+        var result = clienteService.derechoAlOlvido(user.getGuid());
+        return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("/me/dni_image")
+    public ResponseEntity<ClienteResponse> updateDniImage(@AuthenticationPrincipal User user, MultipartFile file) {
+        log.info("Actualizando imagen dni del cliente con guid: {}", user.getGuid());
+        return ResponseEntity.ok(clienteService.updateDniFoto(user.getGuid(), file));
+    }
+
+    @PutMapping("/me/foto_perfil")
+    public ResponseEntity<ClienteResponse> updateFotoPerfil(@AuthenticationPrincipal User user, MultipartFile file) {
+        log.info("Actualizando imagen de perfil del cliente con guid: {}", user.getGuid());
+        return ResponseEntity.ok(clienteService.updateProfileFoto(user.getGuid(), file));
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

@@ -2,8 +2,7 @@ package org.example.vivesbankproject.movimientos.repositories;
 
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.movimientos.models.*;
-import org.example.vivesbankproject.utils.IdGenerator;
-import org.junit.jupiter.api.AfterEach;
+import org.example.vivesbankproject.utils.generators.IdGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +11,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;

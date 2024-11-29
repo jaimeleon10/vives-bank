@@ -1,4 +1,4 @@
-package org.example.vivesbankproject.cuenta.exceptions;
+package org.example.vivesbankproject.cuenta.exceptions.tipoCuenta;
 
 public abstract class TipoCuentaException extends RuntimeException {
     public TipoCuentaException(String message) {

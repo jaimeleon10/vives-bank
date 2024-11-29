@@ -13,7 +13,7 @@ import java.util.Optional;
 @Service
 public interface UserService extends UserDetailsService{
 
-    Page<UserResponse> getAll(Optional<String> username, Optional<Role> rol, Pageable pageable);
+    Page<UserResponse> getAll(Optional<String> username, Optional<String> rol, Pageable pageable);
 
     UserResponse getById(String guid);
 

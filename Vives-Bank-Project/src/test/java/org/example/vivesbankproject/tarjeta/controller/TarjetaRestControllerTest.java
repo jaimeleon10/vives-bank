@@ -5,8 +5,8 @@ import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestUpdate;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.tarjeta.service.TarjetaService;
-import org.example.vivesbankproject.utils.PageResponse;
-import org.example.vivesbankproject.utils.PaginationLinksUtils;
+import org.example.vivesbankproject.utils.pagination.PageResponse;
+import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,7 +26,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -145,7 +144,7 @@ class TarjetaRestControllerTest {
     void deleteTarjeta() {
         doNothing().when(tarjetaService).deleteById(anyString());
 
-        ResponseEntity<TarjetaResponse> response = tarjetaRestController.deleteTarjeta("idTest");
+        ResponseEntity<TarjetaResponse> response = tarjetaRestController.delete("idTest");
 
         assertNotNull(response);
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());

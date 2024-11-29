@@ -6,11 +6,9 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
-import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.services.TipoCuentaService;
-import org.example.vivesbankproject.utils.PageResponse;
-import org.example.vivesbankproject.utils.PaginationLinksUtils;
-import org.example.vivesbankproject.websocket.notifications.models.Notification;
+import org.example.vivesbankproject.utils.pagination.PageResponse;
+import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,20 +44,21 @@ public class TipoCuentaController {
 
     @GetMapping()
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<PageResponse<TipoCuentaResponse>> getAllPageable(
+    public ResponseEntity<PageResponse<TipoCuentaResponse>> getAll(
             @RequestParam(required = false) Optional<String> nombre,
-            @RequestParam(required = false) Optional<BigDecimal> interes,
+            @RequestParam(required = false) Optional<BigDecimal> interesMax,
+            @RequestParam(required = false) Optional<BigDecimal> interesMin,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String direction,
             HttpServletRequest request
     ){
-        log.info("Buscando todos los tipos de cuentas con las siguientes opciones: {}, {}", nombre, interes);
+        log.info("Buscando todos los tipos de cuentas con las siguientes opciones: {}, {}, {}", nombre, interesMax, interesMin);
         Sort sort = direction.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString());
-        Page<TipoCuentaResponse> pageResult = tipoCuentaService.getAll(nombre, interes, PageRequest.of(page, size, sort));
+        Page<TipoCuentaResponse> pageResult = tipoCuentaService.getAll(nombre, interesMax, interesMin, PageRequest.of(page, size, sort));
         return ResponseEntity.ok()
                 .header("link", paginationLinksUtils.createLinkHeader(pageResult, uriBuilder))
                 .body(PageResponse.of(pageResult, sortBy, direction));

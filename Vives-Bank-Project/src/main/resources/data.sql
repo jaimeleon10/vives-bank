@@ -23,10 +23,10 @@ VALUES
     ('6666ffff', '4302320784410830', '2034-12-31', 234, '5678', 1500.00, 6000.00, 25000.00, 'CREDITO', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false);
 
 -- Inserción de Clientes
-INSERT INTO clientes (guid, dni, nombre, apellidos, email, telefono, foto_perfil, foto_dni, created_at, updated_at, is_deleted, user_id)
+INSERT INTO clientes (guid, dni, nombre, apellidos, calle, numero, codigo_postal, piso, letra, email, telefono, foto_perfil, foto_dni, created_at, updated_at, is_deleted, user_id)
 VALUES
-    ('7777gggg', '12345678A', 'Juan', 'Perez', 'juan.perez@email.com', '612345678', 'foto_perfil_juan.jpg', 'foto_dni_juan.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false, 1),
-    ('8888hhhh', '87654321B', 'Maria', 'Lopez', 'maria.lopez@email.com', '698765432', 'foto_perfil_maria.jpg', 'foto_dni_maria.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false, 2);
+    ('7777gggg', '12345678A', 'Juan', 'Perez', 'Calle Test', '100', '28014', '1', 'A', 'juan.perez@email.com', '612345678', 'foto_perfil_juan.jpg', 'foto_dni_juan.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false, 1),
+    ('8888hhhh', '87654321B', 'Maria', 'Lopez', 'Calle Test', '200', '28014', '2', 'B', 'maria.lopez@email.com', '698765432', 'foto_perfil_maria.jpg', 'foto_dni_maria.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false, 2);
 
 -- Inserción de Cuentas
 INSERT INTO cuentas (guid, iban, saldo, tipo_Cuenta_id, tarjeta_id, cliente_id, created_at, updated_at, is_deleted)
