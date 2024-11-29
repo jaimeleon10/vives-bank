@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 public class DuplicatedDomiciliacionException extends DomiciliacionException{
-    public DuplicatedDomiciliacionException(String guid) {
-        super("Domiciliación con guid " + guid + " ya existente");
+    public DuplicatedDomiciliacionException(String iban) {
+        super("Domiciliación al IBAN " + iban + " ya existente");
     }
 }
