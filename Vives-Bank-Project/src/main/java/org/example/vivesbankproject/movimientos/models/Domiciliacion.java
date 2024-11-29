@@ -1,5 +1,6 @@
 package org.example.vivesbankproject.movimientos.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -26,6 +27,8 @@ public class Domiciliacion {
 
     @Builder.Default
     private String guid = IdGenerator.generarId();
+
+    private String clienteGuid;
 
     @Pattern(
             regexp = "^ES\\d{20}$",
@@ -56,4 +59,9 @@ public class Domiciliacion {
 
     @Builder.Default
     private LocalDateTime ultimaEjecucion = LocalDateTime.now(); // Última vez que se realizó el cargo
+
+    @JsonProperty("id")
+    public String get_id() {
+        return id.toHexString();
+    }
 }
