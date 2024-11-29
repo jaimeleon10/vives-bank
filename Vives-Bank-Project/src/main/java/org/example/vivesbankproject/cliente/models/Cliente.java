@@ -70,10 +70,6 @@ public class Cliente {
     @Builder.Default
     private Set<Cuenta> cuentas = new HashSet<>();
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @Builder.Default
-    private Set<String> domiciliacionesIds = Set.of();
-
     @OneToOne
     @JoinColumn(name = "user_id")
     @NotNull(message = "El usuario no puede ser un campo nulo")
