@@ -104,6 +104,7 @@ public class DomiciliacionScheduler {
 
         // Registrar el movimiento
         Movimiento movimiento = Movimiento.builder()
+                .clienteGuid(cuentaOrigen.getClienteId())
                 .domiciliacion(domiciliacion)
                 .build();
 
