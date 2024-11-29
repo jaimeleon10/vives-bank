@@ -10,9 +10,11 @@ import org.example.vivesbankproject.movimientos.exceptions.domiciliacion.SaldoIn
 import org.example.vivesbankproject.movimientos.mappers.MovimientoMapper;
 import org.example.vivesbankproject.movimientos.models.Domiciliacion;
 import org.example.vivesbankproject.movimientos.models.Movimiento;
+import org.example.vivesbankproject.movimientos.models.Periodicidad;
 import org.example.vivesbankproject.movimientos.repositories.DomiciliacionRepository;
 import org.example.vivesbankproject.movimientos.repositories.MovimientosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@EnableScheduling
 public class DomiciliacionScheduler {
 
     private final DomiciliacionRepository domiciliacionRepository;
@@ -38,21 +41,22 @@ public class DomiciliacionScheduler {
         this.cuentaMapper = cuentaMapper;
     }
 
-    @Scheduled(cron = "0 0 0 * * ?") // Ejecución diaria a medianoche
+    @Scheduled(cron = "0 * * * * ?") // Ejecución diaria a medianoche
     public void procesarDomiciliaciones() {
         log.info("Procesando domiciliaciones periódicas");
 
         LocalDateTime ahora = LocalDateTime.now();
 
         // Filtrar domiciliaciones activas que requieren ejecución
-        List<Domiciliacion> domiciliaciones = domiciliacionRepository.findAll().stream()
-                .filter(d -> d.getActiva() &&
-                        d.getUltimaEjecucion().plusMonths(1).isBefore(ahora))
-                .collect(Collectors.toList());
+        List<Domiciliacion> domiciliaciones = domiciliacionRepository.findAll()
+                .stream()
+                .filter(d -> d.getActiva() && requiereEjecucion(d, ahora))
+                .toList();
 
         for (Domiciliacion domiciliacion : domiciliaciones) {
             try {
                 // Validar y ejecutar la domiciliación
+                log.info("Ejecutando domiciliación: {}", domiciliacion.getGuid());
                 ejecutarDomiciliacion(domiciliacion);
 
                 // Actualizar última ejecución
@@ -65,6 +69,22 @@ public class DomiciliacionScheduler {
             }
         }
     }
+
+    private boolean requiereEjecucion(Domiciliacion domiciliacion, LocalDateTime ahora) {
+        switch (domiciliacion.getPeriodicidad()) {
+            case DIARIA:
+                return domiciliacion.getUltimaEjecucion().plusDays(1).isBefore(ahora);
+            case SEMANAL:
+                return domiciliacion.getUltimaEjecucion().plusWeeks(1).isBefore(ahora);
+            case MENSUAL:
+                return domiciliacion.getUltimaEjecucion().plusMonths(1).isBefore(ahora);
+            case ANUAL:
+                return domiciliacion.getUltimaEjecucion().plusYears(1).isBefore(ahora);
+            default:
+                return false;
+        }
+    }
+
 
     private void ejecutarDomiciliacion(Domiciliacion domiciliacion) {
         var cuentaOrigen = cuentaService.getByIban(domiciliacion.getIbanOrigen());
