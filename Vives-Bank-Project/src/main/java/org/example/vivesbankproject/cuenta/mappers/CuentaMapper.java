@@ -10,6 +10,7 @@ import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Component
@@ -50,5 +51,15 @@ public class CuentaMapper {
                 .updatedAt(LocalDateTime.now())
                 .isDeleted(cuenta.getIsDeleted())
                 .build();
+    }
+
+    public CuentaRequestUpdate toCuentaRequestUpdate(CuentaResponse cuenta) {
+        return CuentaRequestUpdate.builder()
+                .saldo(new BigDecimal(cuenta.getSaldo()))
+                .tipoCuentaId(cuenta.getTipoCuentaId())
+                .tarjetaId(cuenta.getTarjetaId())
+                .clienteId(cuenta.getClienteId())
+                .isDeleted(cuenta.getIsDeleted())
+               .build();
     }
 }

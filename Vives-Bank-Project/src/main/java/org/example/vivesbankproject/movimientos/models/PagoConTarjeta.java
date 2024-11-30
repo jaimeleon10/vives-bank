@@ -1,8 +1,7 @@
 package org.example.vivesbankproject.movimientos.models;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -11,12 +10,17 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PagoConTarjeta {
+
     @Pattern(regexp = "^\\d{16}$", message = "El número de tarjeta debe tener 16 dígitos")
+    @NotBlank
     private String numeroTarjeta;
 
+    @Min(value = 1, message = "La cantidad debe ser mayor a 1")
+    @Max(value = 10000, message = "La cantidad debe ser menor a 10000")
+    private Double cantidad;
+
     @Size(max = 100, message = "El nombre del comercio no puede tener más de 100 caracteres")
+    @NotBlank
     private String nombreComercio;
 
-    @Pattern(regexp = "^\\d{3}$", message = "El CVV debe tener 3 dígitos")
-    private String cvv;
 }

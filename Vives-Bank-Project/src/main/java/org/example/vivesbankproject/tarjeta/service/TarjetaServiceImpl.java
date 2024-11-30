@@ -26,7 +26,7 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-@CacheConfig(cacheNames = {"tarjetas"})
+@CacheConfig(cacheNames = {"tarjeta"})
 public class TarjetaServiceImpl implements TarjetaService {
 
     private final TarjetaRepository tarjetaRepository;
