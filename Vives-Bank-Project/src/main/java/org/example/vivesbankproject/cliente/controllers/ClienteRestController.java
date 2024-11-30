@@ -84,8 +84,8 @@ public class ClienteRestController {
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<ClienteResponse> update(@PathVariable String id, @Valid @RequestBody ClienteRequestUpdate clienteRequest) {
-        var result = clienteService.update(id, clienteRequest);
+    public ResponseEntity<ClienteResponse> update(@PathVariable String id, @Valid @RequestBody ClienteRequestUpdate clienteRequestUpdate) {
+        var result = clienteService.update(id, clienteRequestUpdate);
         return ResponseEntity.ok(result);
     }
 
@@ -98,8 +98,33 @@ public class ClienteRestController {
     @GetMapping("/me/perfil")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ClienteResponse> me(@AuthenticationPrincipal User user) {
-        log.info("Obteniendo datos del cliente con guid: {}", user.getGuid());
-        return ResponseEntity.ok(clienteService.getUserByGuid(user.getGuid()));
+        return ResponseEntity.ok(clienteService.getUserAuthenticatedByGuid(user.getGuid()));
+    }
+
+    @PutMapping("/me/perfil")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ClienteResponse> updateMe(@AuthenticationPrincipal User user, @Valid @RequestBody ClienteRequestUpdate clienteRequestUpdate) {
+        var result = clienteService.updateUserAuthenticated(user.getGuid(), clienteRequestUpdate);
+        return ResponseEntity.ok(result);
+    }
+
+    @DeleteMapping("/me/perfil")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<String> deleteMe(@AuthenticationPrincipal User user) {
+        var result = clienteService.derechoAlOlvido(user.getGuid());
+        return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("/me/dni_image")
+    public ResponseEntity<ClienteResponse> updateDniImage(@AuthenticationPrincipal User user, MultipartFile file) {
+        log.info("Actualizando imagen dni del cliente con guid: {}", user.getGuid());
+        return ResponseEntity.ok(clienteService.updateDniFoto(user.getGuid(), file));
+    }
+
+    @PutMapping("/me/foto_perfil")
+    public ResponseEntity<ClienteResponse> updateFotoPerfil(@AuthenticationPrincipal User user, MultipartFile file) {
+        log.info("Actualizando imagen de perfil del cliente con guid: {}", user.getGuid());
+        return ResponseEntity.ok(clienteService.updateProfileFoto(user.getGuid(), file));
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -122,17 +147,5 @@ public class ClienteRestController {
         }
 
         return errors;
-    }
-
-    @PutMapping("/me/dni_image")
-    public ResponseEntity<ClienteResponse> updateDniImage(@AuthenticationPrincipal User user, MultipartFile file) {
-        log.info("Actualizando imagen dni del cliente con guid: {}", user.getGuid());
-        return ResponseEntity.ok(clienteService.updateDniFoto(user.getGuid(), file));
-    }
-
-    @PutMapping("/me/foto_perfil")
-    public ResponseEntity<ClienteResponse> updateFotoPerfil(@AuthenticationPrincipal User user, MultipartFile file) {
-        log.info("Actualizando imagen de perfil del cliente con guid: {}", user.getGuid());
-        return ResponseEntity.ok(clienteService.updateProfileFoto(user.getGuid(), file));
     }
 }

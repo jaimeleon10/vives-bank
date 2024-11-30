@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -64,6 +65,11 @@ public class CuentaController {
         return ResponseEntity.ok()
                 .header("link", paginationLinksUtils.createLinkHeader(pageResult, uriBuilder))
                 .body(PageResponse.of(pageResult, sortBy, direction));
+    }
+
+    @GetMapping("cliente/{clienteGuid}")
+    public ResponseEntity<ArrayList<CuentaResponse>> getAllCuentasByClienteGuid(@PathVariable String clienteGuid) {
+        return ResponseEntity.ok(cuentaService.getAllCuentasByClienteGuid(clienteGuid));
     }
 
     @GetMapping("{id}")

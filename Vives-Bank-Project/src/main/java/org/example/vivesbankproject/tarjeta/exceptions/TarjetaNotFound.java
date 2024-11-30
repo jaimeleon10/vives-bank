@@ -8,6 +8,6 @@ import java.util.UUID;
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class TarjetaNotFound extends TarjetaException {
     public TarjetaNotFound(String id) {
-        super("Tarjeta no encontrada con ID: " + id);
+        super("Tarjeta no encontrada con guid: " + id);
     }
 }
