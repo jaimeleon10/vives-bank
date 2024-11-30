@@ -35,6 +35,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -143,7 +144,7 @@ public class ZipFileSystemStorage implements ZipStorageService {
                                 user.setGuid(clienteJsonAdmin.getUser().getGuid());
                                 user.setUsername(clienteJsonAdmin.getUser().getUsername());
                                 user.setPassword(clienteJsonAdmin.getUser().getPassword());
-                                user.setRoles(clienteJsonAdmin.getUser().getRoles());
+                                user.setRoles(clienteJsonAdmin.getUser().getRoles().stream().collect(Collectors.toSet()));
                                 user.setCreatedAt(clienteJsonAdmin.getUser().getCreatedAt());
                                 user.setUpdatedAt(clienteJsonAdmin.getUser().getUpdatedAt());
                                 user.setIsDeleted(clienteJsonAdmin.getUser().getIsDeleted());
