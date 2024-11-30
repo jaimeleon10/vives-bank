@@ -1,50 +1,41 @@
 package org.example.vivesbankproject.storage.backupZip.services;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.cliente.dto.ClienteJson;
+import org.example.vivesbankproject.cliente.dto.ClienteJsonAdmin;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
-import org.example.vivesbankproject.cliente.service.ClienteService;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
-import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
 import org.example.vivesbankproject.movimientos.models.Movimiento;
 import org.example.vivesbankproject.movimientos.repositories.MovimientosRepository;
 import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
 import org.example.vivesbankproject.storage.exceptions.StorageInternal;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
+import org.example.vivesbankproject.users.models.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
@@ -55,7 +46,7 @@ public class ZipFileSystemStorage implements ZipStorageService {
     private final ClienteRepository clienteRepository;
     private MovimientosRepository movimientosRepository;
 
-    public ZipFileSystemStorage(@Value("${upload.root-location}") String path, ClienteRepository clienteRepository, MovimientosRepository movimientosRepository) {
+    public ZipFileSystemStorage(@Value("${upload.root-location-2}") String path, ClienteRepository clienteRepository, MovimientosRepository movimientosRepository) {
         this.rootLocation = Paths.get(path);
         this.clienteRepository = clienteRepository;
         this.movimientosRepository = movimientosRepository;
@@ -80,7 +71,7 @@ public class ZipFileSystemStorage implements ZipStorageService {
             try (FileOutputStream fos = new FileOutputStream(zipPath.toFile());
                  ZipOutputStream zos = new ZipOutputStream(fos)) {
 
-                Path dataDir = Paths.get("data");
+                Path dataDir = Paths.get("dataAdmin");
 
                 if (!Files.exists(dataDir)) {
                     throw new StorageNotFound("La carpeta 'data' no existe.");
@@ -129,55 +120,68 @@ public class ZipFileSystemStorage implements ZipStorageService {
                         String jsonData = new String(zis.readAllBytes());
 
                         ObjectMapper objectMapper = new ObjectMapper();
-
-                        // Configurar el formato de fecha para manejar fracciones de segundo opcionales
                         JavaTimeModule module = new JavaTimeModule();
-                        DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-                                .appendPattern("yyyy-MM-dd'T'HH:mm:ss")
-                                .optionalStart()
-                                .appendFraction(ChronoField.NANO_OF_SECOND, 1, 9, true) // Permite fracciones de segundo
-                                .optionalEnd()
-                                .toFormatter();
-                        module.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(formatter));
+                        module.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                         objectMapper.registerModule(module);
 
-                        List<ClienteJson> clienteMap = objectMapper.readValue(jsonData, new TypeReference<>() {});
+                        List<ClienteJsonAdmin> clienteMap = objectMapper.readValue(jsonData, new TypeReference<>() {});
 
-                        for (ClienteJson clienteJson : clienteMap) {
+                        for (ClienteJsonAdmin clienteJsonAdmin : clienteMap) {
                             Cliente cliente = new Cliente();
-                            cliente.setGuid(clienteJson.getGuid());
-                            cliente.setDni(clienteJson.getDni());
-                            cliente.setNombre(clienteJson.getNombre());
-                            cliente.setApellidos(clienteJson.getApellidos());
-                            cliente.setDireccion(clienteJson.getDireccion());
-                            cliente.setEmail(clienteJson.getEmail());
-                            cliente.setTelefono(clienteJson.getTelefono());
-                            cliente.setFotoPerfil(clienteJson.getFotoPerfil());
-                            cliente.setFotoDni(clienteJson.getFotoDni());
-                            cliente.setIsDeleted(clienteJson.getIsDeleted());
+                            cliente.setId(clienteJsonAdmin.getId());
+                            cliente.setGuid(clienteJsonAdmin.getGuid());
+                            cliente.setDni(clienteJsonAdmin.getDni());
+                            cliente.setNombre(clienteJsonAdmin.getNombre());
+                            cliente.setApellidos(clienteJsonAdmin.getApellidos());
+                            cliente.setDireccion(clienteJsonAdmin.getDireccion());
+                            cliente.setEmail(clienteJsonAdmin.getEmail());
+                            cliente.setTelefono(clienteJsonAdmin.getTelefono());
+
+                            if (cliente.getUser() != null) {
+                                User user = new User();
+                                user.setGuid(clienteJsonAdmin.getUser().getGuid());
+                                user.setUsername(clienteJsonAdmin.getUser().getUsername());
+                                user.setPassword(clienteJsonAdmin.getUser().getPassword());
+                                user.setRoles(clienteJsonAdmin.getUser().getRoles());
+                                user.setCreatedAt(clienteJsonAdmin.getUser().getCreatedAt());
+                                user.setUpdatedAt(clienteJsonAdmin.getUser().getUpdatedAt());
+                                user.setIsDeleted(clienteJsonAdmin.getUser().getIsDeleted());
+
+                                cliente.setUser(user);
+                            }
+
+                            cliente.setFotoPerfil(clienteJsonAdmin.getFotoPerfil());
+                            cliente.setFotoDni(clienteJsonAdmin.getFotoDni());
+                            cliente.setIsDeleted(clienteJsonAdmin.getIsDeleted());
 
                             Set<Cuenta> cuentas = new HashSet<>();
-                            for (CuentaResponse cuentaResponse : clienteJson.getCuentas()) {
-                                Cuenta cuenta = new Cuenta();
-                                cuenta.setGuid(cuentaResponse.getGuid());
-                                cuenta.setIban(cuentaResponse.getIban());
-                                cuenta.setSaldo(new BigDecimal(cuentaResponse.getSaldo()));
-                                cuenta.setCreatedAt(LocalDateTime.parse(cuentaResponse.getCreatedAt(), formatter));
-                                cuenta.setUpdatedAt(LocalDateTime.parse(cuentaResponse.getUpdatedAt(), formatter));
-                                cuenta.setIsDeleted(cuentaResponse.getIsDeleted());
+                            for (Cuenta cuenta : clienteJsonAdmin.getCuentas()) {
+                                cuenta.setGuid(cuenta.getGuid());
+                                cuenta.setIban(cuenta.getIban());
+                                cuenta.setTipoCuenta(cuenta.getTipoCuenta());
+                                cuenta.setSaldo(cuenta.getSaldo());
+                                cuenta.setCreatedAt(cuenta.getCreatedAt());
+                                cuenta.setUpdatedAt(cuenta.getUpdatedAt());
+                                cuenta.setIsDeleted(cuenta.getIsDeleted());
 
                                 cuenta.setCliente(cliente);
 
-                                Tarjeta tarjeta = new Tarjeta();
-                                tarjeta.setGuid(cuentaResponse.getTarjetaId());
-                                tarjeta.setCreatedAt(LocalDateTime.parse(cuentaResponse.getCreatedAt(), formatter));
-                                tarjeta.setUpdatedAt(LocalDateTime.parse(cuentaResponse.getUpdatedAt(), formatter));
-                                tarjeta.setIsDeleted(cuentaResponse.getIsDeleted());
+                                if (cuenta.getTarjeta() != null) {
+                                    Tarjeta tarjeta = new Tarjeta();
+                                    tarjeta.setGuid(cuenta.getTarjeta().getGuid());
+                                    tarjeta.setTipoTarjeta(cuenta.getTarjeta().getTipoTarjeta());
+                                    tarjeta.setPin(cuenta.getTarjeta().getPin());
+                                    tarjeta.setCreatedAt(cuenta.getTarjeta().getCreatedAt());
+                                    tarjeta.setUpdatedAt(cuenta.getTarjeta().getUpdatedAt());
+                                    tarjeta.setIsDeleted(cuenta.getTarjeta().getIsDeleted());
 
-                                cuenta.setTarjeta(tarjeta);
+                                    cuenta.setTarjeta(tarjeta);
+                                }
 
                                 cuentas.add(cuenta);
                             }
+
                             cliente.setCuentas(cuentas);
 
                             clienteRepository.save(cliente);
