@@ -49,12 +49,10 @@ public class TarjetaServiceImpl implements TarjetaService {
     private final WebSocketConfig webSocketConfig;
     private final ObjectMapper mapper;
     private final CuentaRepository cuentaRepository;
-    //private final NotificationMapper notificationMapper;
     private WebSocketHandler webSocketService;
 
     @Autowired
     public TarjetaServiceImpl(TarjetaRepository tarjetaRepository, TarjetaMapper tarjetaMapper, UserRepository userRepository, WebSocketConfig webSocketConfig, CuentaRepository cuentaRepository) {
-     //       ,NotificationMapper notificationMapper
         this.tarjetaRepository = tarjetaRepository;
         this.tarjetaMapper = tarjetaMapper;
         this.userRepository = userRepository;
@@ -63,7 +61,6 @@ public class TarjetaServiceImpl implements TarjetaService {
 
         webSocketService = webSocketConfig.webSocketTarjetasHandler();
         mapper = new ObjectMapper();
-        //this.notificationMapper = notificationMapper;
         this.cuentaRepository = cuentaRepository;
     }
 
@@ -163,6 +160,7 @@ public class TarjetaServiceImpl implements TarjetaService {
     public TarjetaResponse save(TarjetaRequestSave tarjetaRequestSave) {
         log.info("Guardando tarjeta: {}", tarjetaRequestSave);
         var tarjeta = tarjetaRepository.save(tarjetaMapper.toTarjeta(tarjetaRequestSave));
+        onChange(Notification.Tipo.CREATE, tarjeta);
         return tarjetaMapper.toTarjetaResponse(tarjeta);
     }
 
@@ -174,6 +172,7 @@ public class TarjetaServiceImpl implements TarjetaService {
                 () -> new TarjetaNotFound(id)
         );
         var tarjetaUpdated = tarjetaRepository.save(tarjetaMapper.toTarjetaUpdate(tarjetaRequestUpdate, tarjeta));
+        onChange(Notification.Tipo.UPDATE, tarjetaUpdated);
         return tarjetaMapper.toTarjetaResponse(tarjetaUpdated);
     }
 
@@ -184,6 +183,7 @@ public class TarjetaServiceImpl implements TarjetaService {
         var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
         tarjeta.setIsDeleted(true);
         tarjetaRepository.save(tarjeta);
+        onChange(Notification.Tipo.DELETE, tarjeta);
     }
 
     void onChange(Notification.Tipo tipo, Tarjeta data) {
