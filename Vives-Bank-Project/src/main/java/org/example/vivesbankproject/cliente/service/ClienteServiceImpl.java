@@ -8,8 +8,15 @@ import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.models.Direccion;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
+import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFoundByClienteGuid;
+import org.example.vivesbankproject.cuenta.models.Cuenta;
+import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.storage.images.services.StorageImagesService;
+import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
+import org.example.vivesbankproject.tarjeta.models.Tarjeta;
+import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.users.exceptions.UserNotFoundById;
+import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -32,12 +39,16 @@ public class ClienteServiceImpl implements ClienteService {
     private final ClienteMapper clienteMapper;
     private final UserRepository userRepository;
     private final StorageImagesService storageImagesService;
+    private final CuentaRepository cuentaRepository;
+    private final TarjetaRepository tarjetaRepository;
 
-    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserRepository userRepository, StorageImagesService storageImagesService) {
+    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserRepository userRepository, StorageImagesService storageImagesService, CuentaRepository cuentaRepository, TarjetaRepository tarjetaRepository) {
         this.clienteRepository = clienteRepository;
         this.clienteMapper = clienteMapper;
         this.userRepository = userRepository;
         this.storageImagesService = storageImagesService;
+        this.cuentaRepository = cuentaRepository;
+        this.tarjetaRepository = tarjetaRepository;
     }
 
     @Override
@@ -138,10 +149,13 @@ public class ClienteServiceImpl implements ClienteService {
                 () -> new ClienteNotFound(id)
         );
 
-        // Buscamos si existe el usuario por el parámetro id ajuntado en el cliente request
-        var usuarioExistente = userRepository.findByGuid(clienteRequestUpdate.getUserId()).orElseThrow(
-                () -> new UserNotFoundById(clienteRequestUpdate.getUserId())
-        );
+        // Buscamos si existe el usuario por el parámetro id adjuntado en el cliente request
+        var usuarioExistente = clienteExistente.getUser();
+        if (clienteRequestUpdate.getUserId() != null) {
+             usuarioExistente = userRepository.findByGuid(clienteRequestUpdate.getUserId()).orElseThrow(
+                    () -> new UserNotFoundById(clienteRequestUpdate.getUserId())
+            );
+        }
 
         // Buscamos si existe algún cliente con el usuario adjunto ya asignado
         if (clienteRepository.existsByUserGuid(clienteRequestUpdate.getUserId())) {
@@ -189,7 +203,7 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     @Cacheable
-    public ClienteResponse getUserByGuid(String guid) {
+    public ClienteResponse getUserAuthenticatedByGuid(String guid) {
         log.info("Buscando cliente por user guid: {}", guid);
 
         // Buscamos el cliente directamente por el userGuid
@@ -203,6 +217,71 @@ public class ClienteServiceImpl implements ClienteService {
         }
 
         return clienteMapper.toClienteResponse(cliente, usuarioExistente.getGuid());
+    }
+
+    @Override
+    @CachePut
+    public ClienteResponse updateUserAuthenticated(String guid, ClienteRequestUpdate clienteRequestUpdate) {
+        log.info("Actualizando cliente autenticado");
+        var clienteAutenticado = clienteRepository.findByUserGuid(guid).orElseThrow(
+                () -> new ClienteNotFound(guid)
+        );
+
+        if (!Objects.equals(clienteRequestUpdate.getTelefono(), clienteAutenticado.getTelefono())) {
+            if (clienteRepository.findByTelefono(clienteRequestUpdate.getTelefono()).isPresent()) {
+                throw new ClienteExistsByTelefono(clienteRequestUpdate.getTelefono());
+            }
+        }
+        if (!Objects.equals(clienteRequestUpdate.getEmail(), clienteAutenticado.getEmail())) {
+            if (clienteRepository.findByEmail(clienteRequestUpdate.getNombre()).isPresent()) {
+                throw new ClienteExistsByEmail(clienteRequestUpdate.getEmail());
+            }
+        }
+
+        var direccion = Direccion.builder()
+                .calle(clienteRequestUpdate.getCalle())
+                .numero(clienteRequestUpdate.getNumero())
+                .codigoPostal(clienteRequestUpdate.getCodigoPostal())
+                .piso(clienteRequestUpdate.getPiso())
+                .letra(clienteRequestUpdate.getLetra())
+                .build();
+
+        // Guardamos el cliente mapeado a update
+        var clienteSave = clienteRepository.save(clienteMapper.toClienteUpdate(clienteRequestUpdate, clienteAutenticado, clienteAutenticado.getUser(), direccion));
+
+        // Devolvemos el cliente response con los datos necesarios
+        return clienteMapper.toClienteResponse(clienteSave, clienteSave.getUser().getGuid());
+    }
+
+    @Override
+    public String derechoAlOlvido(String userGuid) {
+        User usuario = userRepository.findByGuid(userGuid).orElseThrow(
+                () -> new UserNotFoundById(userGuid)
+        );
+        Cliente cliente = clienteRepository.findByUserGuid(userGuid).orElseThrow(
+                () -> new ClienteNotFoundByUser(userGuid)
+        );
+        ArrayList<Cuenta> cuentas = cuentaRepository.findAllByCliente_Guid(cliente.getGuid());
+
+        ArrayList<Tarjeta> tarjetas = new ArrayList<>();
+
+        cuentas.forEach(cuenta -> {
+            var tarjeta = tarjetaRepository.findByGuid(cuenta.getTarjeta().getGuid()).orElseThrow(
+                    () -> new TarjetaNotFound(cuenta.getTarjeta().getGuid())
+            );
+            tarjetas.add(tarjeta);
+        });
+
+        try {
+            tarjetaRepository.deleteAll(tarjetas);
+            cuentaRepository.deleteAll(cuentas);
+            clienteRepository.delete(cliente);
+            userRepository.delete(usuario);
+        } catch (Exception e) {
+            throw new ClienteNotDeleted(cliente.getGuid());
+        }
+
+        return "El cliente con guid '" + cliente.getGuid() + "' ejerció su derecho al olvido borrando todos sus datos personales";
     }
 
     private void validarClienteExistente(Cliente cliente) {

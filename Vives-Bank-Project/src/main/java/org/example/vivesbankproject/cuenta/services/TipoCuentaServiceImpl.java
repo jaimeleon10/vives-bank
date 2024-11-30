@@ -34,19 +34,24 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
     }
 
     @Override
-    public Page<TipoCuentaResponse> getAll(Optional<String> nombre, Optional<BigDecimal> interes, Pageable pageable) {
+    public Page<TipoCuentaResponse> getAll(Optional<String> nombre, Optional<BigDecimal> interesMax, Optional<BigDecimal> interesMin, Pageable pageable) {
         log.info("Obteniendo todos los tipos de cuenta");
 
         Specification<TipoCuenta> specNombreTipoCuenta = (root, query, criteriaBuilder) ->
                 nombre.map(i -> criteriaBuilder.like(criteriaBuilder.lower(root.get("nombre")), "%" + i.toLowerCase() + "%"))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
-        Specification<TipoCuenta> specInteresTipoCuenta = (root, query, criteriaBuilder) ->
-                interes.map(s -> criteriaBuilder.lessThanOrEqualTo(root.get("interes"), s))
+        Specification<TipoCuenta> specInteresMaxTipoCuenta = (root, query, criteriaBuilder) ->
+                interesMax.map(s -> criteriaBuilder.lessThanOrEqualTo(root.get("interes"), s))
+                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
+
+        Specification<TipoCuenta> specInteresMinTipoCuenta = (root, query, criteriaBuilder) ->
+                interesMin.map(s -> criteriaBuilder.greaterThanOrEqualTo(root.get("interes"), s))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
         Specification<TipoCuenta> criterio = Specification.where(specNombreTipoCuenta)
-                .and(specInteresTipoCuenta);
+                .and(specInteresMaxTipoCuenta)
+                .and(specInteresMinTipoCuenta);
 
         Page<TipoCuenta> tipoCuentaPage = tipoCuentaRepository.findAll(criterio, pageable);
 

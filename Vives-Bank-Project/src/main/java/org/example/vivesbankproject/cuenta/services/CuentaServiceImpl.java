@@ -27,6 +27,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -85,6 +87,24 @@ public class CuentaServiceImpl implements CuentaService{
                         cuenta.getCliente().getGuid()
                 )
         );
+    }
+
+    @Override
+    public ArrayList<CuentaResponse> getAllCuentasByClienteGuid(String clienteGuid) {
+        ArrayList<Cuenta> cuentas = cuentaRepository.findAllByCliente_Guid(clienteGuid);
+
+        ArrayList<CuentaResponse> cuentaResponses = new ArrayList<>();
+        cuentas.forEach(cuenta -> {
+            CuentaResponse cuentaResponse = cuentaMapper.toCuentaResponse(
+                    cuenta,
+                    cuenta.getTipoCuenta().getGuid(),
+                    cuenta.getTarjeta().getGuid(),
+                    cuenta.getCliente().getGuid()
+            );
+            cuentaResponses.add(cuentaResponse);
+        });
+
+        return cuentaResponses;
     }
 
     @Override

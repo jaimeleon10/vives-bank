@@ -26,9 +26,11 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -47,8 +49,8 @@ public class JsonClientesFileSystemStorage implements JsonClientesStorageService
     }
 
     @Override
-    public String store() {
-        String storedFilename = "clientes" + System.currentTimeMillis() + ".json";
+    public String storeAll() {
+        String storedFilename = "clientes_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".json";
         Path jsonFilePath = this.rootLocation.resolve(storedFilename);
 
         try {
@@ -130,6 +132,89 @@ public class JsonClientesFileSystemStorage implements JsonClientesStorageService
     }
 
     @Override
+    public String store(String guid) {
+        String storedFilename = "clientes_" + guid + "_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".json";
+        Path jsonFilePath = this.rootLocation.resolve(storedFilename);
+
+        try {
+            Optional<Cliente> clientes = clienteRepository.findByGuid(guid);
+
+            List<ClienteJson> clienteMap = clientes.stream()
+                    .map(cliente -> {
+                        ClienteJson clienteJson = new ClienteJson();
+                        clienteJson.setGuid(cliente.getGuid());
+                        clienteJson.setDni(cliente.getDni());
+                        clienteJson.setNombre(cliente.getNombre());
+                        clienteJson.setApellidos(cliente.getApellidos());
+                        clienteJson.setDireccion(cliente.getDireccion());
+                        clienteJson.setEmail(cliente.getEmail());
+                        clienteJson.setTelefono(cliente.getTelefono());
+                        clienteJson.setFotoPerfil(cliente.getFotoPerfil());
+                        clienteJson.setFotoDni(cliente.getFotoDni());
+
+                        Set<CuentaResponse> cuentasResponse = cliente.getCuentas().stream()
+                                .map(cuenta -> {
+                                    CuentaResponse cuentaResponse = new CuentaResponse();
+                                    cuentaResponse.setGuid(cuenta.getGuid());
+                                    cuentaResponse.setIban(cuenta.getIban());
+                                    cuentaResponse.setSaldo(cuenta.getSaldo().toString());
+                                    cuentaResponse.setTipoCuentaId(cuenta.getTipoCuenta().getGuid());
+
+                                    Tarjeta tarjeta = cuenta.getTarjeta();
+                                    if (tarjeta != null) {
+                                        TarjetaResponse tarjetaResponse = new TarjetaResponse();
+                                        tarjetaResponse.setGuid(tarjeta.getGuid());
+                                        tarjetaResponse.setNumeroTarjeta(tarjeta.getNumeroTarjeta());
+                                        tarjetaResponse.setLimiteDiario(String.valueOf(tarjeta.getLimiteDiario()));
+                                        tarjetaResponse.setLimiteSemanal(String.valueOf(tarjeta.getLimiteSemanal()));
+                                        tarjetaResponse.setLimiteMensual(String.valueOf(tarjeta.getLimiteMensual()));
+                                        tarjetaResponse.setTipoTarjeta(tarjeta.getTipoTarjeta());
+                                        tarjetaResponse.setCreatedAt(tarjeta.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                                        tarjetaResponse.setUpdatedAt(tarjeta.getUpdatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                                        tarjetaResponse.setIsDeleted(tarjeta.getIsDeleted());
+                                        cuentaResponse.setTarjetaId(tarjeta.getGuid());
+                                        clienteJson.setTarjeta(tarjetaResponse);
+                                    }
+
+                                    cuentaResponse.setClienteId(cuenta.getCliente().getGuid());
+                                    cuentaResponse.setCreatedAt(String.valueOf(cuenta.getCreatedAt()));
+                                    cuentaResponse.setUpdatedAt(String.valueOf(cuenta.getUpdatedAt()));
+                                    cuentaResponse.setIsDeleted(cuenta.getIsDeleted());
+                                    return cuentaResponse;
+                                })
+                                .collect(Collectors.toSet());
+
+                        clienteJson.setCuentas(cuentasResponse);
+
+                        clienteJson.setCreatedAt(cliente.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                        clienteJson.setUpdatedAt(cliente.getUpdatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                        clienteJson.setIsDeleted(cliente.getIsDeleted());
+
+                        return clienteJson;
+                    })
+                    .collect(Collectors.toList());
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JavaTimeModule module = new JavaTimeModule();
+            module.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            objectMapper.registerModule(module);
+
+            objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+            objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+
+            String jsonData = objectMapper.writeValueAsString(clienteMap);
+
+            Files.write(jsonFilePath, jsonData.getBytes());
+
+            log.info("Archivo JSON con cliente almacenado: " + storedFilename);
+
+            return storedFilename;
+        } catch (IOException e) {
+            throw new StorageInternal("Fallo al almacenar el archivo JSON de cliente: " + e);
+        }
+    }
+
+    @Override
     public Stream<Path> loadAll() {
         log.info("Cargando todos los ficheros almacenados");
         try {
@@ -161,12 +246,6 @@ public class JsonClientesFileSystemStorage implements JsonClientesStorageService
         } catch (MalformedURLException e) {
             throw new StorageNotFound("No se puede leer fichero: " + filename + " " + e);
         }
-    }
-
-    @Override
-    public void deleteAll() {
-        log.info("Eliminando todos los ficheros almacenados");
-        FileSystemUtils.deleteRecursively(rootLocation.toFile());
     }
 
     @Override
