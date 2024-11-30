@@ -121,36 +121,17 @@ public class JsonMovimientosFileSystemStorage implements JsonMovimientosStorageS
                         movimientoResponse.setGuid(movimiento.getGuid());
                         movimientoResponse.setClienteGuid(movimiento.getClienteGuid());
 
-                        Domiciliacion domiciliacion = movimiento.getDomiciliacion();
-                        if (domiciliacion != null) {
-                            domiciliacion.setIban_Origen(domiciliacion.getIban_Origen());
-                            domiciliacion.setNombreAcreedor(domiciliacion.getNombreAcreedor());
-                            domiciliacion.setIdentificadorAcreedor(domiciliacion.getIdentificadorAcreedor());
-                            movimientoResponse.setDomiciliacion(domiciliacion);
+                        if (movimiento.getDomiciliacion() != null) {
+                            movimientoResponse.setDomiciliacion(movimiento.getDomiciliacion());
                         }
-
-                        IngresoDeNomina ingresoDeNomina = movimiento.getIngresoDeNomina();
-                        if (ingresoDeNomina != null) {
-                            ingresoDeNomina.setIban_Destino(ingresoDeNomina.getIban_Destino());
-                            ingresoDeNomina.setNombreEmpresa(ingresoDeNomina.getNombreEmpresa());
-                            ingresoDeNomina.setCifEmpresa(ingresoDeNomina.getCifEmpresa());
-                            movimientoResponse.setIngresoDeNomina(ingresoDeNomina);
+                        if (movimiento.getIngresoDeNomina() != null) {
+                            movimientoResponse.setIngresoDeNomina(movimiento.getIngresoDeNomina());
                         }
-
-                        PagoConTarjeta pagoConTarjeta = movimiento.getPagoConTarjeta();
-                        if (pagoConTarjeta != null) {
-                            pagoConTarjeta.setNumeroTarjeta(pagoConTarjeta.getNumeroTarjeta());
-                            pagoConTarjeta.setNombreComercio(pagoConTarjeta.getNombreComercio());
-                            pagoConTarjeta.setCvv(pagoConTarjeta.getCvv());
-                            movimientoResponse.setPagoConTarjeta(pagoConTarjeta);
+                        if (movimiento.getPagoConTarjeta() != null) {
+                            movimientoResponse.setPagoConTarjeta(movimiento.getPagoConTarjeta());
                         }
-
-                        Transferencia transferencia = movimiento.getTransferencia();
-                        if (transferencia != null) {
-                            transferencia.setIban_Origen(transferencia.getIban_Origen());
-                            transferencia.setIban_Destino(transferencia.getIban_Destino());
-                            transferencia.setNombreBeneficiario(transferencia.getNombreBeneficiario());
-                            movimientoResponse.setTransferencia(transferencia);
+                        if (movimiento.getTransferencia() != null) {
+                            movimientoResponse.setTransferencia(movimiento.getTransferencia());
                         }
 
                         movimientoResponse.setCreatedAt(movimiento.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
@@ -161,6 +142,8 @@ public class JsonMovimientosFileSystemStorage implements JsonMovimientosStorageS
                     .collect(Collectors.toList());
 
             ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
             JavaTimeModule module = new JavaTimeModule();
             module.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
             objectMapper.registerModule(module);

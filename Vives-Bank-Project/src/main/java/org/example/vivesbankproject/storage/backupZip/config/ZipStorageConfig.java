@@ -24,7 +24,7 @@ public class ZipStorageConfig {
     public void init() {
         if (deleteAll.equals("true")) {
             log.info("Borrando ficheros de almacenamiento...");
-            zipStorageService.delete("backup.zip");
+            zipStorageService.delete("clientes.zip");
         }
 
         zipStorageService.init();

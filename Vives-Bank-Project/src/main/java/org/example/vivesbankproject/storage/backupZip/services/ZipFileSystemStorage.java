@@ -1,5 +1,6 @@
 package org.example.vivesbankproject.storage.backupZip.services;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -13,6 +14,9 @@ import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.cliente.service.ClienteService;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
+import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
+import org.example.vivesbankproject.movimientos.models.Movimiento;
+import org.example.vivesbankproject.movimientos.repositories.MovimientosRepository;
 import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
 import org.example.vivesbankproject.storage.exceptions.StorageInternal;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
@@ -35,9 +39,13 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 @Service
@@ -45,12 +53,12 @@ import java.util.zip.ZipOutputStream;
 public class ZipFileSystemStorage implements ZipStorageService {
     private final Path rootLocation;
     private final ClienteRepository clienteRepository;
-    private ClienteService clienteService;
+    private MovimientosRepository movimientosRepository;
 
-    public ZipFileSystemStorage(@Value("${upload.root-location}") String path, ClienteRepository clienteRepository, ClienteService clienteService) {
+    public ZipFileSystemStorage(@Value("${upload.root-location}") String path, ClienteRepository clienteRepository, MovimientosRepository movimientosRepository) {
         this.rootLocation = Paths.get(path);
         this.clienteRepository = clienteRepository;
-        this.clienteService = clienteService;
+        this.movimientosRepository = movimientosRepository;
     }
 
     @Override
@@ -107,70 +115,108 @@ public class ZipFileSystemStorage implements ZipStorageService {
 
     @Override
     public void loadFromZip(File filename) {
-        Path jsonFilePath = this.rootLocation.resolve(filename.toPath());
+        Path zipFilePath = this.rootLocation.resolve(filename.toPath());
 
         try {
-            if (!Files.exists(jsonFilePath)) {
-                throw new StorageNotFound("El archivo JSON no existe: " + filename);
+            if (!Files.exists(zipFilePath)) {
+                throw new StorageNotFound("El archivo ZIP no existe: " + filename);
             }
 
-            String jsonData = new String(Files.readAllBytes(jsonFilePath));
+            try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipFilePath))) {
+                ZipEntry entry;
+                while ((entry = zis.getNextEntry()) != null) {
+                    if (entry.getName().endsWith(".json")) {
+                        String jsonData = new String(zis.readAllBytes());
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JavaTimeModule module = new JavaTimeModule();
-            module.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-            objectMapper.registerModule(module);
+                        ObjectMapper objectMapper = new ObjectMapper();
 
-            List<ClienteJson> clienteMap = objectMapper.readValue(jsonData, new TypeReference<List<ClienteJson>>() {});
+                        // Configurar el formato de fecha para manejar fracciones de segundo opcionales
+                        JavaTimeModule module = new JavaTimeModule();
+                        DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+                                .appendPattern("yyyy-MM-dd'T'HH:mm:ss")
+                                .optionalStart()
+                                .appendFraction(ChronoField.NANO_OF_SECOND, 1, 9, true) // Permite fracciones de segundo
+                                .optionalEnd()
+                                .toFormatter();
+                        module.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(formatter));
+                        objectMapper.registerModule(module);
 
-            for (ClienteJson clienteJson : clienteMap) {
-                Cliente cliente = new Cliente();
-                cliente.setGuid(clienteJson.getGuid());
-                cliente.setDni(clienteJson.getDni());
-                cliente.setNombre(clienteJson.getNombre());
-                cliente.setApellidos(clienteJson.getApellidos());
-                cliente.setDireccion(clienteJson.getDireccion());
-                cliente.setEmail(clienteJson.getEmail());
-                cliente.setTelefono(clienteJson.getTelefono());
-                cliente.setFotoPerfil(clienteJson.getFotoPerfil());
-                cliente.setFotoDni(clienteJson.getFotoDni());
-                cliente.setIsDeleted(clienteJson.getIsDeleted());
+                        List<ClienteJson> clienteMap = objectMapper.readValue(jsonData, new TypeReference<>() {});
 
-                Set<Cuenta> cuentas = new HashSet<>();
-                for (CuentaResponse cuentaResponse : clienteJson.getCuentas()) {
-                    Cuenta cuenta = new Cuenta();
-                    cuenta.setGuid(cuentaResponse.getGuid());
-                    cuenta.setIban(cuentaResponse.getIban());
-                    cuenta.setSaldo(new BigDecimal(cuentaResponse.getSaldo()));
-                    cuenta.setCreatedAt(LocalDateTime.parse(cuentaResponse.getCreatedAt(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-                    cuenta.setUpdatedAt(LocalDateTime.parse(cuentaResponse.getUpdatedAt(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-                    cuenta.setIsDeleted(cuentaResponse.getIsDeleted());
+                        for (ClienteJson clienteJson : clienteMap) {
+                            Cliente cliente = new Cliente();
+                            cliente.setGuid(clienteJson.getGuid());
+                            cliente.setDni(clienteJson.getDni());
+                            cliente.setNombre(clienteJson.getNombre());
+                            cliente.setApellidos(clienteJson.getApellidos());
+                            cliente.setDireccion(clienteJson.getDireccion());
+                            cliente.setEmail(clienteJson.getEmail());
+                            cliente.setTelefono(clienteJson.getTelefono());
+                            cliente.setFotoPerfil(clienteJson.getFotoPerfil());
+                            cliente.setFotoDni(clienteJson.getFotoDni());
+                            cliente.setIsDeleted(clienteJson.getIsDeleted());
 
-                    cuenta.setCliente(cliente);
+                            Set<Cuenta> cuentas = new HashSet<>();
+                            for (CuentaResponse cuentaResponse : clienteJson.getCuentas()) {
+                                Cuenta cuenta = new Cuenta();
+                                cuenta.setGuid(cuentaResponse.getGuid());
+                                cuenta.setIban(cuentaResponse.getIban());
+                                cuenta.setSaldo(new BigDecimal(cuentaResponse.getSaldo()));
+                                cuenta.setCreatedAt(LocalDateTime.parse(cuentaResponse.getCreatedAt(), formatter));
+                                cuenta.setUpdatedAt(LocalDateTime.parse(cuentaResponse.getUpdatedAt(), formatter));
+                                cuenta.setIsDeleted(cuentaResponse.getIsDeleted());
 
-                    Tarjeta tarjeta = new Tarjeta();
-                    tarjeta.setGuid(cuentaResponse.getTarjetaId());
-                    tarjeta.setCreatedAt(LocalDateTime.parse(cuentaResponse.getCreatedAt(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-                    tarjeta.setUpdatedAt(LocalDateTime.parse(cuentaResponse.getUpdatedAt(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-                    tarjeta.setIsDeleted(cuentaResponse.getIsDeleted());
+                                cuenta.setCliente(cliente);
 
-                    cuenta.setTarjeta(tarjeta);
+                                Tarjeta tarjeta = new Tarjeta();
+                                tarjeta.setGuid(cuentaResponse.getTarjetaId());
+                                tarjeta.setCreatedAt(LocalDateTime.parse(cuentaResponse.getCreatedAt(), formatter));
+                                tarjeta.setUpdatedAt(LocalDateTime.parse(cuentaResponse.getUpdatedAt(), formatter));
+                                tarjeta.setIsDeleted(cuentaResponse.getIsDeleted());
 
-                    cuentas.add(cuenta);
+                                cuenta.setTarjeta(tarjeta);
+
+                                cuentas.add(cuenta);
+                            }
+                            cliente.setCuentas(cuentas);
+
+                            clienteRepository.save(cliente);
+                        }
+
+                        List<Movimiento> movimientos = movimientosRepository.findAll();
+                        for (Movimiento movimiento : movimientos) {
+                            Movimiento nuevoMovimiento = new Movimiento();
+                            nuevoMovimiento.setGuid(movimiento.getGuid());
+                            nuevoMovimiento.setClienteGuid(movimiento.getClienteGuid());
+                            nuevoMovimiento.setCreatedAt(movimiento.getCreatedAt());
+                            nuevoMovimiento.setIsDeleted(movimiento.getIsDeleted());
+
+                            if (movimiento.getDomiciliacion() != null) {
+                                nuevoMovimiento.setDomiciliacion(movimiento.getDomiciliacion());
+                            }
+                            if (movimiento.getIngresoDeNomina() != null) {
+                                nuevoMovimiento.setIngresoDeNomina(movimiento.getIngresoDeNomina());
+                            }
+                            if (movimiento.getPagoConTarjeta() != null) {
+                                nuevoMovimiento.setPagoConTarjeta(movimiento.getPagoConTarjeta());
+                            }
+                            if (movimiento.getTransferencia() != null) {
+                                nuevoMovimiento.setTransferencia(movimiento.getTransferencia());
+                            }
+
+                            movimientosRepository.save(nuevoMovimiento);
+                        }
+
+                        log.info("Archivo JSON del ZIP procesado correctamente.");
+                    }
                 }
-
-                cliente.setCuentas(cuentas);
-
-                clienteRepository.save(cliente);
             }
-
-            log.info("Archivo JSON con clientes importado: " + filename);
-
         } catch (IOException e) {
-            throw new StorageInternal("Fallo al leer el archivo JSON de clientes: " + e);
+            throw new StorageInternal("Fallo al procesar el archivo ZIP: " + e);
         }
     }
-    
+
+
     @Override
     public List<Object> loadJson(File jsonFile) {
         ObjectMapper objectMapper = new ObjectMapper();
