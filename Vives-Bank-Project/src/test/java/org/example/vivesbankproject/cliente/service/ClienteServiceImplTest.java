@@ -284,7 +284,7 @@ class ClienteServiceImplTest {
         when(clienteRepository.findByUserGuid(user.getGuid())).thenReturn(Optional.of(cliente));
         when(clienteMapper.toClienteResponse(eq(cliente), eq(user.getGuid()))).thenReturn(expectedResponse);
 
-        ClienteResponse result = clienteService.getUserByGuid(user.getGuid());
+        ClienteResponse result = clienteService.getUserAuthenticatedByGuid(user.getGuid());
 
         assertNotNull(result);
         assertEquals(expectedResponse, result);
@@ -296,6 +296,6 @@ class ClienteServiceImplTest {
     void getUserByGuidNotFound() {
         when(clienteRepository.findByUserGuid(user.getGuid())).thenReturn(Optional.empty());
 
-        assertThrows(ClienteNotFoundByUser.class, () -> clienteService.getUserByGuid(user.getGuid()));
+        assertThrows(ClienteNotFoundByUser.class, () -> clienteService.getUserAuthenticatedByGuid(user.getGuid()));
     }
 }

@@ -48,7 +48,7 @@ public class TipoCuentaServiceImplTest {
         when(tipoCuentaRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
         when(tipoCuentaMapper.toTipoCuentaResponse(any())).thenReturn(new TipoCuentaResponse());
 
-        Page<TipoCuentaResponse> result = tipoCuentaService.getAll(Optional.empty(), Optional.empty(), pageable);
+        Page<TipoCuentaResponse> result = tipoCuentaService.getAll(Optional.empty(), Optional.empty(),Optional.empty(), pageable);
 
         assertNotNull(result);
         assertEquals(2, result.getContent().size());
