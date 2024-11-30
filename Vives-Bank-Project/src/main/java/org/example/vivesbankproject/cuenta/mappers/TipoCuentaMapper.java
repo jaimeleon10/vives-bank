@@ -2,6 +2,7 @@ package org.example.vivesbankproject.cuenta.mappers;
 
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
+import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponseCatalogo;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,13 @@ public class TipoCuentaMapper {
                 .createdAt(tipoCuenta.getCreatedAt().toString())
                 .updatedAt(tipoCuenta.getUpdatedAt().toString())
                 .isDeleted(tipoCuenta.getIsDeleted())
+                .build();
+    }
+
+    public TipoCuentaResponseCatalogo toTipoCuentaResponseCatalogo(TipoCuenta tipoCuenta) {
+        return TipoCuentaResponseCatalogo.builder()
+                .nombre(tipoCuenta.getNombre())
+                .interes(tipoCuenta.getInteres().toString())
                 .build();
     }
 
