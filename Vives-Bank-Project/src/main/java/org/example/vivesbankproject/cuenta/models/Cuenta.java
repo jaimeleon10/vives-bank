@@ -45,7 +45,7 @@ public class Cuenta {
     @JoinColumn(name = "tipoCuenta_id", nullable = false, referencedColumnName = "id")
     private TipoCuenta tipoCuenta;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "tarjeta_id", referencedColumnName = "id")
     private Tarjeta tarjeta;
 

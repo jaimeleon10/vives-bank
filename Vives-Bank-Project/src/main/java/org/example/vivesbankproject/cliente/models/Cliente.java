@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
+import org.example.vivesbankproject.users.models.Role;
 import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.utils.generators.IdGenerator;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -65,7 +66,7 @@ public class Cliente {
     @NotBlank(message = "La foto del DNI no puede estar vacía")
     private String fotoDni;
 
-    @OneToMany(mappedBy = "cliente")
+    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private Set<Cuenta> cuentas = new HashSet<>();
 

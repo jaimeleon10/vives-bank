@@ -1,4 +1,4 @@
-package org.example.vivesbankproject.movimientos.exceptions;
+package org.example.vivesbankproject.movimientos.exceptions.movimientos;
 
 import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
