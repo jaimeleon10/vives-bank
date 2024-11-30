@@ -17,8 +17,8 @@ import java.util.Set;
 @AllArgsConstructor
 public class ClienteRequestSave {
 
-    @NotBlank(message = "El DNI no puede estar vacio")
     @Pattern(regexp = "^\\d{8}[TRWAGMYFPDXBNJZSQVHLCKEtrwagmyfpdxbnjzsqvhlcke]$", message = "El DNI debe tener 8 numeros seguidos de una letra")
+    @NotNull(message = "El DNI no puede ser nulo")
     private String dni;
 
     @NotBlank(message = "El nombre no puede estar vacio")
@@ -30,11 +30,11 @@ public class ClienteRequestSave {
     @NotBlank(message = "La calle no puede estar vacia")
     private String calle;
 
-    @NotBlank(message = "El número no puede estar vacio")
+    @NotBlank(message = "El numero no puede estar vacio")
     private String numero;
 
-    @NotBlank(message = "El código postal no puede estar vacio")
     @Pattern(regexp = "^\\d{5}$", message = "El codigo postal debe tener 5 numeros")
+    @NotNull(message = "El codigo postal no puede ser nulo")
     private String codigoPostal;
 
     @NotBlank(message = "El piso no puede estar vacio")
@@ -44,14 +44,13 @@ public class ClienteRequestSave {
     private String letra;
 
     @Email(regexp = ".*@.*\\..*", message = "El email debe ser valido")
-    @NotBlank(message = "El email no puede estar vacio")
+    @NotNull(message = "El email no puede ser nulo")
     private String email;
 
     @Pattern(regexp = "^\\d{9}$", message = "El telefono debe tener 9 numeros")
-    @NotBlank(message = "El telefono no puede estar vacio")
+    @NotNull(message = "El telefono no puede ser nulo")
     private String telefono;
 
-    // TODO -> MODIFICAR FOTO DE PERFIL Y DNI
     @NotBlank(message = "La foto de perfil no puede estar vacia")
     private String fotoPerfil;
 

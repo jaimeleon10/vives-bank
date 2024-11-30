@@ -360,7 +360,7 @@ class ClienteRestControllerTest {
     }
 
     @Test
-    void EmptyEmail() throws Exception {
+    void nullEmail() throws Exception {
         ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
                 .dni("12345678A")
                 .nombre("Juan")
@@ -370,7 +370,7 @@ class ClienteRestControllerTest {
                 .codigoPostal("28080")
                 .piso("3")
                 .letra("A")
-                .email("")
+                .email(null)
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
@@ -385,10 +385,11 @@ class ClienteRestControllerTest {
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
-        assertAll(
-                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(result.getResponse().getContentAsString().contains("El email no puede estar vacio"))
-        );
+        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
+
+        Map<String, String> errorResponse = objectMapper.readValue(result.getResponse().getContentAsString(), Map.class);
+
+        assertEquals("El email no puede ser nulo", errorResponse.get("email"));
     }
 
     @Test
@@ -449,10 +450,11 @@ class ClienteRestControllerTest {
                 .andExpect(status().isBadRequest())
                 .andReturn().getResponse();
 
-        assertAll(
-                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getStatus()),
-                () -> assertEquals("El telefono no puede estar vacio", result.getContentAsString())
-        );
+        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getStatus());
+
+        Map<String, String> errorResponse = objectMapper.readValue(result.getContentAsString(), Map.class);
+
+        assertEquals("El telefono debe tener 9 numeros", errorResponse.get("telefono"));
     }
 
     @Test
@@ -511,18 +513,19 @@ class ClienteRestControllerTest {
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
-        assertAll(
-                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(result.getResponse().getContentAsString().contains("El número no puede estar vacio"))
-        );
+        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
+
+        Map<String, String> errorResponse = objectMapper.readValue(result.getResponse().getContentAsString(), Map.class);
+
+        assertEquals("El numero no puede estar vacio", errorResponse.get("numero"));
     }
 
     @Test
-    void emptyCodigoPostalSave() throws Exception {
+    void nullCodigoPostalSave() throws Exception {
         ClienteRequestSave clienteRequestSave = ClienteRequestSave.builder()
                 .calle("Calle Falsa")
                 .numero("1")
-                .codigoPostal("")
+                .codigoPostal(null)
                 .piso("1")
                 .letra("A")
                 .dni("12345678A")
@@ -542,10 +545,11 @@ class ClienteRestControllerTest {
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
-        assertAll(
-                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(result.getResponse().getContentAsString().contains("El código postal no puede estar vacio"))
-        );
+        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
+
+        Map<String, String> errorResponse = objectMapper.readValue(result.getResponse().getContentAsString(), Map.class);
+
+        assertEquals("El codigo postal no puede ser nulo", errorResponse.get("codigoPostal"));
     }
 
     @Test
@@ -809,7 +813,7 @@ class ClienteRestControllerTest {
     }
 
     @Test
-    void emptyEmailUpdate() throws Exception {
+    void nullEmailUpdate() throws Exception {
         ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
                 .nombre("Juan")
                 .apellidos("Perez")
@@ -818,7 +822,7 @@ class ClienteRestControllerTest {
                 .codigoPostal("28080")
                 .piso("3")
                 .letra("A")
-                .email("")
+                .email(null)
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
@@ -834,10 +838,11 @@ class ClienteRestControllerTest {
 
         String responseContent = result.getResponse().getContentAsString();
 
-        assertAll(
-                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(responseContent.contains("El email no puede estar vacio"))  // Assert the error message
-        );
+        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
+
+        Map<String, String> errorResponse = objectMapper.readValue(result.getResponse().getContentAsString(), Map.class);
+
+        assertEquals("El email no puede ser un campo nulo", errorResponse.get("email"));
     }
     @Test
     void invalidTelefonoUpdate() throws Exception {
@@ -881,7 +886,7 @@ class ClienteRestControllerTest {
                 .piso("3")
                 .letra("A")
                 .email("juan.perez@example.com")
-                .telefono(" ")
+                .telefono("")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
                 .userId("123456789")
@@ -896,11 +901,13 @@ class ClienteRestControllerTest {
 
         String responseContent = result.getResponse().getContentAsString();
 
-        assertAll(
-                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(responseContent.contains("El telefono no puede estar vacio"))
-        );
+        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
+
+        Map<String, String> errorResponse = objectMapper.readValue(result.getResponse().getContentAsString(), Map.class);
+
+        assertEquals("El telefono debe tener 9 numeros", errorResponse.get("telefono"));
     }
+
     @Test
     void emptyFotoPerfilUpdate() throws Exception {
         ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
@@ -984,10 +991,11 @@ class ClienteRestControllerTest {
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
-        assertAll(
-                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(result.getResponse().getContentAsString().contains("El id de usuario no puede estar vacio"))
-        );
+        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
+
+        Map<String, String> errorResponse = objectMapper.readValue(result.getResponse().getContentAsString(), Map.class);
+
+        assertEquals("El id de usuario no puede estar vacio", errorResponse.get("userId"));
     }
 
     @Test
@@ -1044,18 +1052,19 @@ class ClienteRestControllerTest {
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
-        assertAll(
-                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(result.getResponse().getContentAsString().contains("El número no puede estar vacio"))
-        );
+        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
+
+        Map<String, String> errorResponse = objectMapper.readValue(result.getResponse().getContentAsString(), Map.class);
+
+        assertEquals("El numero no puede estar vacio", errorResponse.get("numero"));
     }
 
     @Test
-    void emptyCodigoPostalUpdate() throws Exception {
+    void nullCodigoPostalUpdate() throws Exception {
         ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
                 .calle("Calle Falsa")
                 .numero("1")
-                .codigoPostal("")
+                .codigoPostal(null)
                 .piso("1")
                 .letra("A")
                 .nombre("Juan")
@@ -1074,10 +1083,11 @@ class ClienteRestControllerTest {
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
-        assertAll(
-                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
-                () -> assertTrue(result.getResponse().getContentAsString().contains("El código postal no puede estar vacio"))
-        );
+        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
+
+        Map<String, String> errorResponse = objectMapper.readValue(result.getResponse().getContentAsString(), Map.class);
+
+        assertEquals("El codigo postal no puede ser nulo", errorResponse.get("codigoPostal"));
     }
 
     @Test
