@@ -14,7 +14,7 @@ import java.io.IOException;
 
 @RestController
 @Slf4j
-@RequestMapping("/storage")
+@RequestMapping("/storage/images")
 public class StorageImagesController {
     private final StorageImagesService storageService;
 

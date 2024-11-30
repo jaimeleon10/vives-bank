@@ -74,7 +74,7 @@ class UserServiceImplTest {
         when(userRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(usersPage);
         when(userMapper.toUserResponse(user)).thenReturn(userResponse);
 
-        Page<UserResponse> result = userService.getAll(Optional.of("testuser"), Optional.of(Role.USER), pageable);
+        Page<UserResponse> result = userService.getAll(Optional.of("testuser"), Optional.of(String.valueOf(Role.USER)), pageable);
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());

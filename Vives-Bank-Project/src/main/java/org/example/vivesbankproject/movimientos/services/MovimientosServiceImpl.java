@@ -105,7 +105,7 @@ public class MovimientosServiceImpl implements MovimientosService {
         log.info("Guardando Domiciliacion: {}", domiciliacion);
 
         // Validar que el cliente existe
-        var cliente = clienteService.getUserByGuid(user.getGuid());
+        var cliente = clienteService.getUserAuthenticatedByGuid(user.getGuid());
         if (cliente == null) {
             throw new ClienteNotFoundByUser(user.getGuid());
         }
