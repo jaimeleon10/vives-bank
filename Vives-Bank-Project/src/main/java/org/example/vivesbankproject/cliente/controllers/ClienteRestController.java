@@ -127,6 +127,12 @@ public class ClienteRestController {
         return ResponseEntity.ok(clienteService.updateProfileFoto(user.getGuid(), file));
     }
 
+    @GetMapping("/catalogo")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ClienteProducto> getCatalogue() {
+        return ResponseEntity.ok(clienteService.getCatalogue());
+    }
+
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
     public Map<String, String> handleValidationExceptions(Exception ex) {
