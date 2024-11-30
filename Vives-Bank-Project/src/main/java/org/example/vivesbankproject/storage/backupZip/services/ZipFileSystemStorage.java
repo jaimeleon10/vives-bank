@@ -11,12 +11,15 @@ import org.example.vivesbankproject.cliente.dto.ClienteJsonAdmin;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
+import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.movimientos.models.Movimiento;
 import org.example.vivesbankproject.movimientos.repositories.MovimientosRepository;
 import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
 import org.example.vivesbankproject.storage.exceptions.StorageInternal;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
+import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.users.models.User;
+import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -45,12 +48,18 @@ import java.util.zip.ZipOutputStream;
 public class ZipFileSystemStorage implements ZipStorageService {
     private final Path rootLocation;
     private final ClienteRepository clienteRepository;
+    private final UserRepository userRepository;
+    private final TarjetaRepository tarjetaRepository;
+    private final CuentaRepository cuentaRepository;
     private MovimientosRepository movimientosRepository;
 
-    public ZipFileSystemStorage(@Value("${upload.root-location-2}") String path, ClienteRepository clienteRepository, MovimientosRepository movimientosRepository) {
+    public ZipFileSystemStorage(@Value("${upload.root-location-2}") String path, ClienteRepository clienteRepository, MovimientosRepository movimientosRepository, UserRepository userRepository, TarjetaRepository tarjetaRepository, CuentaRepository cuentaRepository) {
         this.rootLocation = Paths.get(path);
         this.clienteRepository = clienteRepository;
         this.movimientosRepository = movimientosRepository;
+        this.userRepository = userRepository;
+        this.tarjetaRepository = tarjetaRepository;
+        this.cuentaRepository = cuentaRepository;
     }
 
     @Override
@@ -75,11 +84,11 @@ public class ZipFileSystemStorage implements ZipStorageService {
                 Path dataDir = Paths.get("dataAdmin");
 
                 if (!Files.exists(dataDir)) {
-                    throw new StorageNotFound("La carpeta 'data' no existe.");
+                    throw new StorageNotFound("La carpeta 'dataAdmin' no existe.");
                 }
 
                 Files.walk(dataDir)
-                        .filter(file -> !Files.isDirectory(file) && !file.toString().endsWith(".zip")) // Filtrar archivos que no sean .zip
+                        .filter(file -> !Files.isDirectory(file) && !file.toString().endsWith(".zip"))
                         .forEach(file -> {
                             try {
                                 ZipEntry zipEntry = new ZipEntry(file.getFileName().toString());
@@ -107,6 +116,7 @@ public class ZipFileSystemStorage implements ZipStorageService {
 
     @Override
     public void loadFromZip(File filename) {
+        log.warn("inicio");
         Path zipFilePath = this.rootLocation.resolve(filename.toPath());
 
         try {
@@ -129,63 +139,40 @@ public class ZipFileSystemStorage implements ZipStorageService {
                         List<ClienteJsonAdmin> clienteMap = objectMapper.readValue(jsonData, new TypeReference<>() {});
 
                         for (ClienteJsonAdmin clienteJsonAdmin : clienteMap) {
-                            Cliente cliente = new Cliente();
-                            cliente.setId(clienteJsonAdmin.getId());
-                            cliente.setGuid(clienteJsonAdmin.getGuid());
-                            cliente.setDni(clienteJsonAdmin.getDni());
-                            cliente.setNombre(clienteJsonAdmin.getNombre());
-                            cliente.setApellidos(clienteJsonAdmin.getApellidos());
-                            cliente.setDireccion(clienteJsonAdmin.getDireccion());
-                            cliente.setEmail(clienteJsonAdmin.getEmail());
-                            cliente.setTelefono(clienteJsonAdmin.getTelefono());
+                            Cliente cliente = Cliente.builder()
+                                    .id(clienteJsonAdmin.getId())
+                                    .guid(clienteJsonAdmin.getGuid())
+                                    .dni(clienteJsonAdmin.getDni())
+                                    .nombre(clienteJsonAdmin.getNombre())
+                                    .apellidos(clienteJsonAdmin.getApellidos())
+                                    .direccion(clienteJsonAdmin.getDireccion())
+                                    .email(clienteJsonAdmin.getEmail())
+                                    .telefono(clienteJsonAdmin.getTelefono())
+                                    .fotoPerfil(clienteJsonAdmin.getFotoPerfil())
+                                    .fotoDni(clienteJsonAdmin.getFotoDni())
+                                    .user(clienteJsonAdmin.getUser())
+                                    .cuentas(clienteJsonAdmin.getCuentas())
+                                    .isDeleted(clienteJsonAdmin.getIsDeleted())
+                                    .build();
 
-                            if (cliente.getUser() != null) {
-                                User user = new User();
-                                user.setGuid(clienteJsonAdmin.getUser().getGuid());
-                                user.setUsername(clienteJsonAdmin.getUser().getUsername());
-                                user.setPassword(clienteJsonAdmin.getUser().getPassword());
-                                user.setRoles(clienteJsonAdmin.getUser().getRoles().stream().collect(Collectors.toSet()));
-                                user.setCreatedAt(clienteJsonAdmin.getUser().getCreatedAt());
-                                user.setUpdatedAt(clienteJsonAdmin.getUser().getUpdatedAt());
-                                user.setIsDeleted(clienteJsonAdmin.getUser().getIsDeleted());
-
-                                cliente.setUser(user);
-                            }
-
-                            cliente.setFotoPerfil(clienteJsonAdmin.getFotoPerfil());
-                            cliente.setFotoDni(clienteJsonAdmin.getFotoDni());
-                            cliente.setIsDeleted(clienteJsonAdmin.getIsDeleted());
-
-                            Set<Cuenta> cuentas = new HashSet<>();
-                            for (Cuenta cuenta : clienteJsonAdmin.getCuentas()) {
-                                cuenta.setGuid(cuenta.getGuid());
-                                cuenta.setIban(cuenta.getIban());
-                                cuenta.setTipoCuenta(cuenta.getTipoCuenta());
-                                cuenta.setSaldo(cuenta.getSaldo());
-                                cuenta.setCreatedAt(cuenta.getCreatedAt());
-                                cuenta.setUpdatedAt(cuenta.getUpdatedAt());
-                                cuenta.setIsDeleted(cuenta.getIsDeleted());
-
-                                cuenta.setCliente(cliente);
-
-                                if (cuenta.getTarjeta() != null) {
-                                    Tarjeta tarjeta = new Tarjeta();
-                                    tarjeta.setGuid(cuenta.getTarjeta().getGuid());
-                                    tarjeta.setTipoTarjeta(cuenta.getTarjeta().getTipoTarjeta());
-                                    tarjeta.setPin(cuenta.getTarjeta().getPin());
-                                    tarjeta.setCreatedAt(cuenta.getTarjeta().getCreatedAt());
-                                    tarjeta.setUpdatedAt(cuenta.getTarjeta().getUpdatedAt());
-                                    tarjeta.setIsDeleted(cuenta.getTarjeta().getIsDeleted());
-
-                                    cuenta.setTarjeta(tarjeta);
+                            cliente.getCuentas().forEach(cuenta -> {
+                                if (tarjetaRepository.findByGuid(cuenta.getTarjeta().getGuid()).isEmpty()) {
+                                    tarjetaRepository.save(cuenta.getTarjeta());
                                 }
-
-                                cuentas.add(cuenta);
+                            });
+                            if (userRepository.findByGuid(cliente.getUser().getGuid()).isEmpty()) {
+                                userRepository.save(cliente.getUser());
                             }
-
-                            cliente.setCuentas(cuentas);
-
-                            clienteRepository.save(cliente);
+                            if (clienteRepository.findByGuid(cliente.getGuid()).isEmpty()) {
+                                Cliente cliente1 = cliente;
+                                cliente1.setCuentas(Set.of());
+                                clienteRepository.save(cliente1);
+                            }
+                            cliente.getCuentas().forEach(cuenta -> {
+                                if (cuentaRepository.findByGuid(cuenta.getGuid()).isEmpty()) {
+                                    cuentaRepository.save(cuenta);
+                                }
+                            });
                         }
 
                         List<Movimiento> movimientos = movimientosRepository.findAll();
