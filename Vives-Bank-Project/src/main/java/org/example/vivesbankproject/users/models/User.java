@@ -1,5 +1,6 @@
 package org.example.vivesbankproject.users.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -66,6 +67,7 @@ public class User implements Serializable, UserDetails {
     @Builder.Default
     private Boolean isDeleted = false;
 
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()

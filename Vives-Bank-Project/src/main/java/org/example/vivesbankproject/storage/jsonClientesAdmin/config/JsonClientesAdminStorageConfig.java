@@ -1,8 +1,7 @@
-package org.example.vivesbankproject.storage.jsonClientes.config;
+package org.example.vivesbankproject.storage.jsonClientesAdmin.config;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.storage.backupZip.services.ZipStorageService;
 import org.example.vivesbankproject.storage.jsonClientes.services.JsonClientesStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,14 +12,14 @@ import java.time.format.DateTimeFormatter;
 
 @Configuration
 @Slf4j
-public class JsonClientesStorageConfig {
+public class JsonClientesAdminStorageConfig {
     private final JsonClientesStorageService jsonClientesStorageService;
 
     @Value("${upload.delete}")
     private String deleteAll;
 
     @Autowired
-    public JsonClientesStorageConfig(JsonClientesStorageService jsonClientesStorageService) {
+    public JsonClientesAdminStorageConfig(JsonClientesStorageService jsonClientesStorageService) {
         this.jsonClientesStorageService = jsonClientesStorageService;
     }
 
