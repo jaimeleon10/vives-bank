@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 @Configuration
 @Slf4j
 public class JsonClientesStorageConfig {
@@ -24,7 +27,7 @@ public class JsonClientesStorageConfig {
     public void init() {
         if (deleteAll.equals("true")) {
             log.info("Borrando ficheros de almacenamiento...");
-            jsonClientesStorageService.delete("clientes.json");
+            jsonClientesStorageService.delete("clientes_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".json");
         }
 
         jsonClientesStorageService.init();
