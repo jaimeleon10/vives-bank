@@ -81,6 +81,7 @@ public class ClienteRepositoryTest {
     void FindByDni() {
         User user = crearUsuario("testUserDni");
         entityManager.persist(user);
+        entityManager.flush();
 
         Cliente cliente = crearCliente(user, "guid-dni", "87654321Y", "email@dni.com", "987654321");
         cliente = clienteRepository.save(cliente);
