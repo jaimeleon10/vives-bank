@@ -3,6 +3,7 @@ package org.example.vivesbankproject.storage.images.services;
 import org.example.vivesbankproject.storage.exceptions.StorageBadRequest;
 import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,6 +49,26 @@ class ImageFileSystemStorageImagesServiceTest {
         }
 
         storageService.init();
+    }
+
+    @AfterAll
+    static void cleanupAfterTests() throws IOException {
+        Path testPath = Paths.get(TEST_ROOT_LOCATION);
+        if (Files.exists(testPath)) {
+            Files.walkFileTree(testPath, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        }
     }
 
     @Test
