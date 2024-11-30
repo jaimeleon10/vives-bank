@@ -63,6 +63,9 @@ dependencies {
     // Jackson
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.1")
 
+    // Pdf
+    implementation ("com.itextpdf:itext7-core:7.2.3")
+
     // Spring Security
     implementation("org.springframework.boot:spring-boot-starter-security")
 
