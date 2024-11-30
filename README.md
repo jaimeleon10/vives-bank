@@ -67,20 +67,6 @@ El proyecto implementa diversas prácticas y herramientas para asegurar la calid
 <table align="center">
   <tr>
     <td align="center">
-      <a href="https://github.com/ngalvez0910">
-        <img src="https://avatars.githubusercontent.com/u/145333876" width="70" height="70" style="border-radius: 50%;" alt="Natalia González Álvarez"/>
-        <br/>
-        <sub><b>Natalia</b></sub>
-      </a>
-    </td>
-    <td align="center">
-      <a href="https://github.com/germangfc">
-        <img src="https://avatars.githubusercontent.com/u/147338370" width="70" height="70" style="border-radius: 50%;" alt="German"/>
-        <br/>
-        <sub><b>German</b></sub>
-      </a>
-    </td>
-    <td align="center">
       <a href="https://github.com/jaimeleon10">
         <img src="https://avatars.githubusercontent.com/u/113149992" width="70" height="70" style="border-radius: 50%;" alt="Jaime León"/>
         <br/>
@@ -88,17 +74,17 @@ El proyecto implementa diversas prácticas y herramientas para asegurar la calid
       </a>
     </td>
     <td align="center">
+      <a href="https://github.com/ngalvez0910">
+        <img src="https://avatars.githubusercontent.com/u/145333876" width="70" height="70" style="border-radius: 50%;" alt="Natalia González Álvarez"/>
+        <br/>
+        <sub><b>Natalia</b></sub>
+      </a>
+    </td>
+        <td align="center">
       <a href="https://github.com/Alba448">
         <img src="https://avatars.githubusercontent.com/u/146001599" width="70" height="70" style="border-radius: 50%;" alt="Alba García"/>
         <br/>
         <sub><b>Alba</b></sub>
-      </a>
-    </td>
-    <td align="center">
-      <a href="https://github.com/wolverine307mda">
-        <img src="https://avatars.githubusercontent.com/u/146002100" width="70" height="70" style="border-radius: 50%;" alt="Mario de Domingo Alvarez"/>
-        <br/>
-        <sub><b>Mario</b></sub>
       </a>
     </td>
     <td align="center">
@@ -108,5 +94,19 @@ El proyecto implementa diversas prácticas y herramientas para asegurar la calid
         <sub><b>Álvaro</b></sub>
       </a>
     </td>
+        </td>
+    <td align="center">
+      <a href="https://github.com/wolverine307mda">
+        <img src="https://avatars.githubusercontent.com/u/146002100" width="70" height="70" style="border-radius: 50%;" alt="Mario de Domingo Alvarez"/>
+        <br/>
+        <sub><b>Mario</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/germangfc">
+        <img src="https://avatars.githubusercontent.com/u/147338370" width="70" height="70" style="border-radius: 50%;" alt="German"/>
+        <br/>
+        <sub><b>German</b></sub>
+      </a>
   </tr>
 </table>
