@@ -31,6 +31,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.http.RequestEntity.post;
 
 @ExtendWith(MockitoExtension.class)
 class TarjetaRestControllerTest {
@@ -51,6 +52,7 @@ class TarjetaRestControllerTest {
 
     @BeforeEach
     void setUp() {
+        tarjetaRestController = new TarjetaRestController(tarjetaService, paginationLinksUtils);
         request = new MockHttpServletRequest();
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
 
@@ -82,6 +84,7 @@ class TarjetaRestControllerTest {
                 .isDeleted(false)
                 .build();
     }
+
 
     @Test
     void getAllDevuelvePageResponse() {
@@ -195,5 +198,49 @@ class TarjetaRestControllerTest {
                 any(), any(), any(), any(), any(), any(), any(), any(), any(),
                 any(PageRequest.class)
         );
+    }
+    @Test
+    void saveTarjetaPinIncorrecto() {
+        TarjetaRequestSave invalidPinRequest = TarjetaRequestSave.builder()
+                .pin("12")
+                .limiteDiario(new BigDecimal("1000"))
+                .limiteSemanal(new BigDecimal("5000"))
+                .limiteMensual(new BigDecimal("20000"))
+                .tipoTarjeta(TipoTarjeta.CREDITO)
+                .build();
+
+        assertThrows(MethodArgumentNotValidException.class, () -> {
+            tarjetaRestController.save(invalidPinRequest);
+        });
+    }
+
+    @Test
+    void saveTarjetaLimitesDiarioNegativo() {
+        TarjetaRequestSave invalidLimiteDiarioRequest = TarjetaRequestSave.builder()
+                .pin("1234")
+                .limiteDiario(new BigDecimal(-1000))
+                .limiteSemanal(new BigDecimal(5000))
+                .limiteMensual(new BigDecimal(20000))
+                .tipoTarjeta(TipoTarjeta.CREDITO)
+                .build();
+
+        assertThrows(MethodArgumentNotValidException.class, () -> {
+            tarjetaRestController.save(invalidLimiteDiarioRequest);
+        });
+    }
+
+    @Test
+    void saveTarjetaSinTipoTarjeta() {
+        TarjetaRequestSave sinTipoTarjetaRequest = TarjetaRequestSave.builder()
+                .pin("1234")
+                .limiteDiario(new BigDecimal("1000"))
+                .limiteSemanal(new BigDecimal("5000"))
+                .limiteMensual(new BigDecimal("20000"))
+                .tipoTarjeta(null)
+                .build();
+
+        assertThrows(MethodArgumentNotValidException.class, () -> {
+            tarjetaRestController.save(sinTipoTarjetaRequest);
+        });
     }
 }
