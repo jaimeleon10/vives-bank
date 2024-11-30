@@ -28,11 +28,11 @@ public class ClienteRequestUpdate {
     @NotBlank(message = "La calle no puede estar vacia")
     private String calle;
 
-    @NotBlank(message = "El número no puede estar vacio")
+    @NotBlank(message = "El numero no puede estar vacio")
     private String numero;
 
-    @NotBlank(message = "El código postal no puede estar vacio")
     @Pattern(regexp = "^\\d{5}$", message = "El codigo postal debe tener 5 numeros")
+    @NotNull(message = "El codigo postal no puede ser nulo")
     private String codigoPostal;
 
     @NotBlank(message = "El piso no puede estar vacio")
@@ -41,12 +41,12 @@ public class ClienteRequestUpdate {
     @NotBlank(message = "La letra no puede estar vacia")
     private String letra;
 
-    @NotBlank(message = "El email no puede estar vacio")
     @Email(regexp = ".*@.*\\..*", message = "El email debe ser valido")
+    @NotNull(message = "El email no puede ser un campo nulo")
     private String email;
 
-    @NotBlank(message = "El telefono no puede estar vacio")
     @Pattern(regexp = "^\\d{9}$", message = "El telefono debe tener 9 numeros")
+    @NotNull(message = "El telefono no puede ser nulo")
     private String telefono;
 
     @NotBlank(message = "La foto de perfil no puede estar vacia")
@@ -55,5 +55,6 @@ public class ClienteRequestUpdate {
     @NotBlank(message = "La foto del DNI no puede estar vacia")
     private String fotoDni;
 
+    @NotBlank(message = "El id de usuario no puede estar vacio")
     private String userId;
 }
