@@ -1,5 +1,6 @@
 package org.example.vivesbankproject.storage.jsonMovimientos.services;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -59,51 +60,34 @@ public class JsonMovimientosFileSystemStorage implements JsonMovimientosStorageS
             List<Movimiento> movimientos = movimientosRepository.findAll();
 
             List<MovimientoResponse> movimientoMap = movimientos.stream()
-                .map(movimiento -> {
-                    MovimientoResponse movimientoResponse = new MovimientoResponse();
-                    movimientoResponse.setGuid(movimiento.getGuid());
-                    movimientoResponse.setClienteGuid(movimiento.getClienteGuid());
+                    .map(movimiento -> {
+                        MovimientoResponse movimientoResponse = new MovimientoResponse();
+                        movimientoResponse.setGuid(movimiento.getGuid());
+                        movimientoResponse.setClienteGuid(movimiento.getClienteGuid());
 
-                    Domiciliacion domiciliacion = movimiento.getDomiciliacion();
-                    if (domiciliacion != null) {
-                        domiciliacion.setIban_Origen(domiciliacion.getIban_Origen());
-                        domiciliacion.setNombreAcreedor(domiciliacion.getNombreAcreedor());
-                        domiciliacion.setIdentificadorAcreedor(domiciliacion.getIdentificadorAcreedor());
-                        movimientoResponse.setDomiciliacion(domiciliacion);
-                    }
+                        if (movimiento.getDomiciliacion() != null) {
+                            movimientoResponse.setDomiciliacion(movimiento.getDomiciliacion());
+                        }
+                        if (movimiento.getIngresoDeNomina() != null) {
+                            movimientoResponse.setIngresoDeNomina(movimiento.getIngresoDeNomina());
+                        }
+                        if (movimiento.getPagoConTarjeta() != null) {
+                            movimientoResponse.setPagoConTarjeta(movimiento.getPagoConTarjeta());
+                        }
+                        if (movimiento.getTransferencia() != null) {
+                            movimientoResponse.setTransferencia(movimiento.getTransferencia());
+                        }
 
-                    IngresoDeNomina ingresoDeNomina = movimiento.getIngresoDeNomina();
-                    if (ingresoDeNomina != null){
-                        ingresoDeNomina.setIban_Destino(ingresoDeNomina.getIban_Destino());
-                        ingresoDeNomina.setNombreEmpresa(ingresoDeNomina.getNombreEmpresa());
-                        ingresoDeNomina.setCifEmpresa(ingresoDeNomina.getCifEmpresa());
-                        movimientoResponse.setIngresoDeNomina(ingresoDeNomina);
-                    }
+                        movimientoResponse.setCreatedAt(movimiento.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                        movimientoResponse.setIsDeleted(movimiento.getIsDeleted());
 
-                    PagoConTarjeta pagoConTarjeta = movimiento.getPagoConTarjeta();
-                    if (pagoConTarjeta != null) {
-                        pagoConTarjeta.setNumeroTarjeta(pagoConTarjeta.getNumeroTarjeta());
-                        pagoConTarjeta.setNombreComercio(pagoConTarjeta.getNombreComercio());
-                        pagoConTarjeta.setCvv(pagoConTarjeta.getCvv());
-                        movimientoResponse.setPagoConTarjeta(pagoConTarjeta);
-                    }
-
-                    Transferencia transferencia = movimiento.getTransferencia();
-                    if (transferencia!= null) {
-                        transferencia.setIban_Origen(transferencia.getIban_Origen());
-                        transferencia.setIban_Destino(transferencia.getIban_Destino());
-                        transferencia.setNombreBeneficiario(transferencia.getNombreBeneficiario());
-                        movimientoResponse.setTransferencia(transferencia);
-                    }
-
-                    movimientoResponse.setCreatedAt(movimiento.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-                    movimientoResponse.setIsDeleted(movimiento.getIsDeleted());
-
-                    return movimientoResponse;
-                })
-                .collect(Collectors.toList());
+                        return movimientoResponse;
+                    })
+                    .collect(Collectors.toList());
 
             ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
             JavaTimeModule module = new JavaTimeModule();
             module.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
             objectMapper.registerModule(module);
