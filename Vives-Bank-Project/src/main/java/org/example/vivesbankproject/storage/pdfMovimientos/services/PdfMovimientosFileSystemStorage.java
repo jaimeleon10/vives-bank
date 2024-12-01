@@ -4,7 +4,6 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.movimientos.models.Movimiento;
 import org.example.vivesbankproject.movimientos.repositories.MovimientosRepository;
@@ -44,7 +43,7 @@ public class PdfMovimientosFileSystemStorage implements PdfMovimientosStorageSer
     @Override
     public String storeAll() {
         String storedFilename = "movimientos_clientes_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".pdf";
-        Path pdfFilePath = this.rootLocation.resolve(storedFilename);
+        Path pdfFilePath = Path.of("dataAdmin").resolve(storedFilename);
 
         try {
             List<Movimiento> movimientos = movimientosRepository.findAll();
@@ -56,24 +55,15 @@ public class PdfMovimientosFileSystemStorage implements PdfMovimientosStorageSer
                     .setFontSize(18)
                     .setBold());
 
-            Table table = new Table(6);
-            table.addCell("GUID");
-            table.addCell("Cliente GUID");
-            table.addCell("Domiciliación");
-            table.addCell("Ingreso de Nómina");
-            table.addCell("Pago con Tarjeta");
-            table.addCell("Transferencia");
-
             for (Movimiento movimiento : movimientos) {
-                table.addCell(movimiento.getGuid());
-                table.addCell(movimiento.getClienteGuid());
-                table.addCell(String.valueOf(movimiento.getDomiciliacion()));
-                table.addCell(String.valueOf(movimiento.getIngresoDeNomina()));
-                table.addCell(String.valueOf(movimiento.getPagoConTarjeta()));
-                table.addCell(String.valueOf(movimiento.getTransferencia()));
+                document.add(new Paragraph("GUID: " + movimiento.getGuid()));
+                document.add(new Paragraph("Cliente GUID: " + movimiento.getClienteGuid()));
+                document.add(new Paragraph("Domiciliación: " + movimiento.getDomiciliacion()));
+                document.add(new Paragraph("Ingreso de Nómina: " + movimiento.getIngresoDeNomina()));
+                document.add(new Paragraph("Pago con Tarjeta: " + movimiento.getPagoConTarjeta()));
+                document.add(new Paragraph("Transferencia: " + movimiento.getTransferencia()));
+                document.add(new Paragraph("\n"));
             }
-
-            document.add(table);
 
             document.close();
 
@@ -106,22 +96,14 @@ public class PdfMovimientosFileSystemStorage implements PdfMovimientosStorageSer
                         .setFontSize(18)
                         .setBold());
 
-                Table table = new Table(6);
-                table.addCell("GUID");
-                table.addCell("Cliente GUID");
-                table.addCell("Domiciliación");
-                table.addCell("Ingreso de Nómina");
-                table.addCell("Pago con Tarjeta");
-                table.addCell("Transferencia");
+                document.add(new Paragraph("GUID: " + movimiento.getGuid()));
+                document.add(new Paragraph("Cliente GUID: " + movimiento.getClienteGuid()));
+                document.add(new Paragraph("Domiciliación: " + movimiento.getDomiciliacion()));
+                document.add(new Paragraph("Ingreso de Nómina: " + movimiento.getIngresoDeNomina()));
+                document.add(new Paragraph("Pago con Tarjeta: " + movimiento.getPagoConTarjeta()));
+                document.add(new Paragraph("Transferencia: " + movimiento.getTransferencia()));
+                document.add(new Paragraph("\n"));
 
-                table.addCell(movimiento.getGuid());
-                table.addCell(movimiento.getClienteGuid());
-                table.addCell(String.valueOf(movimiento.getDomiciliacion()));
-                table.addCell(String.valueOf(movimiento.getIngresoDeNomina()));
-                table.addCell(String.valueOf(movimiento.getPagoConTarjeta()));
-                table.addCell(String.valueOf(movimiento.getTransferencia()));
-
-                document.add(table);
                 log.info("Archivo PDF con movimientos del cliente almacenado: " + storedFilename);
             }
 
