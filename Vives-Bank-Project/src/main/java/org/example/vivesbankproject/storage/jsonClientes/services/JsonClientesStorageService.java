@@ -8,8 +8,6 @@ import java.util.stream.Stream;
 public interface JsonClientesStorageService {
     void init();
 
-    String storeAll();
-
     String store(String guid);
 
     Stream<Path> loadAll();
