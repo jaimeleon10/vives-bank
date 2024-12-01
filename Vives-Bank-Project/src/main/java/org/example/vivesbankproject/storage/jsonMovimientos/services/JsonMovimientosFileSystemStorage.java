@@ -54,7 +54,7 @@ public class JsonMovimientosFileSystemStorage implements JsonMovimientosStorageS
     @Override
     public String storeAll() {
         String storedFilename = "movimientos_clientes_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".json";
-        Path jsonFilePath = this.rootLocation.resolve(storedFilename);
+        Path jsonFilePath = Path.of("dataAdmin").resolve(storedFilename);
 
         try {
             List<Movimiento> movimientos = movimientosRepository.findAll();
