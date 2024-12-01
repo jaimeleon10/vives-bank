@@ -27,7 +27,7 @@ public class JsonMovimientosStorageConfig {
     public void init() {
         if (deleteAll.equals("true")) {
             log.info("Borrando ficheros de almacenamiento...");
-            jsonMovimientosStorageService.delete("movimientos_clientes_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".json");
+            jsonMovimientosStorageService.delete("admin_movimientos_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".json");
         }
 
         jsonMovimientosStorageService.init();

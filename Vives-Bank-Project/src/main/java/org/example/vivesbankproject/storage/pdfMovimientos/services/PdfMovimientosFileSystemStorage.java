@@ -42,7 +42,7 @@ public class PdfMovimientosFileSystemStorage implements PdfMovimientosStorageSer
 
     @Override
     public String storeAll() {
-        String storedFilename = "movimientos_clientes_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".pdf";
+        String storedFilename = "admin_movimientos_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".pdf";
         Path pdfFilePath = Path.of("dataAdmin").resolve(storedFilename);
 
         try {

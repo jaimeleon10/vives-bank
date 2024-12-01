@@ -28,7 +28,7 @@ public class PdfMovimientosStorageConfig {
     public void init() {
         if (deleteAll.equals("true")) {
             log.info("Borrando ficheros de almacenamiento...");
-            pdfMovimientosStorageService.delete("movimientos_clientes_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".pdf");
+            pdfMovimientosStorageService.delete("admin_movimientos_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".pdf");
         }
 
         pdfMovimientosStorageService.init();

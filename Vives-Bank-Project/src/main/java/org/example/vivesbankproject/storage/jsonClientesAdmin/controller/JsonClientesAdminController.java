@@ -43,18 +43,6 @@ public class JsonClientesAdminController {
         }
     }
 
-    @PostMapping("/generate/{guid}")
-    public ResponseEntity<String> generateClienteJson(@PathVariable String guid) {
-        try {
-            String storedFilename = jsonClientesAdminStorageService.store(guid);
-            return ResponseEntity.ok("Archivo JSON de clientes generado con éxito: " + storedFilename);
-        } catch (StorageInternal e) {
-            log.error("Error al generar el archivo JSON de clientes: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error al generar el archivo JSON de clientes.");
-        }
-    }
-
     @GetMapping(value = "/{filename:.+}")
     @ResponseBody
     public ResponseEntity<Resource> serveFile(@PathVariable String filename, HttpServletRequest request) {
