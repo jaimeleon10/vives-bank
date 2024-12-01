@@ -31,18 +31,6 @@ public class JsonClientesController {
         this.jsonClientesStorageService = jsonClientesStorageService;
     }
 
-    @PostMapping("/generate")
-    public ResponseEntity<String> generateClientesJson() {
-        try {
-            String storedFilename = jsonClientesStorageService.storeAll();
-            return ResponseEntity.ok("Archivo JSON de clientes generado con éxito: " + storedFilename);
-        } catch (StorageInternal e) {
-            log.error("Error al generar el archivo JSON de clientes: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error al generar el archivo JSON de clientes.");
-        }
-    }
-
     @PostMapping("/generate/{guid}")
     public ResponseEntity<String> generateClienteJson(@PathVariable String guid) {
         try {
