@@ -58,7 +58,6 @@ public class TarjetaServiceImpl implements TarjetaService {
         this.userRepository = userRepository;
 
         this.webSocketConfig = webSocketConfig;
-
         webSocketService = webSocketConfig.webSocketTarjetasHandler();
         mapper = new ObjectMapper();
         this.cuentaRepository = cuentaRepository;
@@ -187,7 +186,7 @@ public class TarjetaServiceImpl implements TarjetaService {
     }
 
     void onChange(Notification.Tipo tipo, Tarjeta data) {
-        log.debug("Servicio de productos onChange con tipo: " + tipo + " y datos: " + data);
+        log.debug("Servicio de Tarjetas onChange con tipo: " + tipo + " y datos: " + data);
 
         if (webSocketService == null) {
             log.warn("No se ha podido enviar la notificación a los clientes ws, no se ha encontrado el servicio");
