@@ -91,9 +91,10 @@ class TarjetaServiceImplTest {
                 .cvv("123")
                 .build();
 
-        tarjetaRequestPrivado = new TarjetaRequestPrivado();
-        tarjetaRequestPrivado.setUsername("username");
-        tarjetaRequestPrivado.setUserPass("password");
+        tarjetaRequestPrivado = TarjetaRequestPrivado.builder()
+                .username("")
+                .userPass("password")
+                .build();
     }
 
     @Test
@@ -270,5 +271,50 @@ class TarjetaServiceImplTest {
         assertThrows(TarjetaNotFound.class, () -> tarjetaService.deleteById(GUID));
         verify(tarjetaRepository).findByGuid(GUID);
         verify(tarjetaRepository, never()).save(any(Tarjeta.class));
+    }
+
+    @Test
+    void getAll_WithoutMinLimiteSemanal_ShouldReturnAllCards() {
+        // Preparación del escenario sin límite semanal mínimo
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // Crear múltiples tarjetas con diferentes límites semanales
+        Tarjeta tarjeta1 = Tarjeta.builder()
+                .guid("tarjeta1")
+                .limiteSemanal(new BigDecimal("3000.00"))
+                .build();
+
+        Tarjeta tarjeta2 = Tarjeta.builder()
+                .guid("tarjeta2")
+                .limiteSemanal(new BigDecimal("6000.00"))
+                .build();
+
+        Page<Tarjeta> tarjetaPage = new PageImpl<>(List.of(tarjeta1, tarjeta2));
+
+        // Configurar mocks para simular el comportamiento del repositorio
+        when(tarjetaRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(tarjetaPage);
+
+        when(tarjetaMapper.toTarjetaResponse(any(Tarjeta.class)))
+                .thenReturn(tarjetaResponse);
+
+        // Ejecutar el método bajo prueba
+        Page<TarjetaResponse> result = tarjetaService.getAll(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(), // Sin límite semanal mínimo
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                pageable
+        );
+
+        // Verificaciones
+        assertNotNull(result);
+        assertEquals(2, result.getTotalElements());
+        verify(tarjetaRepository).findAll(any(Specification.class), eq(pageable));
     }
 }
