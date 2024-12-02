@@ -46,22 +46,22 @@ public class MovimientosMeController {
         return ResponseEntity.ok(movimientosService.saveDomiciliacion(user, request));
     }
 
-    @PostMapping("/ingresonomina/{iban}")
+    @PostMapping("/ingresonomina")
     public ResponseEntity<MovimientoResponse> createMovimientoIngresoNomina(@AuthenticationPrincipal User user, @RequestBody @Valid IngresoDeNomina request) {
-
-        return null;
+        log.info("Creando Movimiento de Ingreso de Nomina");
+        return ResponseEntity.ok(movimientosService.saveIngresoDeNomina(user, request));
     }
 
-    @PostMapping("/pagotarjeta/{iban}")
+    @PostMapping("/pagotarjeta")
     public ResponseEntity<MovimientoResponse> createMovimientoPagoConTarjeta(@AuthenticationPrincipal User user, @RequestBody @Valid PagoConTarjeta request) {
-
-        return null;
+        log.info("Creando Movimiento de Pago con Tarjeta");
+        return ResponseEntity.ok(movimientosService.savePagoConTarjeta(user, request));
     }
 
-    @PostMapping("/transferencia/{iban}")
-    public ResponseEntity<MovimientoResponse> createMovimientoTransferencia(@AuthenticationPrincipal User user, @PathVariable String iban , @RequestBody @Valid Transferencia request) {
-
-        return null;
+    @PostMapping("/transferencia")
+    public ResponseEntity<MovimientoResponse> createMovimientoTransferencia(@AuthenticationPrincipal User user, @RequestBody @Valid Transferencia request) {
+        log.info("Creando Movimiento de Transferencia");
+        return ResponseEntity.ok(movimientosService.saveTransferencia(user, request));
     }
 
     @DeleteMapping("/transferencia/{guid}")
