@@ -8,11 +8,14 @@ import org.example.vivesbankproject.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.models.Direccion;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
-import org.example.vivesbankproject.cuenta.models.Cuenta;
+import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
+import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponseCatalogo;
+import org.example.vivesbankproject.cuenta.mappers.TipoCuentaMapper;
+import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
+import org.example.vivesbankproject.cuenta.repositories.TipoCuentaRepository;
 import org.example.vivesbankproject.storage.images.services.StorageImagesService;
-import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
-import org.example.vivesbankproject.tarjeta.models.Tarjeta;
+import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.users.exceptions.UserNotFoundById;
 import org.example.vivesbankproject.users.models.User;
@@ -28,7 +31,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.util.*;
 
 @Slf4j
@@ -43,8 +45,10 @@ public class ClienteServiceImpl implements ClienteService {
     private final TarjetaRepository tarjetaRepository;
     private final CuentaRepository cuentaRepository;
     private final RedisTemplate<String, String> redisTemplate;
+    private final TipoCuentaRepository tipoCuentaRepository;
+    private final TipoCuentaMapper tipoCuentaMapper;
 
-    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserRepository userRepository, StorageImagesService storageImagesService, TarjetaRepository tarjetaRepository, CuentaRepository cuentaRepository, @Qualifier("stringRedisTemplate") RedisTemplate<String, String> redisTemplate) {
+    public ClienteServiceImpl(ClienteRepository clienteRepository, ClienteMapper clienteMapper, UserRepository userRepository, StorageImagesService storageImagesService, TarjetaRepository tarjetaRepository, CuentaRepository cuentaRepository, @Qualifier("stringRedisTemplate") RedisTemplate<String, String> redisTemplate, TipoCuentaRepository tipoCuentaRepository, TipoCuentaMapper tipoCuentaMapper) {
         this.clienteRepository = clienteRepository;
         this.clienteMapper = clienteMapper;
         this.userRepository = userRepository;
@@ -52,6 +56,8 @@ public class ClienteServiceImpl implements ClienteService {
         this.cuentaRepository = cuentaRepository;
         this.tarjetaRepository = tarjetaRepository;
         this.redisTemplate = redisTemplate;
+        this.tipoCuentaRepository = tipoCuentaRepository;
+        this.tipoCuentaMapper = tipoCuentaMapper;
     }
 
     @Override
@@ -334,6 +340,22 @@ public class ClienteServiceImpl implements ClienteService {
         var clienteSaved = clienteRepository.save(cliente);
 
         return clienteMapper.toClienteResponse(clienteSaved, cliente.getUser().getGuid());
+    }
+
+    @Override
+    public ClienteProducto getCatalogue() {
+        List<TipoCuenta> tiposCuentas = tipoCuentaRepository.findAll();
+        List<TipoCuentaResponseCatalogo> tiposCuentasResponse = new ArrayList<>();
+        tiposCuentas.forEach(tipoCuenta -> {
+            tiposCuentasResponse.add(tipoCuentaMapper.toTipoCuentaResponseCatalogo(tipoCuenta));
+        });
+
+        List<TipoTarjeta> tiposTarjetas = Arrays.asList(TipoTarjeta.values());
+
+        return ClienteProducto.builder()
+                .tiposTarjetas(tiposTarjetas)
+                .tiposCuentas(tiposCuentasResponse)
+                .build();
     }
 
     private void clearCacheByPrefix(String cachePrefix) {

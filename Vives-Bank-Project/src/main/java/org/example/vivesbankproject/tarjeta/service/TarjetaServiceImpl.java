@@ -9,6 +9,7 @@ import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.movimientos.models.IngresoDeNomina;
 import org.example.vivesbankproject.tarjeta.dto.*;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
+import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFoundByNumero;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaUserPasswordNotValid;
 import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
@@ -133,6 +134,13 @@ public class TarjetaServiceImpl implements TarjetaService {
     public TarjetaResponse getById(String id) {
         log.info("Obteniendo la tarjeta con id: {}", id);
         var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
+        return tarjetaMapper.toTarjetaResponse(tarjeta);
+    }
+
+    @Override
+    public TarjetaResponse getByNumeroTarjeta(String numeroTarjeta) {
+        log.info("Obteniendo la tarjeta con numero: {}", numeroTarjeta);
+        var tarjeta = tarjetaRepository.findByNumeroTarjeta(numeroTarjeta).orElseThrow(() -> new TarjetaNotFoundByNumero(numeroTarjeta));
         return tarjetaMapper.toTarjetaResponse(tarjeta);
     }
 

@@ -1,16 +1,15 @@
-package org.example.vivesbankproject.storage.jsonClientes.controller;
+package org.example.vivesbankproject.storage.jsonMovimientos.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.storage.exceptions.StorageInternal;
-import org.example.vivesbankproject.storage.jsonClientes.services.JsonClientesStorageService;
+import org.example.vivesbankproject.storage.jsonMovimientos.services.JsonMovimientosStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -21,32 +20,44 @@ import java.util.stream.Stream;
 
 @RestController
 @Slf4j
-@RequestMapping("/storage/jsonClientes")
-public class JsonClientesController {
+@RequestMapping("/storage/jsonMovimientos")
+public class JsonMovimientosController {
 
-    private final JsonClientesStorageService jsonClientesStorageService;
+    private final JsonMovimientosStorageService jsonMovimientosStorageService;
 
     @Autowired
-    public JsonClientesController(JsonClientesStorageService jsonClientesStorageService) {
-        this.jsonClientesStorageService = jsonClientesStorageService;
+    public JsonMovimientosController(JsonMovimientosStorageService jsonMovimientosStorageService) {
+        this.jsonMovimientosStorageService = jsonMovimientosStorageService;
+    }
+
+    @PostMapping("/generate")
+    public ResponseEntity<String> generateMovimientosJson() {
+        try {
+            String storedFilename = jsonMovimientosStorageService.storeAll();
+            return ResponseEntity.ok("Archivo JSON de movimientos generado con éxito: " + storedFilename);
+        } catch (StorageInternal e) {
+            log.error("Error al generar el archivo JSON de movimientos: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al generar el archivo JSON de movimientos.");
+        }
     }
 
     @PostMapping("/generate/{guid}")
-    public ResponseEntity<String> generateClienteJson(@PathVariable String guid) {
+    public ResponseEntity<String> generateMovimientoJson(@PathVariable String guid) {
         try {
-            String storedFilename = jsonClientesStorageService.store(guid);
-            return ResponseEntity.ok("Archivo JSON de clientes generado con éxito: " + storedFilename);
+            String storedFilename = jsonMovimientosStorageService.store(guid);
+            return ResponseEntity.ok("Archivo JSON de movimientos de cliente generado con éxito: " + storedFilename);
         } catch (StorageInternal e) {
-            log.error("Error al generar el archivo JSON de clientes: " + e.getMessage());
+            log.error("Error al generar el archivo JSON de movimientos de cliente: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error al generar el archivo JSON de clientes.");
+                    .body("Error al generar el archivo JSON de movimientos de cliente.");
         }
     }
 
     @GetMapping(value = "/{filename:.+}")
     @ResponseBody
     public ResponseEntity<Resource> serveFile(@PathVariable String filename, HttpServletRequest request) {
-        Resource file = jsonClientesStorageService.loadAsResource(filename);
+        Resource file = jsonMovimientosStorageService.loadAsResource(filename);
 
         String contentType = null;
         try {
@@ -67,7 +78,7 @@ public class JsonClientesController {
     @GetMapping("/list")
     public ResponseEntity<List<String>> listAllFiles() {
         try {
-            Stream<Path> files = jsonClientesStorageService.loadAll();
+            Stream<Path> files = jsonMovimientosStorageService.loadAll();
             List<String> filenames = files.map(Path::toString)
                     .collect(Collectors.toList());
             return ResponseEntity.ok(filenames);

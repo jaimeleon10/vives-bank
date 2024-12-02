@@ -30,4 +30,6 @@ public interface ClienteService {
     ClienteResponse updateDniFoto(String id, MultipartFile file);
 
     ClienteResponse updateProfileFoto(String id, MultipartFile file);
+
+    ClienteProducto getCatalogue();
 }

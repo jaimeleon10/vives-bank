@@ -8,7 +8,8 @@ import org.bson.types.ObjectId;
 import org.example.vivesbankproject.cliente.exceptions.ClienteNotFoundByUser;
 import org.example.vivesbankproject.cliente.service.ClienteService;
 import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFound;
-import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
+import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFoundByClienteGuid;
+import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFoundByTarjetaId;
 import org.example.vivesbankproject.cuenta.services.CuentaService;
 import org.example.vivesbankproject.movimientos.dto.MovimientoRequest;
 import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
@@ -16,12 +17,13 @@ import org.example.vivesbankproject.movimientos.exceptions.domiciliacion.Duplica
 import org.example.vivesbankproject.movimientos.exceptions.domiciliacion.SaldoInsuficienteException;
 import org.example.vivesbankproject.movimientos.exceptions.movimientos.ClienteHasNoMovements;
 import org.example.vivesbankproject.movimientos.exceptions.movimientos.MovimientoNotFound;
+import org.example.vivesbankproject.movimientos.exceptions.movimientos.NegativeAmount;
 import org.example.vivesbankproject.movimientos.mappers.MovimientoMapper;
-import org.example.vivesbankproject.movimientos.models.Domiciliacion;
-import org.example.vivesbankproject.movimientos.models.IngresoDeNomina;
-import org.example.vivesbankproject.movimientos.models.Movimiento;
+import org.example.vivesbankproject.movimientos.models.*;
 import org.example.vivesbankproject.movimientos.repositories.DomiciliacionRepository;
 import org.example.vivesbankproject.movimientos.repositories.MovimientosRepository;
+import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFoundByNumero;
+import org.example.vivesbankproject.tarjeta.service.TarjetaService;
 import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.users.services.UserService;
 import org.example.vivesbankproject.websocket.notifications.config.WebSocketConfig;
@@ -50,7 +52,7 @@ public class MovimientosServiceImpl implements MovimientosService {
     private final DomiciliacionRepository domiciliacionRepository;
     private final CuentaService cuentaService;
     private final MovimientoMapper movimientosMapper;
-    private final CuentaMapper cuentaMapper;
+    private final TarjetaService tarjetaService;
 
     private final UserService userService;
     private final WebSocketConfig webSocketConfig;
@@ -61,17 +63,14 @@ public class MovimientosServiceImpl implements MovimientosService {
 
 
     @Autowired
-    public MovimientosServiceImpl(CuentaService cuentaService, MovimientosRepository movimientosRepository, ClienteService clienteService, MovimientoMapper movimientosMapper, DomiciliacionRepository domiciliacionRepository, CuentaMapper cuentaMapper,
-            UserService userService,
-            WebSocketConfig webSocketConfig,
-            NotificationMapper notificationMapper
-        ) {
+    public MovimientosServiceImpl( CuentaService cuentaService, MovimientosRepository movimientosRepository, ClienteService clienteService, MovimientoMapper movimientosMapper, DomiciliacionRepository domiciliacionRepository, TarjetaService tarjetaService) {
         this.clienteService = clienteService;
         this.movimientosRepository = movimientosRepository;
         this.movimientosMapper = movimientosMapper;
         this.domiciliacionRepository = domiciliacionRepository;
         this.cuentaService = cuentaService;
-        this.cuentaMapper = cuentaMapper;
+        this.tarjetaService = tarjetaService;
+    }
 
         this.userService = userService;
         this.webSocketConfig = webSocketConfig;
@@ -152,7 +151,7 @@ public class MovimientosServiceImpl implements MovimientosService {
         // Validar que la cantidad es mayor que cero
         var cantidadDomiciliacion = new BigDecimal(domiciliacion.getCantidad().toString());
         if (cantidadDomiciliacion.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("La cantidad de la domiciliación debe ser mayor a 0");
+            throw new NegativeAmount(cantidadDomiciliacion);
         }
 
         // Guardar la domiciliación
@@ -166,29 +165,140 @@ public class MovimientosServiceImpl implements MovimientosService {
 
 
     @Override
-    public MovimientoResponse saveIngresoDeNomina(User user, MovimientoRequest movimientoRequest) {
-        log.info("Guardando Movimiento de Ingreso de Nómina: {}", movimientoRequest);
+    public MovimientoResponse saveIngresoDeNomina(User user, IngresoDeNomina ingresoDeNomina) {
+        log.info("Guardando Ingreso de Nomina: {}", ingresoDeNomina);
 
-        // Notifaciones
-        IngresoDeNomina fakeIngreso = IngresoDeNomina.builder()
-                .cantidad(2000.00)
-                .iban_Destino("")
-                .nombreEmpresa("Mi Empresa")
-                .cifEmpresa("").build();
-        onChangeIngresoNomina(Notification.Tipo.CREATE,fakeIngreso);
+        // Validar que el cliente existe
+        var cliente = clienteService.getUserAuthenticatedByGuid(user.getGuid());
+        if (cliente == null) {
+            throw new ClienteNotFoundByUser(user.getGuid());
+        }
+
+        // Validar que la cuenta existe
+        var clienteCuenta = cuentaService.getByIban(ingresoDeNomina.getIban_Destino());
+        if (clienteCuenta == null) {
+            throw new CuentaNotFound(ingresoDeNomina.getIban_Destino());
+        }
+
+        var empresaCuenta = cuentaService.getByIban(ingresoDeNomina.getIban_Origen());
+        if (empresaCuenta == null) {
+            throw new CuentaNotFound(ingresoDeNomina.getIban_Origen());
+        }
+
+        var cantidadNomina = new BigDecimal(ingresoDeNomina.getCantidad().toString());
+        if (cantidadNomina.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new NegativeAmount(cantidadNomina);
+        }
+
+        // VALIDAR CIF
 
 
-        return null;
+
+        BigDecimal saldoActual = new BigDecimal(empresaCuenta.getSaldo());
+        // Validar saldo suficiente
+        if (saldoActual.compareTo(cantidadNomina) < 0) {
+            throw new SaldoInsuficienteException(empresaCuenta.getIban(), saldoActual);
+        }
+
+
+        Movimiento movimineto = Movimiento.builder()
+                .ingresoDeNomina(ingresoDeNomina)
+                .build();
+
+        // Guardar el movimiento
+        Movimiento saved = movimientosRepository.save(movimineto);
+        return movimientosMapper.toMovimientoResponse(saved);
     }
 
     @Override
-    public MovimientoResponse savePagoConTarjeta(User user, MovimientoRequest movimientoRequest) {
-        return null;
+    public MovimientoResponse savePagoConTarjeta(User user, PagoConTarjeta pagoConTarjeta) {
+        log.info("Guardando Pago con Tarjeta: {}", pagoConTarjeta);
+
+        // Validar que el cliente existe
+        var cliente = clienteService.getUserAuthenticatedByGuid(user.getGuid());
+        if (cliente == null) {
+            throw new ClienteNotFoundByUser(user.getGuid());
+        }
+
+        // Validar que la tarjeta existe
+        var clienteTarjeta = tarjetaService.getByNumeroTarjeta(pagoConTarjeta.getNumeroTarjeta());
+        if (clienteTarjeta == null) {
+            throw new TarjetaNotFoundByNumero(pagoConTarjeta.getNumeroTarjeta());
+        }
+
+
+        var clienteCuentas = cuentaService.getAllCuentasByClienteGuid(cliente.getGuid());
+        if (clienteCuentas == null) {
+            throw new CuentaNotFoundByClienteGuid(cliente.getGuid());
+        }
+
+        var cuentaAsociadaATarjeta = clienteCuentas.stream()
+                .filter(c -> c.getTarjetaId().equals(clienteTarjeta.getGuid()))
+                .findFirst()
+                .orElseThrow(() -> new CuentaNotFoundByTarjetaId(clienteTarjeta.getGuid()));
+
+
+        // Validar que la cantidad es mayor que cero
+        var cantidadTarjeta = new BigDecimal(pagoConTarjeta.getCantidad().toString());
+        if (cantidadTarjeta.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new NegativeAmount(cantidadTarjeta);
+        }
+
+        BigDecimal saldoActual = new BigDecimal(cuentaAsociadaATarjeta.getSaldo());
+        // Validar saldo suficiente
+        if (saldoActual.compareTo(cantidadTarjeta) < 0) {
+            throw new SaldoInsuficienteException(cuentaAsociadaATarjeta.getIban(), saldoActual);
+        }
+
+        Movimiento movimiento = Movimiento.builder()
+                .pagoConTarjeta(pagoConTarjeta)
+                .build();
+
+        // Guardar el movimiento
+        Movimiento saved = movimientosRepository.save(movimiento);
+        return movimientosMapper.toMovimientoResponse(saved);
+
     }
 
     @Override
-    public MovimientoResponse saveTransferencia(User user, MovimientoRequest movimientoRequest) {
-        return null;
+    public MovimientoResponse saveTransferencia(User user, Transferencia transferencia) {
+        log.info("Guardando Transferencia: {}", transferencia);
+        // Validar que el cliente existe
+        var cliente = clienteService.getUserAuthenticatedByGuid(user.getGuid());
+        if (cliente == null) {
+            throw new ClienteNotFoundByUser(user.getGuid());
+        }
+
+        // Validar que la cuenta existe
+        var cuentaOrigen = cuentaService.getByIban(transferencia.getIban_Origen());
+        if (cuentaOrigen == null) {
+            throw new CuentaNotFound(transferencia.getIban_Origen());
+        }
+
+        var cuentaDestino = cuentaService.getByIban(transferencia.getIban_Destino());
+        if (cuentaDestino == null) {
+            throw new CuentaNotFound(transferencia.getIban_Destino());
+        }
+
+        // Validar que la cantidad es mayor que cero
+        var cantidadTranseferencia = new BigDecimal(transferencia.getCantidad().toString());
+        if (cantidadTranseferencia.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new NegativeAmount(cantidadTranseferencia);
+        }
+
+        BigDecimal saldoActual = new BigDecimal(cuentaOrigen.getSaldo());
+        // Validar saldo suficiente
+        if (saldoActual.compareTo(cantidadTranseferencia) < 0) {
+            throw new SaldoInsuficienteException(cuentaOrigen.getIban(), saldoActual);
+        }
+
+        Movimiento movimiento = Movimiento.builder()
+                .transferencia(transferencia)
+                .build();
+
+        // Guardar el movimiento
+        Movimiento saved = movimientosRepository.save(movimiento);
+        return movimientosMapper.toMovimientoResponse(saved);
     }
 
     void onChangeIngresoNomina(Notification.Tipo tipo, IngresoDeNomina data) {

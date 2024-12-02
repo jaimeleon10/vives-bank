@@ -1,5 +1,7 @@
 package org.example.vivesbankproject.users.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -29,7 +31,7 @@ import java.util.stream.Collectors;
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Entity
 @Table(name = "usuarios")
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class User implements Serializable, UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -66,6 +68,7 @@ public class User implements Serializable, UserDetails {
     @Builder.Default
     private Boolean isDeleted = false;
 
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()

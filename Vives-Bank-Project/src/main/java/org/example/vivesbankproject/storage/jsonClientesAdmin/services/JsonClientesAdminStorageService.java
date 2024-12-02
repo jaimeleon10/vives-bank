@@ -1,14 +1,14 @@
-package org.example.vivesbankproject.storage.jsonClientes.services;
+package org.example.vivesbankproject.storage.jsonClientesAdmin.services;
 
 import org.springframework.core.io.Resource;
 
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-public interface JsonClientesStorageService {
+public interface JsonClientesAdminStorageService {
     void init();
 
-    String store(String guid);
+    String storeAll();
 
     Stream<Path> loadAll();
 
