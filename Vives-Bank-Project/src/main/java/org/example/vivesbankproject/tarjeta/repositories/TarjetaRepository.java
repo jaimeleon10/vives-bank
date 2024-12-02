@@ -14,4 +14,6 @@ import java.util.UUID;
 @Repository
 public interface TarjetaRepository extends JpaRepository<Tarjeta, Long>, JpaSpecificationExecutor<Tarjeta> {
     Optional<Tarjeta> findByGuid(String guid);
+
+    Optional<Tarjeta> findByNumeroTarjeta(String numeroTarjeta);
 }
