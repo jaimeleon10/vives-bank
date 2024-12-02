@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WithMockUser(username = "admin", password = "adminPassword123", roles = {"ADMIN", "USER"})
 class JsonClientesControllerTest {
 
-    private static final Path TEST_DIRECTORY = Paths.get("dataTest");
+    private static final Path TEST_DIRECTORY = Paths.get("data", "test");
 
     @Autowired
     private MockMvc mockMvc;
@@ -129,7 +129,7 @@ class JsonClientesControllerTest {
         mockMvc.perform(get("/storage/jsonClientes/list"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0]").value("dataTest\\clientes_test-guid_2024-12-01.json"))
-                .andExpect(jsonPath("$[1]").value("dataTest\\clientes_test-guid_2024-12-02.json"));
+                .andExpect(jsonPath("$[0]").value("data\\test\\clientes_test-guid_2024-12-01.json"))
+                .andExpect(jsonPath("$[1]").value("data\\test\\clientes_test-guid_2024-12-02.json"));
     }
 }
