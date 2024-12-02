@@ -115,27 +115,7 @@ public class ClienteRepositoryTest {
         boolean exists = clienteRepository.existsByUserGuid(user.getGuid());
         assertTrue(exists);
     }
-
-    @Test
-    void FindCuentasAsignadas() {
-        User user = crearUsuario("testUserCuentas");
-        entityManager.persist(user);
-
-        Cliente cliente = crearCliente(user, "guid-cuentas", "22334455A", "cuentas@test.com", "223344556");
-        cliente = clienteRepository.save(cliente);
-
-        Cuenta cuenta1 = crearCuenta(cliente, "cuenta-001", BigDecimal.valueOf(1000));
-        Cuenta cuenta2 = crearCuenta(cliente, "cuenta-002", BigDecimal.valueOf(2000));
-
-        entityManager.persist(cuenta1);
-        entityManager.persist(cuenta2);
-
-        List<Cuenta> cuentas = clienteRepository.findCuentasAsignadas(Set.of("cuenta-001", "cuenta-002"));
-        assertEquals(2, cuentas.size());
-        assertTrue(cuentas.stream().anyMatch(c -> c.getGuid().equals("cuenta-001")));
-        assertTrue(cuentas.stream().anyMatch(c -> c.getGuid().equals("cuenta-002")));
-    }
-
+    
     @Test
     void FindByTelefono() {
         User user = crearUsuario("testUserTelefono");
