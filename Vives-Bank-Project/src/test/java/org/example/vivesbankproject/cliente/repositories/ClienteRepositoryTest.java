@@ -77,6 +77,7 @@ public class ClienteRepositoryTest {
         assertTrue(result.isPresent());
         assertEquals("guid-123", result.get().getGuid());
     }
+
     @Test
     void FindByDni() {
         User user = crearUsuario("testUserDni");
@@ -115,7 +116,7 @@ public class ClienteRepositoryTest {
         boolean exists = clienteRepository.existsByUserGuid(user.getGuid());
         assertTrue(exists);
     }
-    
+
     @Test
     void FindByTelefono() {
         User user = crearUsuario("testUserTelefono");
@@ -127,5 +128,18 @@ public class ClienteRepositoryTest {
         Optional<Cliente> result = clienteRepository.findByTelefono("667788990");
         assertTrue(result.isPresent());
         assertEquals("667788990", result.get().getTelefono());
+    }
+
+    @Test
+    void FindByUserGuid() {
+        User user = crearUsuario("testUserGuid");
+        user = entityManager.persistAndFlush(user);
+
+        Cliente cliente = crearCliente(user, "guid-12345", "12345678A", "userguid@test.com", "123456789");
+        cliente = clienteRepository.save(cliente);
+
+        Optional<Cliente> result = clienteRepository.findByUserGuid(user.getGuid());
+        assertTrue(result.isPresent());
+        assertEquals(user.getGuid(), result.get().getUser().getGuid());
     }
 }
