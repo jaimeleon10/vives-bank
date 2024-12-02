@@ -18,6 +18,11 @@ public class IngresoDeNomina  {
     @NotBlank
     private String iban_Destino; //iban de la persona que recibe el ingreso de la nomina
 
+    @Pattern(regexp = "^ES\\d{22}$",message = "El IBAN español debe comenzar con 'ES' seguido de 22 dígitos")
+    @Size(min = 24, max = 24,message = "El IBAN español debe tener exactamente 24 caracteres")
+    @NotBlank
+    private String iban_Origen; //iban de la empresa
+
     @Min(value = 1, message = "La cantidad debe ser mayor a 1")
     @Max(value = 10000, message = "La cantidad debe ser menor a 10000")
     private Double cantidad;

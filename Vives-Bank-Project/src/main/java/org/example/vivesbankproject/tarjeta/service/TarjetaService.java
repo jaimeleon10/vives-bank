@@ -24,6 +24,8 @@ public interface TarjetaService {
 
     TarjetaResponse getById(String id);
 
+    TarjetaResponse getByNumeroTarjeta(String numeroTarjeta);
+
     TarjetaResponsePrivado getPrivateData(String id, TarjetaRequestPrivado tarjetaRequestPrivado);
 
     TarjetaResponse save(TarjetaRequestSave tarjetaRequestSave);
