@@ -2,6 +2,9 @@ package org.example.vivesbankproject.storage.jsonClientes.controller;
 
 import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
 import org.example.vivesbankproject.storage.jsonClientes.services.JsonClientesStorageService;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,6 +37,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WithMockUser(username = "admin", password = "adminPassword123", roles = {"ADMIN", "USER"})
 class JsonClientesControllerTest {
 
+    private static final Path TEST_DIRECTORY = Paths.get("dataTest");
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -42,10 +48,40 @@ class JsonClientesControllerTest {
     @InjectMocks
     private JsonClientesController jsonClientesController;
 
+    @BeforeAll
+    static void setUp() throws IOException {
+        if (!Files.exists(TEST_DIRECTORY)) {
+            Files.createDirectory(TEST_DIRECTORY);
+        }
+    }
+
+    @AfterEach
+    void cleanUpTestFiles() throws IOException {
+        if (Files.exists(TEST_DIRECTORY)) {
+            Files.walk(TEST_DIRECTORY)
+                    .sorted((path1, path2) -> path2.compareTo(path1))
+                    .forEach(path -> {
+                        try {
+                            Files.deleteIfExists(path);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        }
+    }
+
+    @AfterAll
+    static void cleanUpAndTearDownTestDirectory() throws IOException {
+        if (Files.exists(TEST_DIRECTORY)) {
+            Files.deleteIfExists(TEST_DIRECTORY);
+        }
+    }
+
     @Test
     void generateClienteJson() throws Exception {
         String guid = "test-guid";
         String expectedFilename = "clientes_" + guid + "_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".json";
+        Path expectedFilePath = TEST_DIRECTORY.resolve(expectedFilename);
 
         when(jsonClientesStorageService.store(guid)).thenReturn(expectedFilename);
 
@@ -59,9 +95,8 @@ class JsonClientesControllerTest {
     @Test
     void serveFile() throws Exception {
         String filename = "clientes_test-guid_2024-12-01.json";
-        Path filePath = Paths.get("data/" + filename);
-        byte[] fileContent = Files.readAllBytes(filePath);
 
+        byte[] fileContent = "Contenido de prueba".getBytes();
         Resource mockResource = new org.springframework.core.io.ByteArrayResource(fileContent);
 
         when(jsonClientesStorageService.loadAsResource(filename)).thenReturn(mockResource);
@@ -86,15 +121,15 @@ class JsonClientesControllerTest {
     @Test
     void listAllFiles() throws Exception {
         List<Path> mockFiles = new ArrayList<>();
-        mockFiles.add(Paths.get("clientes_test-guid_2024-12-01.json"));
-        mockFiles.add(Paths.get("clientes_test-guid_2024-12-02.json"));
+        mockFiles.add(TEST_DIRECTORY.resolve("clientes_test-guid_2024-12-01.json"));
+        mockFiles.add(TEST_DIRECTORY.resolve("clientes_test-guid_2024-12-02.json"));
 
         when(jsonClientesStorageService.loadAll()).thenReturn(mockFiles.stream());
 
         mockMvc.perform(get("/storage/jsonClientes/list"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0]").value("clientes_test-guid_2024-12-01.json"))
-                .andExpect(jsonPath("$[1]").value("clientes_test-guid_2024-12-02.json"));
+                .andExpect(jsonPath("$[0]").value("dataTest\\clientes_test-guid_2024-12-01.json"))
+                .andExpect(jsonPath("$[1]").value("dataTest\\clientes_test-guid_2024-12-02.json"));
     }
 }
