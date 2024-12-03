@@ -2,6 +2,7 @@ package org.example.vivesbankproject.tarjeta.service;
 
 import org.example.vivesbankproject.tarjeta.dto.*;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
+import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFoundByNumero;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaUserPasswordNotValid;
 import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
@@ -275,10 +276,8 @@ class TarjetaServiceImplTest {
 
     @Test
     void getAll_WithoutMinLimiteSemanal_ShouldReturnAllCards() {
-        // Preparación del escenario sin límite semanal mínimo
         Pageable pageable = PageRequest.of(0, 10);
 
-        // Crear múltiples tarjetas con diferentes límites semanales
         Tarjeta tarjeta1 = Tarjeta.builder()
                 .guid("tarjeta1")
                 .limiteSemanal(new BigDecimal("3000.00"))
@@ -291,30 +290,51 @@ class TarjetaServiceImplTest {
 
         Page<Tarjeta> tarjetaPage = new PageImpl<>(List.of(tarjeta1, tarjeta2));
 
-        // Configurar mocks para simular el comportamiento del repositorio
         when(tarjetaRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(tarjetaPage);
 
         when(tarjetaMapper.toTarjetaResponse(any(Tarjeta.class)))
                 .thenReturn(tarjetaResponse);
 
-        // Ejecutar el método bajo prueba
         Page<TarjetaResponse> result = tarjetaService.getAll(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.empty(), // Sin límite semanal mínimo
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 pageable
         );
 
-        // Verificaciones
         assertNotNull(result);
         assertEquals(2, result.getTotalElements());
         verify(tarjetaRepository).findAll(any(Specification.class), eq(pageable));
+    }
+
+    @Test
+    void getByNumeroTarjeta() {
+        when(tarjetaRepository.findByNumeroTarjeta("1234567890123456")).thenReturn(Optional.of(tarjeta));
+        when(tarjetaMapper.toTarjetaResponse(tarjeta)).thenReturn(tarjetaResponse);
+
+        TarjetaResponse result = tarjetaService.getByNumeroTarjeta("1234567890123456");
+
+        assertNotNull(result);
+        assertEquals("1234567890123456", result.getNumeroTarjeta());
+        verify(tarjetaRepository).findByNumeroTarjeta("1234567890123456");
+        verify(tarjetaMapper).toTarjetaResponse(tarjeta);
+    }
+
+
+    @Test
+    void getByNumeroTarjetaNotFound() {
+        when(tarjetaRepository.findByNumeroTarjeta("1234567890123456")).thenReturn(Optional.empty());
+
+        assertThrows(TarjetaNotFoundByNumero.class, () -> tarjetaService.getByNumeroTarjeta("1234567890123456"));
+        verify(tarjetaRepository).findByNumeroTarjeta("1234567890123456");
+
+        verifyNoInteractions(tarjetaMapper);
     }
 }
