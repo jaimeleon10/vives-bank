@@ -77,6 +77,7 @@ public class ClienteRepositoryTest {
         assertTrue(result.isPresent());
         assertEquals("guid-123", result.get().getGuid());
     }
+
     @Test
     void FindByDni() {
         User user = crearUsuario("testUserDni");
@@ -117,26 +118,6 @@ public class ClienteRepositoryTest {
     }
 
     @Test
-    void FindCuentasAsignadas() {
-        User user = crearUsuario("testUserCuentas");
-        entityManager.persist(user);
-
-        Cliente cliente = crearCliente(user, "guid-cuentas", "22334455A", "cuentas@test.com", "223344556");
-        cliente = clienteRepository.save(cliente);
-
-        Cuenta cuenta1 = crearCuenta(cliente, "cuenta-001", BigDecimal.valueOf(1000));
-        Cuenta cuenta2 = crearCuenta(cliente, "cuenta-002", BigDecimal.valueOf(2000));
-
-        entityManager.persist(cuenta1);
-        entityManager.persist(cuenta2);
-
-        List<Cuenta> cuentas = clienteRepository.findCuentasAsignadas(Set.of("cuenta-001", "cuenta-002"));
-        assertEquals(2, cuentas.size());
-        assertTrue(cuentas.stream().anyMatch(c -> c.getGuid().equals("cuenta-001")));
-        assertTrue(cuentas.stream().anyMatch(c -> c.getGuid().equals("cuenta-002")));
-    }
-
-    @Test
     void FindByTelefono() {
         User user = crearUsuario("testUserTelefono");
         entityManager.persist(user);
@@ -147,5 +128,18 @@ public class ClienteRepositoryTest {
         Optional<Cliente> result = clienteRepository.findByTelefono("667788990");
         assertTrue(result.isPresent());
         assertEquals("667788990", result.get().getTelefono());
+    }
+
+    @Test
+    void FindByUserGuid() {
+        User user = crearUsuario("testUserGuid");
+        user = entityManager.persistAndFlush(user);
+
+        Cliente cliente = crearCliente(user, "guid-12345", "12345678A", "userguid@test.com", "123456789");
+        cliente = clienteRepository.save(cliente);
+
+        Optional<Cliente> result = clienteRepository.findByUserGuid(user.getGuid());
+        assertTrue(result.isPresent());
+        assertEquals(user.getGuid(), result.get().getUser().getGuid());
     }
 }

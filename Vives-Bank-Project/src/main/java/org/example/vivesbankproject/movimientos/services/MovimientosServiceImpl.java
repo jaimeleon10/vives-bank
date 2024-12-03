@@ -8,6 +8,7 @@ import org.example.vivesbankproject.cliente.service.ClienteService;
 import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFound;
 import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFoundByClienteGuid;
 import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFoundByTarjetaId;
+import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.cuenta.services.CuentaService;
 import org.example.vivesbankproject.movimientos.dto.MovimientoRequest;
 import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
@@ -16,6 +17,7 @@ import org.example.vivesbankproject.movimientos.exceptions.domiciliacion.SaldoIn
 import org.example.vivesbankproject.movimientos.exceptions.movimientos.ClienteHasNoMovements;
 import org.example.vivesbankproject.movimientos.exceptions.movimientos.MovimientoNotFound;
 import org.example.vivesbankproject.movimientos.exceptions.movimientos.NegativeAmount;
+import org.example.vivesbankproject.movimientos.exceptions.movimientos.UnknownIban;
 import org.example.vivesbankproject.movimientos.mappers.MovimientoMapper;
 import org.example.vivesbankproject.movimientos.models.*;
 import org.example.vivesbankproject.movimientos.repositories.DomiciliacionRepository;
@@ -23,6 +25,9 @@ import org.example.vivesbankproject.movimientos.repositories.MovimientosReposito
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFoundByNumero;
 import org.example.vivesbankproject.tarjeta.service.TarjetaService;
 import org.example.vivesbankproject.users.models.User;
+import org.example.vivesbankproject.utils.validators.ValidarCif;
+import org.example.vivesbankproject.utils.validators.ValidarIban;
+import org.example.vivesbankproject.utils.validators.ValidarTarjeta;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CachePut;
@@ -45,18 +50,17 @@ public class MovimientosServiceImpl implements MovimientosService {
     private final CuentaService cuentaService;
     private final MovimientoMapper movimientosMapper;
     private final TarjetaService tarjetaService;
-
-
-
+    private final CuentaMapper cuentaMapper;
 
     @Autowired
-    public MovimientosServiceImpl( CuentaService cuentaService, MovimientosRepository movimientosRepository, ClienteService clienteService, MovimientoMapper movimientosMapper, DomiciliacionRepository domiciliacionRepository, TarjetaService tarjetaService) {
+    public MovimientosServiceImpl( CuentaService cuentaService, MovimientosRepository movimientosRepository, ClienteService clienteService, MovimientoMapper movimientosMapper, DomiciliacionRepository domiciliacionRepository, TarjetaService tarjetaService, CuentaMapper cuentaMapper) {
         this.clienteService = clienteService;
         this.movimientosRepository = movimientosRepository;
         this.movimientosMapper = movimientosMapper;
         this.domiciliacionRepository = domiciliacionRepository;
         this.cuentaService = cuentaService;
         this.tarjetaService = tarjetaService;
+        this.cuentaMapper = cuentaMapper;
     }
 
     @Override
@@ -107,6 +111,9 @@ public class MovimientosServiceImpl implements MovimientosService {
     @Override
     public Domiciliacion saveDomiciliacion(User user, Domiciliacion domiciliacion) {
         log.info("Guardando Domiciliacion: {}", domiciliacion);
+        // validar Iban correcto
+        ValidarIban.validateIban(domiciliacion.getIbanOrigen());
+        ValidarIban.validateIban(domiciliacion.getIbanDestino());
 
         // Validar que el cliente existe
         var cliente = clienteService.getUserAuthenticatedByGuid(user.getGuid());
@@ -118,6 +125,10 @@ public class MovimientosServiceImpl implements MovimientosService {
         var clienteCuenta = cuentaService.getByIban(domiciliacion.getIbanOrigen());
         if (clienteCuenta == null) {
             throw new CuentaNotFound(domiciliacion.getIbanOrigen());
+        }
+
+        if (!cliente.getGuid().equals(clienteCuenta.getClienteId())) {
+            throw new UnknownIban(domiciliacion.getIbanOrigen());
         }
 
         // Validar si la domiciliación ya existe
@@ -145,6 +156,11 @@ public class MovimientosServiceImpl implements MovimientosService {
     @Override
     public MovimientoResponse saveIngresoDeNomina(User user, IngresoDeNomina ingresoDeNomina) {
         log.info("Guardando Ingreso de Nomina: {}", ingresoDeNomina);
+        // Validar Iban correcto
+        ValidarIban.validateIban(ingresoDeNomina.getIban_Destino());
+        ValidarIban.validateIban(ingresoDeNomina.getIban_Origen());
+        // Validar Cif
+        ValidarCif.validateCif(ingresoDeNomina.getCifEmpresa());
 
         // Validar que el cliente existe
         var cliente = clienteService.getUserAuthenticatedByGuid(user.getGuid());
@@ -158,28 +174,20 @@ public class MovimientosServiceImpl implements MovimientosService {
             throw new CuentaNotFound(ingresoDeNomina.getIban_Destino());
         }
 
-        var empresaCuenta = cuentaService.getByIban(ingresoDeNomina.getIban_Origen());
-        if (empresaCuenta == null) {
-            throw new CuentaNotFound(ingresoDeNomina.getIban_Origen());
-        }
-
+        // Validar que el ingreso de nomina es > 0
         var cantidadNomina = new BigDecimal(ingresoDeNomina.getCantidad().toString());
         if (cantidadNomina.compareTo(BigDecimal.ZERO) <= 0) {
             throw new NegativeAmount(cantidadNomina);
         }
 
-        // VALIDAR CIF
+        // sumar al cliente
+        var saldoActual = new BigDecimal(clienteCuenta.getSaldo().toString());
+        clienteCuenta.setSaldo(String.valueOf(saldoActual.add(cantidadNomina)));
+        cuentaService.update(clienteCuenta.getGuid(), cuentaMapper.toCuentaRequestUpdate(clienteCuenta));
 
-
-
-        BigDecimal saldoActual = new BigDecimal(empresaCuenta.getSaldo());
-        // Validar saldo suficiente
-        if (saldoActual.compareTo(cantidadNomina) < 0) {
-            throw new SaldoInsuficienteException(empresaCuenta.getIban(), saldoActual);
-        }
-
-
+        // Crear el movimiento
         Movimiento movimineto = Movimiento.builder()
+                .clienteGuid(cliente.getGuid())
                 .ingresoDeNomina(ingresoDeNomina)
                 .build();
 
@@ -191,6 +199,8 @@ public class MovimientosServiceImpl implements MovimientosService {
     @Override
     public MovimientoResponse savePagoConTarjeta(User user, PagoConTarjeta pagoConTarjeta) {
         log.info("Guardando Pago con Tarjeta: {}", pagoConTarjeta);
+        // Validar Iban correcto
+        ValidarTarjeta.validateTarjeta(pagoConTarjeta.getNumeroTarjeta());
 
         // Validar que el cliente existe
         var cliente = clienteService.getUserAuthenticatedByGuid(user.getGuid());
@@ -205,11 +215,13 @@ public class MovimientosServiceImpl implements MovimientosService {
         }
 
 
+        // Validar que la cuenta existe
         var clienteCuentas = cuentaService.getAllCuentasByClienteGuid(cliente.getGuid());
         if (clienteCuentas == null) {
             throw new CuentaNotFoundByClienteGuid(cliente.getGuid());
         }
 
+        // Validar que la cuenta asociada a la tarjeta existe
         var cuentaAsociadaATarjeta = clienteCuentas.stream()
                 .filter(c -> c.getTarjetaId().equals(clienteTarjeta.getGuid()))
                 .findFirst()
@@ -222,13 +234,20 @@ public class MovimientosServiceImpl implements MovimientosService {
             throw new NegativeAmount(cantidadTarjeta);
         }
 
-        BigDecimal saldoActual = new BigDecimal(cuentaAsociadaATarjeta.getSaldo());
         // Validar saldo suficiente
+        BigDecimal saldoActual = new BigDecimal(cuentaAsociadaATarjeta.getSaldo());
         if (saldoActual.compareTo(cantidadTarjeta) < 0) {
             throw new SaldoInsuficienteException(cuentaAsociadaATarjeta.getIban(), saldoActual);
         }
 
+        // restar al cliente
+        saldoActual = saldoActual.subtract(cantidadTarjeta);
+        cuentaAsociadaATarjeta.setSaldo(String.valueOf(saldoActual));
+        cuentaService.update(cuentaAsociadaATarjeta.getGuid(), cuentaMapper.toCuentaRequestUpdate(cuentaAsociadaATarjeta));
+
+        //crear el movimiento
         Movimiento movimiento = Movimiento.builder()
+                .clienteGuid(cliente.getGuid())
                 .pagoConTarjeta(pagoConTarjeta)
                 .build();
 
@@ -241,6 +260,9 @@ public class MovimientosServiceImpl implements MovimientosService {
     @Override
     public MovimientoResponse saveTransferencia(User user, Transferencia transferencia) {
         log.info("Guardando Transferencia: {}", transferencia);
+        // Validar Iban correcto
+        ValidarIban.validateIban(transferencia.getIban_Destino());
+        ValidarIban.validateIban(transferencia.getIban_Origen());
         // Validar que el cliente existe
         var cliente = clienteService.getUserAuthenticatedByGuid(user.getGuid());
         if (cliente == null) {
@@ -253,6 +275,11 @@ public class MovimientosServiceImpl implements MovimientosService {
             throw new CuentaNotFound(transferencia.getIban_Origen());
         }
 
+        if (!cliente.getGuid().equals(cuentaOrigen.getClienteId())) {
+            throw new UnknownIban(transferencia.getIban_Origen());
+        }
+
+        // HACER MOVIMIENTO INVERSO
         var cuentaDestino = cuentaService.getByIban(transferencia.getIban_Destino());
         if (cuentaDestino == null) {
             throw new CuentaNotFound(transferencia.getIban_Destino());
@@ -264,18 +291,45 @@ public class MovimientosServiceImpl implements MovimientosService {
             throw new NegativeAmount(cantidadTranseferencia);
         }
 
-        BigDecimal saldoActual = new BigDecimal(cuentaOrigen.getSaldo());
         // Validar saldo suficiente
+        BigDecimal saldoActual = new BigDecimal(cuentaOrigen.getSaldo());
         if (saldoActual.compareTo(cantidadTranseferencia) < 0) {
             throw new SaldoInsuficienteException(cuentaOrigen.getIban(), saldoActual);
         }
 
-        Movimiento movimiento = Movimiento.builder()
+        // restar al cliente
+        saldoActual = saldoActual.subtract(cantidadTranseferencia);
+        cuentaOrigen.setSaldo(String.valueOf(saldoActual));
+        cuentaService.update(cuentaOrigen.getGuid(), cuentaMapper.toCuentaRequestUpdate(cuentaOrigen));
+
+        // sumar al cliente de la cuenta destino
+        var saldoActualDestino = new BigDecimal(cuentaDestino.getSaldo());
+        saldoActualDestino = saldoActualDestino.add(cantidadTranseferencia);
+        cuentaDestino.setSaldo(String.valueOf(saldoActualDestino));
+        cuentaService.update(cuentaDestino.getGuid(), cuentaMapper.toCuentaRequestUpdate(cuentaDestino));
+
+        // crear el movimiento al cliente origen
+        Movimiento movimientoOrigen = Movimiento.builder()
+                .clienteGuid(cliente.getGuid())
+                .transferencia(Transferencia.builder()
+                       .iban_Origen(transferencia.getIban_Origen())
+                       .iban_Destino(transferencia.getIban_Destino())
+                       .cantidad(transferencia.getCantidad().negate())
+                       .build())
+                .build();
+
+        // Guardar el movimiento origen
+        var saved = movimientosRepository.save(movimientoOrigen);
+
+        // crear el movimiento al cliente destino
+        Movimiento movimientoDestino = Movimiento.builder()
+                .clienteGuid(cuentaDestino.getClienteId())
                 .transferencia(transferencia)
                 .build();
 
-        // Guardar el movimiento
-        Movimiento saved = movimientosRepository.save(movimiento);
+        // Guardar el movimiento destino
+        movimientosRepository.save(movimientoDestino);
+
         return movimientosMapper.toMovimientoResponse(saved);
     }
 }

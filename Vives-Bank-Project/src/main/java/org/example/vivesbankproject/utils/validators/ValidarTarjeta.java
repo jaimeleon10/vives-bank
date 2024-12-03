@@ -3,7 +3,7 @@ package org.example.vivesbankproject.utils.validators;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class validarTarjeta {
+public class ValidarTarjeta {
     public boolean validateTarjeta(String tarjeta) {
         if (!tarjeta.matches("\\d+") || tarjeta.length() == 16) {
             return false;

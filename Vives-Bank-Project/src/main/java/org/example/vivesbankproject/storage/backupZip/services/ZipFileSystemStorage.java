@@ -51,7 +51,7 @@ public class ZipFileSystemStorage implements ZipStorageService {
     private final UserRepository userRepository;
     private final TarjetaRepository tarjetaRepository;
     private final CuentaRepository cuentaRepository;
-    private MovimientosRepository movimientosRepository;
+    private final MovimientosRepository movimientosRepository;
 
     public ZipFileSystemStorage(@Value("${upload.root-location-2}") String path, ClienteRepository clienteRepository, MovimientosRepository movimientosRepository, UserRepository userRepository, TarjetaRepository tarjetaRepository, CuentaRepository cuentaRepository) {
         this.rootLocation = Paths.get(path);
