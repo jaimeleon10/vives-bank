@@ -3,7 +3,7 @@ package org.example.vivesbankproject.utils.validators;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class validarIban {
+public class ValidarIban {
 
     public boolean validateIban(String iban) {
         if (iban == null || iban.length() < 15 || iban.length() > 34 || !iban.matches("[A-Z0-9]+")) {
