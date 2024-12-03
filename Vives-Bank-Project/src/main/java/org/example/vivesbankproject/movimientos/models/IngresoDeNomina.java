@@ -13,13 +13,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class IngresoDeNomina  {
 
-    @Pattern(regexp = "^ES\\d{22}$",message = "El IBAN español debe comenzar con 'ES' seguido de 22 dígitos")
-    @Size(min = 24, max = 24,message = "El IBAN español debe tener exactamente 24 caracteres")
+   // @Pattern(regexp = "^ES\\d{22}$",message = "El IBAN español debe comenzar con 'ES' seguido de 22 dígitos")
+ //   @Size(min = 24, max = 24,message = "El IBAN español debe tener exactamente 24 caracteres")
     @NotBlank
     private String iban_Destino; //iban de la persona que recibe el ingreso de la nomina
 
-    @Pattern(regexp = "^ES\\d{22}$",message = "El IBAN español debe comenzar con 'ES' seguido de 22 dígitos")
-    @Size(min = 24, max = 24,message = "El IBAN español debe tener exactamente 24 caracteres")
+//    @Pattern(regexp = "^ES\\d{22}$",message = "El IBAN español debe comenzar con 'ES' seguido de 22 dígitos")
+  //  @Size(min = 24, max = 24,message = "El IBAN español debe tener exactamente 24 caracteres")
     @NotBlank
     private String iban_Origen; //iban de la empresa
 
