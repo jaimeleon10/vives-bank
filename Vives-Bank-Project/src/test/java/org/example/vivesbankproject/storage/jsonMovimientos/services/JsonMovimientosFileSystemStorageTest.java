@@ -99,6 +99,11 @@ class JsonMovimientosFileSystemStorageTest {
 
         File fileInDataAdmin = new File("dataAdmin", filename);
         assertTrue(fileInDataAdmin.exists(), "El archivo no se creó en el directorio esperado: " + fileInDataAdmin.getAbsolutePath());
+
+        if (fileInDataAdmin.exists()) {
+            boolean deleted = fileInDataAdmin.delete();
+            assertTrue(deleted, "No se pudo eliminar el archivo generado: " + fileInDataAdmin.getAbsolutePath());
+        }
     }
 
     @Test

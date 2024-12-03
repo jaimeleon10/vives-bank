@@ -34,6 +34,7 @@ class ZipFileSystemStorageTest {
 
     private static final String TEST_ROOT_LOCATION = "data/test";
 
+    @MockBean
     private ZipFileSystemStorage zipFileSystemStorage;
 
     @MockBean
@@ -141,20 +142,18 @@ class ZipFileSystemStorageTest {
     void loadJson() throws IOException {
         String jsonContent = "[{\"name\":\"John Doe\"}, {\"name\":\"Jane Doe\"}]";
 
-        File mockJsonFile = mock(File.class);
-        when(mockJsonFile.exists()).thenReturn(true);
-        when(mockJsonFile.length()).thenReturn((long) jsonContent.length());
+        File tempFile = File.createTempFile("test", ".json");
+        Files.write(tempFile.toPath(), jsonContent.getBytes());
 
-        ObjectMapper objectMapper = mock(ObjectMapper.class);
-        List<Object> mockResult = Arrays.asList(new Object(), new Object());
-        when(objectMapper.readValue(mockJsonFile, List.class)).thenReturn(mockResult);
+        try {
+            List<Object> result = zipFileSystemStorage.loadJson(tempFile);
 
-        List<Object> result = zipFileSystemStorage.loadJson(mockJsonFile);
+            assertNotNull(result, "La lista deserializada no debería ser nula");
+            assertEquals(2, result.size(), "La lista deserializada debería tener 2 elementos");
 
-        assertNotNull(result);
-        assertEquals(mockResult.size(), result.size(), "La lista deserializada no tiene el tamaño esperado");
-
-        verify(objectMapper).readValue(mockJsonFile, List.class);
+        } finally {
+            tempFile.delete();
+        }
     }
 
     @Test
@@ -183,28 +182,18 @@ class ZipFileSystemStorageTest {
     }
 
     @Test
-    void loadAsResource() {
+    void loadAsResource() throws Exception {
         String filename = "test.zip";
+        Path filePath = Paths.get(TEST_ROOT_LOCATION).resolve(filename);
 
-        Path mockPath = mock(Path.class);
-        when(zipFileSystemStorage.load(filename)).thenReturn(mockPath);
-
-        URI mockUri = mock(URI.class);
-        when(mockPath.toUri()).thenReturn(mockUri);
-
-        Resource mockResource = mock(UrlResource.class);
-        when(mockResource.exists()).thenReturn(true);
-        when(mockResource.isReadable()).thenReturn(true);
-
-        when(zipFileSystemStorage.loadAsResource(filename)).thenReturn(mockResource);
+        Files.createDirectories(filePath.getParent());
+        Files.write(filePath, "Contenido de prueba".getBytes());
 
         Resource resource = zipFileSystemStorage.loadAsResource(filename);
 
         assertNotNull(resource, "El recurso no debería ser nulo");
         assertTrue(resource.exists(), "El recurso debería existir");
         assertTrue(resource.isReadable(), "El recurso debería ser legible");
-
-        verify(zipFileSystemStorage).load(filename);
     }
 
     @Test
