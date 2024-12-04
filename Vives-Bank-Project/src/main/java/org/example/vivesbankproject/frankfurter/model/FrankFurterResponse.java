@@ -10,6 +10,7 @@ public class FrankFurterResponse {
     private String amount;
     private String base;
     private String date;
+
     @JsonProperty("rates")
     private Map<String, Double> exchangeRates;
 }
