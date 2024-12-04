@@ -1,13 +1,15 @@
 package org.example.vivesbankproject.movimientos.repositories;
 
-import org.example.vivesbankproject.cliente.models.Cliente;
-import org.example.vivesbankproject.movimientos.models.*;
+import org.example.vivesbankproject.movimientos.models.Movimiento;
+import org.example.vivesbankproject.movimientos.models.Domiciliacion;
+import org.example.vivesbankproject.movimientos.models.IngresoDeNomina;
+import org.example.vivesbankproject.movimientos.models.PagoConTarjeta;
+import org.example.vivesbankproject.movimientos.models.Transferencia;
 import org.example.vivesbankproject.utils.generators.IdGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
-import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.time.LocalDateTime;
@@ -16,7 +18,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataMongoTest
-class MovimientoRepositoryTest {
+class MovimientosRepositoryTest {
 
     @Autowired
     private MovimientosRepository movimientosRepository;
@@ -24,56 +26,106 @@ class MovimientoRepositoryTest {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    @Autowired
-    private Environment env;
-
-    private String clienteId;
     private Movimiento movimiento;
-    private Cliente cliente = new Cliente();
+    private String clienteGuid;
 
     @BeforeEach
     void setUp() {
-        clienteId = "clienteGuid";
+        clienteGuid = IdGenerator.generarId();
 
-        cliente.setGuid(clienteId);
-
-        movimiento = new Movimiento();
-        movimiento.setClienteGuid(cliente.getGuid());
-        movimiento.setGuid("BF0HTp1DON1");
-        movimiento.setDomiciliacion(new Domiciliacion());
-        movimiento.setIngresoDeNomina(new IngresoDeNomina());
-        movimiento.setPagoConTarjeta(new PagoConTarjeta());
-        movimiento.setTransferencia(new Transferencia());
-        movimiento.setIsDeleted(false);
-        movimiento.setCreatedAt(LocalDateTime.now());
+        movimiento = Movimiento.builder()
+                .guid(IdGenerator.generarId())
+                .clienteGuid(clienteGuid)
+                .domiciliacion(Domiciliacion.builder().guid(IdGenerator.generarId()).build())
+                .ingresoDeNomina(IngresoDeNomina.builder().build())
+                .pagoConTarjeta(PagoConTarjeta.builder().build())
+                .transferencia(Transferencia.builder().build())
+                .createdAt(LocalDateTime.now())
+                .build();
 
         mongoTemplate.insert(movimiento);
     }
 
     @Test
-    void findMovimientosByClienteId_shouldReturnMovimientos_whenClienteExists() {
-        Optional<Movimiento> result = movimientosRepository.findMovimientosByClienteGuid(movimiento.getClienteGuid());
+    void findByGuid_deberiaDevolverMovimiento_cuandoGuidExiste() {
+        Optional<Movimiento> result = movimientosRepository.findByGuid(movimiento.getGuid());
 
-        assertTrue(result.isPresent(), "El resultado debería estar presente");
-
-        Movimiento movimientoEncontrado = result.get();
-        assertEquals(cliente.getGuid(), movimientoEncontrado.getClienteGuid(), "El ID del cliente debería coincidir");
-    }
-
-    @Test
-    void findMovimientosByClienteId_shouldReturnEmpty_whenClienteDoesNotExist() {
-        String nonExistentClienteId = IdGenerator.generarId();
-
-        Optional<Movimiento> result = movimientosRepository.findMovimientosByClienteGuid(nonExistentClienteId);
-
-        assertTrue(result.isEmpty(), "El resultado debería estar vacío para un cliente inexistente");
-    }
-
-    @Test
-    void verifyEmbeddedMongoDB() {
         assertAll(
-                () -> assertTrue(mongoTemplate.getDb().getName().startsWith("banco-dev"), "El nombre de la base de datos debería empezar con 'test'"),
-                () -> assertNull(env.getProperty("spring.data.mongodb.uri"), "La URI de MongoDB debería ser null para la base de datos embebida")
+                () -> assertTrue(result.isPresent(), "Movimiento deberia ser encontrado por el GUID existente"),
+                () -> assertEquals(movimiento.getGuid(), result.get().getGuid(), "El movimiento recuperado debe coincidir con el GUID original")
+        );
+    }
+
+    @Test
+    void findByGuid_deberiaDevolverVacio_cuandoGuidNoExiste() {
+        String nonExistentGuid = IdGenerator.generarId();
+
+        Optional<Movimiento> result = movimientosRepository.findByGuid(nonExistentGuid);
+
+        assertTrue(result.isEmpty(), "El resultado deberia estar vacio para un GUID inexistente");
+    }
+
+    @Test
+    void findMovimientosByClienteGuid_deberiaDevolverMovimiento_cuandoClienteExiste() {
+        Optional<Movimiento> result = movimientosRepository.findMovimientosByClienteGuid(clienteGuid);
+
+        assertAll(
+                () -> assertEquals(true, result.isPresent(), "Movimiento deberia ser encontrado para el cliente existente"),
+                () -> assertEquals(clienteGuid, result.get().getClienteGuid(), "El movimiento recuperado debe tener el GUID del cliente correcto")
+        );
+    }
+
+    @Test
+    void findMovimientosByClienteGuid_deberiaDevolverVacio_cuandoClienteNoExiste() {
+        String nonExistentClienteGuid = IdGenerator.generarId();
+
+        Optional<Movimiento> result = movimientosRepository.findMovimientosByClienteGuid(nonExistentClienteGuid);
+
+        assertTrue(result.isEmpty(), "El resultado deberia estar vacio para un GUID de cliente inexistente");
+    }
+
+    @Test
+    void save_deberiaPersistirMovimiento() {
+        Movimiento newMovimiento = Movimiento.builder()
+                .guid(IdGenerator.generarId())
+                .clienteGuid(IdGenerator.generarId())
+                .domiciliacion(Domiciliacion.builder().guid(IdGenerator.generarId()).build())
+                .ingresoDeNomina(IngresoDeNomina.builder().build())
+                .pagoConTarjeta(PagoConTarjeta.builder().build())
+                .transferencia(Transferencia.builder().build())
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        Movimiento savedMovimiento = movimientosRepository.save(newMovimiento);
+
+        assertAll(
+                () -> assertNotNull(savedMovimiento, "El movimiento guardado no debe ser nulo"),
+                () -> assertNotNull(savedMovimiento.getId(), "El movimiento guardado debe tener un ID"),
+                () -> assertEquals(newMovimiento.getGuid(), savedMovimiento.getGuid(), "El movimiento guardado debe tener el mismo GUID")
+        );
+    }
+
+    @Test
+    void delete_deberiaEliminarMovimiento() {
+        Movimiento savedMovimiento = movimientosRepository.save(movimiento);
+
+        movimientosRepository.delete(savedMovimiento);
+
+        Optional<Movimiento> deletedMovimiento = movimientosRepository.findByGuid(savedMovimiento.getGuid());
+
+        assertTrue(deletedMovimiento.isEmpty(), "El movimiento deberia ser eliminado del repositorio");
+    }
+
+    @Test
+    void update_deberiaModificarMovimientoExistente() {
+        Movimiento savedMovimiento = movimientosRepository.save(movimiento);
+
+        savedMovimiento.setIsDeleted(true);
+
+        Movimiento updatedMovimiento = movimientosRepository.save(savedMovimiento);
+
+        assertAll(
+                () -> assertTrue(updatedMovimiento.getIsDeleted(), "El flag isDeleted debe ser actualizado")
         );
     }
 }

@@ -2,6 +2,7 @@ package org.example.vivesbankproject.tarjeta.service;
 
 import org.example.vivesbankproject.tarjeta.dto.*;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
+import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFoundByNumero;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaUserPasswordNotValid;
 import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
@@ -91,9 +92,10 @@ class TarjetaServiceImplTest {
                 .cvv("123")
                 .build();
 
-        tarjetaRequestPrivado = new TarjetaRequestPrivado();
-        tarjetaRequestPrivado.setUsername("username");
-        tarjetaRequestPrivado.setUserPass("password");
+        tarjetaRequestPrivado = TarjetaRequestPrivado.builder()
+                .username("")
+                .userPass("password")
+                .build();
     }
 
     @Test
@@ -270,5 +272,69 @@ class TarjetaServiceImplTest {
         assertThrows(TarjetaNotFound.class, () -> tarjetaService.deleteById(GUID));
         verify(tarjetaRepository).findByGuid(GUID);
         verify(tarjetaRepository, never()).save(any(Tarjeta.class));
+    }
+
+    @Test
+    void getAll_WithoutMinLimiteSemanal_ShouldReturnAllCards() {
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Tarjeta tarjeta1 = Tarjeta.builder()
+                .guid("tarjeta1")
+                .limiteSemanal(new BigDecimal("3000.00"))
+                .build();
+
+        Tarjeta tarjeta2 = Tarjeta.builder()
+                .guid("tarjeta2")
+                .limiteSemanal(new BigDecimal("6000.00"))
+                .build();
+
+        Page<Tarjeta> tarjetaPage = new PageImpl<>(List.of(tarjeta1, tarjeta2));
+
+        when(tarjetaRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(tarjetaPage);
+
+        when(tarjetaMapper.toTarjetaResponse(any(Tarjeta.class)))
+                .thenReturn(tarjetaResponse);
+
+        Page<TarjetaResponse> result = tarjetaService.getAll(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                pageable
+        );
+
+        assertNotNull(result);
+        assertEquals(2, result.getTotalElements());
+        verify(tarjetaRepository).findAll(any(Specification.class), eq(pageable));
+    }
+
+    @Test
+    void getByNumeroTarjeta() {
+        when(tarjetaRepository.findByNumeroTarjeta("1234567890123456")).thenReturn(Optional.of(tarjeta));
+        when(tarjetaMapper.toTarjetaResponse(tarjeta)).thenReturn(tarjetaResponse);
+
+        TarjetaResponse result = tarjetaService.getByNumeroTarjeta("1234567890123456");
+
+        assertNotNull(result);
+        assertEquals("1234567890123456", result.getNumeroTarjeta());
+        verify(tarjetaRepository).findByNumeroTarjeta("1234567890123456");
+        verify(tarjetaMapper).toTarjetaResponse(tarjeta);
+    }
+
+
+    @Test
+    void getByNumeroTarjetaNotFound() {
+        when(tarjetaRepository.findByNumeroTarjeta("1234567890123456")).thenReturn(Optional.empty());
+
+        assertThrows(TarjetaNotFoundByNumero.class, () -> tarjetaService.getByNumeroTarjeta("1234567890123456"));
+        verify(tarjetaRepository).findByNumeroTarjeta("1234567890123456");
+
+        verifyNoInteractions(tarjetaMapper);
     }
 }

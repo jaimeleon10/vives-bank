@@ -104,8 +104,8 @@ public class TarjetaRestController {
         Map<String, String> errors = new HashMap<>();
 
         if (ex instanceof MethodArgumentNotValidException methodArgumentNotValidException) {
-            methodArgumentNotValidException.getBindingResult().getAllErrors().forEach((error) -> {
-                String fieldName = ((FieldError) error).getField();
+            methodArgumentNotValidException.getBindingResult().getFieldErrors().forEach((error) -> {
+                String fieldName = error.getField();
                 String errorMessage = error.getDefaultMessage();
                 errors.put(fieldName, errorMessage);
             });
