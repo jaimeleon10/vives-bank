@@ -128,7 +128,7 @@ class JsonMovimientosFileSystemStorageTest {
         movimiento.setCreatedAt(LocalDateTime.now());
         movimiento.setIsDeleted(false);
 
-        when(movimientosRepository.findMovimientosByClienteGuid(guid)).thenReturn(Optional.of(movimiento));
+        when(movimientosRepository.findByClienteGuid(guid)).thenReturn(Optional.of(movimiento));
 
         String filename = storageService.store(guid);
 
@@ -143,7 +143,7 @@ class JsonMovimientosFileSystemStorageTest {
     @Test
     void storeClienteSinMovimientos() throws IOException {
         String guid = "12345";
-        when(movimientosRepository.findMovimientosByClienteGuid(guid)).thenReturn(Optional.empty());
+        when(movimientosRepository.findByClienteGuid(guid)).thenReturn(Optional.empty());
 
         String filename = storageService.store(guid);
 
@@ -157,7 +157,7 @@ class JsonMovimientosFileSystemStorageTest {
     @Test
     void storeClienteNotFound() throws IOException {
         String guid = "not-found";
-        when(movimientosRepository.findMovimientosByClienteGuid(guid)).thenReturn(Optional.empty());
+        when(movimientosRepository.findByClienteGuid(guid)).thenReturn(Optional.empty());
 
         String filename = storageService.store(guid);
 
@@ -177,7 +177,7 @@ class JsonMovimientosFileSystemStorageTest {
         movimiento.setCreatedAt(LocalDateTime.now());
         movimiento.setIsDeleted(false);
 
-        when(movimientosRepository.findMovimientosByClienteGuid(guid)).thenReturn(Optional.of(movimiento));
+        when(movimientosRepository.findByClienteGuid(guid)).thenReturn(Optional.of(movimiento));
 
         String invalidPath = "/invalid";
         storageService = new JsonMovimientosFileSystemStorage(invalidPath, movimientosRepository);
@@ -195,7 +195,7 @@ class JsonMovimientosFileSystemStorageTest {
         movimiento.setCreatedAt(LocalDateTime.now());
         movimiento.setIsDeleted(false);
 
-        when(movimientosRepository.findMovimientosByClienteGuid(guid)).thenReturn(Optional.of(movimiento));
+        when(movimientosRepository.findByClienteGuid(guid)).thenReturn(Optional.of(movimiento));
 
         String filename = storageService.store(guid);
 

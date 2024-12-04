@@ -152,7 +152,6 @@ public class MovimientosServiceImpl implements MovimientosService {
         return saved;
     }
 
-
     @Override
     public MovimientoResponse saveIngresoDeNomina(User user, IngresoDeNomina ingresoDeNomina) {
         log.info("Guardando Ingreso de Nomina: {}", ingresoDeNomina);
