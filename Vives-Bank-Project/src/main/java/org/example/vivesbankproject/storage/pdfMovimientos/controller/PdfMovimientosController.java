@@ -3,7 +3,6 @@ package org.example.vivesbankproject.storage.pdfMovimientos.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.storage.exceptions.StorageInternal;
-import org.example.vivesbankproject.storage.jsonMovimientos.services.JsonMovimientosStorageService;
 import org.example.vivesbankproject.storage.pdfMovimientos.services.PdfMovimientosStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -32,7 +31,7 @@ public class PdfMovimientosController {
     }
 
     @PostMapping("/generate")
-    public ResponseEntity<String> generateMovimientosJson() {
+    public ResponseEntity<String> generateMovimientosPdf() {
         try {
             String storedFilename = pdfMovimientosStorageService.storeAll();
             return ResponseEntity.ok("Archivo PDF de movimientos generado con éxito: " + storedFilename);
@@ -44,7 +43,7 @@ public class PdfMovimientosController {
     }
 
     @PostMapping("/generate/{guid}")
-    public ResponseEntity<String> generateMovimientoJson(@PathVariable String guid) {
+    public ResponseEntity<String> generateMovimientoPdf(@PathVariable String guid) {
         try {
             String storedFilename = pdfMovimientosStorageService.store(guid);
             return ResponseEntity.ok("Archivo PDF de movimientos de cliente generado con éxito: " + storedFilename);
