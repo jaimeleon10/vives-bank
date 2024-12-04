@@ -74,30 +74,30 @@ class JsonMovimientosControllerTest {
         }
     }
 
-//    @Test
-//    void generateMovimientosJson() throws Exception {
-//        String expectedFilename = "admin_movimientos_2024-12-03.json";
-//
-//        when(jsonMovimientosFileSystemStorage.storeAll()).thenReturn(expectedFilename);
-//
-//        mockMvc.perform(post("/generate"))
-//                .andExpect(status().isOk())
-//                .andExpect(content().string("Archivo JSON de movimientos generado con éxito: " + expectedFilename));
-//    }
+    @Test
+    void generateMovimientosJson() throws Exception {
+        String expectedFilename = "admin_movimientos_2024-12-03.json";
 
-//    @Test
-//    void generateMovimientoJson() throws Exception {
-//        String guid = "54321";
-//        String expectedFilename = "movimientos_54321_2024-12-03.json";
-//
-//        when(jsonMovimientosFileSystemStorage.store(guid)).thenReturn(expectedFilename);
-//
-//        mockMvc.perform(post("/generate/{guid}", guid))
-//                .andExpect(status().isOk())
-//                .andExpect(content().string("Archivo JSON de movimientos de cliente generado con éxito: " + expectedFilename));
-//
-//        verify(jsonMovimientosFileSystemStorage, times(1)).store(guid);
-//    }
+        when(jsonMovimientosFileSystemStorage.storeAll()).thenReturn(expectedFilename);
+
+        mockMvc.perform(post("/storage/jsonMovimientos/generate"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Archivo JSON de movimientos generado con éxito: " + expectedFilename));
+    }
+
+    @Test
+    void generateMovimientoJson() throws Exception {
+        String guid = "54321";
+        String expectedFilename = "movimientos_54321_2024-12-03.json";
+
+        when(jsonMovimientosFileSystemStorage.store(guid)).thenReturn(expectedFilename);
+
+        mockMvc.perform(post("/storage/jsonMovimientos/generate/{guid}", guid))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Archivo JSON de movimientos de cliente generado con éxito: " + expectedFilename));
+
+        verify(jsonMovimientosFileSystemStorage, times(1)).store(guid);
+    }
 
     @Test
     void serveFile() throws Exception {
