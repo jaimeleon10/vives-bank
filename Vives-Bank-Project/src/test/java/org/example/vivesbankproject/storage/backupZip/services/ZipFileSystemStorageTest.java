@@ -1,11 +1,18 @@
 package org.example.vivesbankproject.storage.backupZip.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.vivesbankproject.cliente.dto.ClienteJsonAdmin;
+import org.example.vivesbankproject.cliente.models.Cliente;
+import org.example.vivesbankproject.cliente.models.Direccion;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
+import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
+import org.example.vivesbankproject.movimientos.models.Movimiento;
 import org.example.vivesbankproject.movimientos.repositories.MovimientosRepository;
 import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
+import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
+import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
@@ -14,17 +21,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -138,6 +144,7 @@ class ZipFileSystemStorageTest {
 
     @Test
     void loadFromZip() {
+
     }
 
     @Test
@@ -157,20 +164,6 @@ class ZipFileSystemStorageTest {
             tempFile.delete();
         }
     }
-
-//    @Test
-//    void loadJsonStorageNotFound() throws IOException {
-//        File mockJsonFile = mock(File.class);
-//
-//        ObjectMapper objectMapper = mock(ObjectMapper.class);
-//        when(objectMapper.readValue(mockJsonFile, List.class)).thenThrow(new IOException("Error al leer el archivo JSON"));
-//
-//        StorageNotFound exception = assertThrows(StorageNotFound.class, () -> {
-//            zipFileSystemStorage.loadJson(mockJsonFile);
-//        });
-//
-//        assertTrue(exception.getMessage().contains("Error al deserializar el archivo JSON"));
-//    }
 
     @Test
     void load() {
