@@ -10,9 +10,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,12 +25,13 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Stream;
 
-import static org.mockito.Mockito.mock;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -73,14 +78,15 @@ class PdfMovimientosControllerTest {
         }
     }
 
-//    @Test
-//    void generateMovimientosPdf() throws Exception {
-//        String expectedFilename = "admin_movimientos_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".pdf";
-//
-//        mockMvc.perform(post("/storage/pdfMovimientos/generate"))
-//                .andExpect(status().isOk())
-//                .andExpect(content().string("Archivo PDF de movimientos generado con éxito: " + expectedFilename));
-//    }
+    @Test
+    void generateMovimientosPdf() throws Exception {
+        String filename = "movimientos.pdf";
+        when(storageService.storeAll()).thenReturn(filename);
+
+        mockMvc.perform(post("/storage/pdfMovimientos/generate"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Archivo PDF de movimientos generado con éxito: " + filename));
+    }
 
     @Test
     void generateMovimientosPdfError() throws Exception {
@@ -91,14 +97,16 @@ class PdfMovimientosControllerTest {
                 .andExpect(content().string("Error al generar el archivo PDF de movimientos."));
     }
 
-//    @Test
-//    void generateMovimientoPdf() throws Exception {
-//        String expectedFilename = "movimientos_guid123_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".pdf";
-//
-//        mockMvc.perform(post("/storage/pdfMovimientos/generate/{guid}", "guid123"))
-//                .andExpect(status().isOk())
-//                .andExpect(content().string("Archivo PDF de movimientos de cliente generado con éxito: " + expectedFilename));
-//    }
+    @Test
+    void generateMovimientoPdf() throws Exception {
+        String guid = "12345";
+        String filename = "movimiento_12345.pdf";
+        when(storageService.store(guid)).thenReturn(filename);
+
+        mockMvc.perform(post("/storage/pdfMovimientos/generate/{guid}", guid))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Archivo PDF de movimientos de cliente generado con éxito: " + filename));
+    }
 
     @Test
     void generateMovimientoPdfError() throws Exception {
@@ -109,20 +117,29 @@ class PdfMovimientosControllerTest {
                 .andExpect(content().string("Error al generar el archivo PDF de movimientos de cliente."));
     }
 
-//    @Test
-//    void serveFile() throws Exception {
-//        String filename = "file1.pdf";
-//        Path filePath = Paths.get("data/test", filename);
-//        Resource resource = mock(Resource.class);
-//
-//        when(storageService.loadAsResource(filename)).thenReturn(resource);
-//
-//        mockMvc.perform(get("/storage/pdfMovimientos/{filename}", filename))
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentType("application/pdf"))
-//                .andExpect(header().exists("Content-Disposition"))
-//                .andExpect(header().string("Content-Disposition", "attachment; filename=\"file1.pdf\""));
-//    }
+    @Test
+    void serveFile() throws Exception {
+        String filename = "movimiento.pdf";
+        File testFile = TEST_DIRECTORY.resolve(filename).toFile();
+
+        if (!testFile.exists()) {
+            testFile.getParentFile().mkdirs();
+            try (FileWriter writer = new FileWriter(testFile)) {
+                writer.write("Contenido de prueba del archivo PDF");
+            }
+        }
+
+        Resource fileResource = new FileSystemResource(testFile);
+        when(storageService.loadAsResource(filename)).thenReturn(fileResource);
+
+        mockMvc.perform(get("/storage/pdfMovimientos/{filename}", filename))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF));
+
+        if (testFile.exists()) {
+            testFile.delete();
+        }
+    }
 
     @Test
     void listAllFiles() throws Exception {
@@ -142,6 +159,7 @@ class PdfMovimientosControllerTest {
 
         mockMvc.perform(get("/storage/pdfMovimientos/list"))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().json("[]"));
+                .andExpect(content().json("[]"))
+                .andExpect(content().string(containsString("[]")));
     }
 }
