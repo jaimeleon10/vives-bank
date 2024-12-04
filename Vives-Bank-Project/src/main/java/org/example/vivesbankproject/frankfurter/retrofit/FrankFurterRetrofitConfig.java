@@ -30,8 +30,10 @@ public class FrankFurterRetrofitConfig {
                 .build();
     }
 
-    @Bean
+
+    @Bean(name = "retrofitDivisasApiService")
     public DivisasApiService divisasApiService(Retrofit retrofit) {
         return retrofit.create(DivisasApiService.class);
     }
+
 }
