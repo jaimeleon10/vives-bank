@@ -160,4 +160,13 @@ class JsonMovimientosControllerTest {
                 .andExpect(jsonPath("$[0]").value("data\\test\\movimientos_test_2024-12-01.json"))
                 .andExpect(jsonPath("$[1]").value("data\\test\\movimientos_test_2024-12-02.json"));
     }
+
+    @Test
+    void listAllFiles_error() throws Exception {
+        when(jsonMovimientosFileSystemStorage.loadAll()).thenThrow(new StorageInternal("Error al obtener archivos"));
+
+        mockMvc.perform(get("/storage/jsonMovimientos/list"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().json("[]"));
+    }
 }
