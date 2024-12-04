@@ -13,4 +13,6 @@ public interface CuentaRepository extends JpaRepository<Cuenta, Long>, JpaSpecif
     Optional<Cuenta> findByGuid(String guid);
     Optional<Cuenta> findByIban(String iban);
     ArrayList<Cuenta> findAllByCliente_Guid(String clienteGuid);
+
+    Optional<Cuenta>  findByTarjetaId(Long id);
 }

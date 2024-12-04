@@ -3,6 +3,7 @@ package org.example.vivesbankproject.movimientos.mappers;
 import org.example.vivesbankproject.movimientos.dto.MovimientoRequest;
 import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
 import org.example.vivesbankproject.movimientos.models.Movimiento;
+import org.example.vivesbankproject.websocket.notifications.dto.IngresoNominaResponse;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -35,4 +36,5 @@ public class MovimientoMapper {
                 .createdAt(String.valueOf(movimiento.getCreatedAt()))
                .build();
     }
+
 }
