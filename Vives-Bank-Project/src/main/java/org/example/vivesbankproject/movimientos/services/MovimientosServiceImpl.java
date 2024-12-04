@@ -93,7 +93,7 @@ public class MovimientosServiceImpl implements MovimientosService {
     public MovimientoResponse getByClienteGuid(String ClienteGuid) {
         log.info("Encontrando Movimientos por idCliente: {}", ClienteGuid);
         clienteService.getById(ClienteGuid);
-        return movimientosRepository.findMovimientosByClienteGuid(ClienteGuid)
+        return movimientosRepository.findByClienteGuid(ClienteGuid)
                 .map(movimientosMapper::toMovimientoResponse)
                 .orElseThrow(() -> new ClienteHasNoMovements(ClienteGuid));
     }
