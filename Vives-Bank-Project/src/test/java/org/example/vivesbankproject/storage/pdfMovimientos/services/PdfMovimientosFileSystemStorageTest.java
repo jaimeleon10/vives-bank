@@ -1,58 +1,44 @@
-package org.example.vivesbankproject.storage.jsonClientes.services;
+package org.example.vivesbankproject.storage.pdfMovimientos.services;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import org.example.vivesbankproject.cliente.dto.ClienteJson;
-import org.example.vivesbankproject.cliente.models.Cliente;
-import org.example.vivesbankproject.cliente.models.Direccion;
-import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
-import org.example.vivesbankproject.cuenta.models.Cuenta;
-import org.example.vivesbankproject.cuenta.models.TipoCuenta;
-import org.example.vivesbankproject.storage.exceptions.StorageInternal;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfReader;
+import org.bson.types.ObjectId;
+import org.example.vivesbankproject.movimientos.models.*;
+import org.example.vivesbankproject.movimientos.repositories.MovimientosRepository;
 import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
-import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.MockedStatic;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.Resource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
-class JsonClientesFileSystemStorageTest {
+class PdfMovimientosFileSystemStorageTest {
 
     private static final String TEST_ROOT_LOCATION = "data/test";
 
-    private JsonClientesFileSystemStorage storageService;
+    private PdfMovimientosFileSystemStorage storageService;
 
     @MockBean
-    private ClienteRepository clienteRepository;
+    private MovimientosRepository movimientosRepository;
 
     @BeforeEach
     void setUp() throws IOException {
-        storageService = new JsonClientesFileSystemStorage(TEST_ROOT_LOCATION, clienteRepository);
+        storageService = new PdfMovimientosFileSystemStorage(TEST_ROOT_LOCATION, movimientosRepository);
 
         Path testPath = Paths.get(TEST_ROOT_LOCATION);
         if (Files.exists(testPath)) {
@@ -96,73 +82,56 @@ class JsonClientesFileSystemStorageTest {
         }
     }
 
+//    @Test
+//    void storeAll() throws IOException {
+//        List<Movimiento> movimientos = List.of(
+//                new Movimiento().builder()
+//                        .id(new ObjectId())
+//                        .guid("guid1")
+//                        .clienteGuid("cliente1")
+//                        .domiciliacion(new Domiciliacion())
+//                        .ingresoDeNomina(new IngresoDeNomina())
+//                        .pagoConTarjeta(new PagoConTarjeta())
+//                        .transferencia(new Transferencia())
+//                        .build(),
+//                new Movimiento().builder()
+//                        .id(new ObjectId())
+//                        .guid("guid2")
+//                        .clienteGuid("cliente2")
+//                        .domiciliacion(new Domiciliacion())
+//                        .ingresoDeNomina(new IngresoDeNomina())
+//                        .pagoConTarjeta(new PagoConTarjeta())
+//                        .transferencia(new Transferencia())
+//                        .build()
+//        );
+//
+//        when(movimientosRepository.findAll()).thenReturn(movimientos);
+//
+//        String filename = storageService.storeAll();
+//
+//        Path pdfPath = Path.of(TEST_ROOT_LOCATION).resolve("dataAdmin").resolve(filename);
+//
+//        System.out.println("Verificando existencia del archivo en: " + pdfPath.toAbsolutePath());
+//
+//        assertTrue(Files.exists(pdfPath), "El archivo PDF debería existir.");
+//
+//        long fileSize = Files.size(pdfPath);
+//        assertTrue(fileSize > 0, "El archivo PDF no debería estar vacío.");
+//
+//        try (PdfReader reader = new PdfReader(pdfPath.toString())) {
+//            PdfDocument pdfDoc = new PdfDocument(reader);
+//            assertTrue(pdfDoc.getNumberOfPages() > 0, "El PDF debería tener al menos una página.");
+//        }
+//    }
+
     @Test
-    void store() throws IOException {
-        Cuenta mockCuenta = Cuenta.builder()
-                .guid("cuentaGuid")
-                .iban("iban")
-                .saldo(new BigDecimal("100.00"))
-                .tarjeta(new Tarjeta())
-                .tipoCuenta(new TipoCuenta())
-                .cliente(new Cliente())
-                .build();
-
-        String guid = "test-guid";
-        Cliente mockCliente = new Cliente();
-        mockCliente.setGuid(guid);
-        mockCliente.setDni("12345678A");
-        mockCliente.setNombre("John");
-        mockCliente.setApellidos("Doe");
-        mockCliente.setDireccion(new Direccion());
-        mockCliente.setEmail("john.doe@example.com");
-        mockCliente.setTelefono("123456789");
-        mockCliente.setFotoPerfil("foto-perfil.jpg");
-        mockCliente.setFotoDni("foto-dni.jpg");
-        mockCliente.setCuentas(Set.of(mockCuenta));
-        mockCliente.setCreatedAt(LocalDateTime.now());
-        mockCliente.setUpdatedAt(LocalDateTime.now());
-        mockCliente.setIsDeleted(false);
-
-        when(clienteRepository.findByGuid(guid)).thenReturn(Optional.of(mockCliente));
-
-        String storedFilename = storageService.store(guid);
-
-        assertNotNull(storedFilename);
-        assertTrue(storedFilename.contains(guid));
-        assertTrue(storedFilename.endsWith(".json"));
-
-        Path storedFilePath = Paths.get(TEST_ROOT_LOCATION).resolve(storedFilename);
-        assertTrue(Files.exists(storedFilePath));
-
-        String fileContent = Files.readString(storedFilePath);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        JavaTimeModule module = new JavaTimeModule();
-        module.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-        objectMapper.registerModule(module);
-
-        List<ClienteJson> clienteJsonList = objectMapper.readValue(fileContent, new TypeReference<>(){});
-
-        assertFalse(clienteJsonList.isEmpty(), "El archivo JSON debe contener al menos un cliente");
-
-        ClienteJson clienteJson = clienteJsonList.get(0);
-
-        assertEquals(guid, clienteJson.getGuid());
-        assertEquals("John", clienteJson.getNombre());
-        assertEquals("Doe", clienteJson.getApellidos());
-        assertEquals("12345678A", clienteJson.getDni());
-        assertEquals("john.doe@example.com", clienteJson.getEmail());
-        assertEquals("123456789", clienteJson.getTelefono());
-        assertEquals("foto-perfil.jpg", clienteJson.getFotoPerfil());
-        assertEquals("foto-dni.jpg", clienteJson.getFotoDni());
-        assertNotNull(clienteJson.getDireccion(), "La dirección no debe ser nula");
-        assertFalse(clienteJson.getCuentas().isEmpty(), "El cliente debe tener cuentas asociadas");
+    void store() {
     }
 
     @Test
     void loadAll() throws IOException {
-        Path testFile1 = Paths.get(TEST_ROOT_LOCATION).resolve("testFile1.json");
-        Path testFile2 = Paths.get(TEST_ROOT_LOCATION).resolve("testFile2.json");
+        Path testFile1 = Paths.get(TEST_ROOT_LOCATION).resolve("testFile1.pdf");
+        Path testFile2 = Paths.get(TEST_ROOT_LOCATION).resolve("testFile2.pdf");
 
         Files.createDirectories(Paths.get(TEST_ROOT_LOCATION));
         Files.write(testFile1, "Contenido de prueba 1".getBytes());
@@ -173,8 +142,8 @@ class JsonClientesFileSystemStorageTest {
         List<Path> fileList = loadedFiles.collect(Collectors.toList());
 
         assertEquals(2, fileList.size());
-        assertTrue(fileList.contains(Paths.get("testFile1.json")));
-        assertTrue(fileList.contains(Paths.get("testFile2.json")));
+        assertTrue(fileList.contains(Paths.get("testFile1.pdf")));
+        assertTrue(fileList.contains(Paths.get("testFile2.pdf")));
 
         Files.deleteIfExists(testFile1);
         Files.deleteIfExists(testFile2);
@@ -182,7 +151,7 @@ class JsonClientesFileSystemStorageTest {
 
     @Test
     void load() {
-        String filename = "testFile.json";
+        String filename = "testFile.pdf";
         Path expectedPath = Paths.get(TEST_ROOT_LOCATION).resolve(filename);
 
         Path resolvedPath = storageService.load(filename);
@@ -193,7 +162,7 @@ class JsonClientesFileSystemStorageTest {
 
     @Test
     void loadAsResource() {
-        String filename = "testFile.json";
+        String filename = "testFile.pdf";
         Path filePath = Paths.get(TEST_ROOT_LOCATION).resolve(filename);
 
         try {
@@ -218,7 +187,7 @@ class JsonClientesFileSystemStorageTest {
 
     @Test
     void loadAsResourceFileNotExist() {
-        String filename = "archivoInexistente.json";
+        String filename = "archivoInexistente.pdf";
 
         StorageNotFound exception = assertThrows(StorageNotFound.class, () -> {
             storageService.loadAsResource(filename);
@@ -272,7 +241,7 @@ class JsonClientesFileSystemStorageTest {
 
     @Test
     void delete() throws IOException {
-        String filename = "testFileToDelete.json";
+        String filename = "testFileToDelete.pdf";
         Path filePath = Paths.get(TEST_ROOT_LOCATION).resolve(filename);
 
         Files.createDirectories(Paths.get(TEST_ROOT_LOCATION));

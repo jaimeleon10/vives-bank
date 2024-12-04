@@ -1,57 +1,73 @@
 package org.example.vivesbankproject.tarjeta.controller;
 
-import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestSave;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestUpdate;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
-import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
+import com.jayway.jsonpath.JsonPath;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import org.example.vivesbankproject.tarjeta.dto.*;
+import org.mockito.MockitoAnnotations;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.web.context.request.RequestContextHolder;
 import org.example.vivesbankproject.tarjeta.service.TarjetaService;
 import org.example.vivesbankproject.utils.pagination.PageResponse;
-import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
+import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.MockMvc;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.springframework.http.RequestEntity.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
+@AutoConfigureMockMvc
+@WithMockUser(username = "admin", password = "adminPassword123", roles = {"ADMIN", "USER"})
 class TarjetaRestControllerTest {
 
-    @Mock
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
     private TarjetaService tarjetaService;
 
-    @Mock
+    @MockBean
     private PaginationLinksUtils paginationLinksUtils;
 
-    @InjectMocks
-    private TarjetaRestController tarjetaRestController;
-
     private TarjetaResponse tarjetaResponse;
+    private TarjetaRestController tarjetaRestController;
     private TarjetaRequestSave tarjetaRequestSave;
     private TarjetaRequestUpdate tarjetaRequestUpdate;
     private MockHttpServletRequest request;
 
     @BeforeEach
     void setUp() {
+        MockitoAnnotations.openMocks(this);
         tarjetaRestController = new TarjetaRestController(tarjetaService, paginationLinksUtils);
         request = new MockHttpServletRequest();
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
@@ -156,17 +172,23 @@ class TarjetaRestControllerTest {
     }
 
     @Test
-    void handleValidationExceptionError() {
-        MethodArgumentNotValidException ex = mock(MethodArgumentNotValidException.class);
-        BindingResult bindingResult = mock(BindingResult.class);
-        when(ex.getBindingResult()).thenReturn(bindingResult);
+    void handleValidationExceptionError() throws Exception {
+        var result = mockMvc.perform(post("/v1/tarjetas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"pin\": \"\", \"limiteDiario\": 1000, \"limiteSemanal\": 5000, \"limiteMensual\": 20000, \"tipoTarjeta\": \"CREDITO\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.pin").value("El PIN debe ser un numero de 4 digitos"))
 
-        Map<String, String> errors = tarjetaRestController.handleValidationExceptions(ex);
+                .andReturn();
 
-        assertNotNull(errors);
-        assertInstanceOf(HashMap.class, errors);
-        verify(ex).getBindingResult();
+        String responseContent = result.getResponse().getContentAsString();
+        System.out.println(responseContent);
+
+        assertAll(
+                () -> assertTrue(responseContent.contains("\"pin\""))
+        );
     }
+
 
     @Test
     void getAllTarjetasConfiltros() {
@@ -200,8 +222,56 @@ class TarjetaRestControllerTest {
         );
     }
     @Test
-    void saveTarjetaPinIncorrecto() {
-        /*TarjetaRequestSave invalidPinRequest = TarjetaRequestSave.builder()
+    void pinVacio() throws Exception {
+        TarjetaRequestSave tarjetaRequestSave = TarjetaRequestSave.builder()
+                .pin("")
+                .limiteDiario(new BigDecimal("1000"))
+                .limiteSemanal(new BigDecimal("5000"))
+                .limiteMensual(new BigDecimal("20000"))
+                .tipoTarjeta(TipoTarjeta.CREDITO)
+                .build();
+
+        MvcResult result = mockMvc.perform(
+                        post("/v1/tarjetas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(tarjetaRequestSave)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertEquals("El PIN debe ser un numero de 4 digitos", JsonPath.read(result.getResponse().getContentAsString(), "$.pin"))
+        );
+    }
+
+    @Test
+    void pinNull() throws Exception {
+        TarjetaRequestSave tarjetaRequestSave = TarjetaRequestSave.builder()
+                .pin(null)
+                .limiteDiario(new BigDecimal("1000"))
+                .limiteSemanal(new BigDecimal("5000"))
+                .limiteMensual(new BigDecimal("20000"))
+                .tipoTarjeta(TipoTarjeta.CREDITO)
+                .build();
+
+        MvcResult result = mockMvc.perform(
+                        post("/v1/tarjetas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(tarjetaRequestSave)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        String expectedErrorMessage = "El PIN debe ser un numero de 4 digitos";
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains(expectedErrorMessage))
+        );
+    }
+
+    @Test
+    void pinMuyCorto() throws Exception {
+        TarjetaRequestSave tarjetaRequestSave = TarjetaRequestSave.builder()
                 .pin("12")
                 .limiteDiario(new BigDecimal("1000"))
                 .limiteSemanal(new BigDecimal("5000"))
@@ -209,31 +279,114 @@ class TarjetaRestControllerTest {
                 .tipoTarjeta(TipoTarjeta.CREDITO)
                 .build();
 
-        assertThrows(MethodArgumentNotValidException.class, () -> {
-            tarjetaRestController.save(invalidPinRequest);
-        });*/
+        MvcResult result = mockMvc.perform(
+                        post("/v1/tarjetas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(tarjetaRequestSave)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El PIN debe ser un numero de 4 digitos"))
+        );
     }
 
     @Test
-    void saveTarjetaLimitesDiarioNegativo() {
-        /*TarjetaRequestSave invalidLimiteDiarioRequest = TarjetaRequestSave.builder()
-                .pin("1234")
-                .limiteDiario(new BigDecimal(-1000))
-                .limiteSemanal(new BigDecimal(5000))
-                .limiteMensual(new BigDecimal(20000))
+    void pinConLetras() throws Exception {
+        TarjetaRequestSave tarjetaRequestSave = TarjetaRequestSave.builder()
+                .pin("12A")
+                .limiteDiario(new BigDecimal("1000"))
+                .limiteSemanal(new BigDecimal("5000"))
+                .limiteMensual(new BigDecimal("20000"))
                 .tipoTarjeta(TipoTarjeta.CREDITO)
                 .build();
 
-        assertThrows(MethodArgumentNotValidException.class, () -> {
-            tarjetaRestController.save(invalidLimiteDiarioRequest);
-        });
+        MvcResult result = mockMvc.perform(
+                        post("/v1/tarjetas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(tarjetaRequestSave)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
 
-         */
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El PIN debe ser un numero de 4 digitos"))
+        );
     }
 
     @Test
-    void saveTarjetaSinTipoTarjeta() {
-        /*TarjetaRequestSave sinTipoTarjetaRequest = TarjetaRequestSave.builder()
+    void limiteNegativoDiario() throws Exception {
+        TarjetaRequestSave tarjetaRequestSave = TarjetaRequestSave.builder()
+                .pin("1234")
+                .limiteDiario(new BigDecimal("-1000"))
+                .limiteSemanal(new BigDecimal("5000"))
+                .limiteMensual(new BigDecimal("20000"))
+                .tipoTarjeta(TipoTarjeta.CREDITO)
+                .build();
+
+        MvcResult result = mockMvc.perform(
+                        post("/v1/tarjetas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(tarjetaRequestSave)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El limite diario debe ser un numero positivo"))
+        );
+    }
+
+    @Test
+    void limiteNegativoSemanal() throws Exception {
+        TarjetaRequestSave tarjetaRequestSave = TarjetaRequestSave.builder()
+                .pin("1234")
+                .limiteDiario(new BigDecimal("1000"))
+                .limiteSemanal(new BigDecimal("-5000"))
+                .limiteMensual(new BigDecimal("20000"))
+                .tipoTarjeta(TipoTarjeta.CREDITO)
+                .build();
+
+        MvcResult result = mockMvc.perform(
+                        post("/v1/tarjetas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(tarjetaRequestSave)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El limite semanal debe ser un numero positivo"))
+        );
+    }
+
+    @Test
+    void limiteNegativoMensual() throws Exception {
+        TarjetaRequestSave tarjetaRequestSave = TarjetaRequestSave.builder()
+                .pin("1234")
+                .limiteDiario(new BigDecimal("1000"))
+                .limiteSemanal(new BigDecimal("5000"))
+                .limiteMensual(new BigDecimal("-20000"))
+                .tipoTarjeta(TipoTarjeta.CREDITO)
+                .build();
+
+        MvcResult result = mockMvc.perform(
+                        post("/v1/tarjetas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(tarjetaRequestSave)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El limite mensual debe ser un numero positivo"))
+        );
+    }
+
+    @Test
+    void tipoTarjetaNull() throws Exception {
+        TarjetaRequestSave tarjetaRequestSave = TarjetaRequestSave.builder()
                 .pin("1234")
                 .limiteDiario(new BigDecimal("1000"))
                 .limiteSemanal(new BigDecimal("5000"))
@@ -241,8 +394,162 @@ class TarjetaRestControllerTest {
                 .tipoTarjeta(null)
                 .build();
 
-        assertThrows(MethodArgumentNotValidException.class, () -> {
-            tarjetaRestController.save(sinTipoTarjetaRequest);
-        });*/
+        MvcResult result = mockMvc.perform(
+                        post("/v1/tarjetas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(tarjetaRequestSave)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El tipo de tarjeta no puede ser un campo nulo"))
+        );
+    }
+
+    @Test
+    void sinLimit() throws Exception {
+        TarjetaRequestSave tarjetaRequestSave = TarjetaRequestSave.builder()
+                .pin("1234")
+                .limiteDiario(BigDecimal.ZERO)
+                .limiteSemanal(BigDecimal.ZERO)
+                .limiteMensual(BigDecimal.ZERO)
+                .tipoTarjeta(TipoTarjeta.CREDITO)
+                .build();
+
+        MvcResult result = mockMvc.perform(
+                        post("/v1/tarjetas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(tarjetaRequestSave)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El limite diario debe ser un numero positivo")),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El limite semanal debe ser un numero positivo")),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El limite mensual debe ser un numero positivo"))
+        );
+    }
+
+    @Test
+    void getPrivateDataWithValidCredentials() {
+        String cardId = "testCardId";
+        TarjetaRequestPrivado requestPrivado = TarjetaRequestPrivado.builder()
+                .username("validUser")
+                .userPass("validPassword")
+                .build();
+
+        TarjetaResponsePrivado expectedResponse = TarjetaResponsePrivado.builder()
+                .pin("1234")
+                .cvv("123")
+                .build();
+
+        when(tarjetaService.getPrivateData(cardId, requestPrivado)).thenReturn(expectedResponse);
+
+        ResponseEntity<TarjetaResponsePrivado> response = tarjetaRestController.getPrivateData(cardId, requestPrivado);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedResponse, response.getBody());
+        verify(tarjetaService).getPrivateData(cardId, requestPrivado);
+    }
+
+    @Test
+    void getPrivateDataWithEmptyUsername() throws Exception {
+        // Arrange
+        String cardId = "testCardId";
+        TarjetaRequestPrivado requestPrivado = TarjetaRequestPrivado.builder()
+                .username("")
+                .userPass("validPassword")
+                .build();
+
+        // Act & Assert
+        MvcResult result = mockMvc.perform(
+                        MockMvcRequestBuilders.get("/v1/tarjetas/{id}/private", cardId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(requestPrivado)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El usuario no puede estar vacio"))
+        );
+    }
+
+    @Test
+    void getPrivateDataWithNullUsername() throws Exception {
+        String cardId = "testCardId";
+        TarjetaRequestPrivado requestPrivado = TarjetaRequestPrivado.builder()
+                .username(null)
+                .userPass("validPassword")
+                .build();
+
+        MvcResult result = mockMvc.perform(
+                        MockMvcRequestBuilders.get("/v1/tarjetas/{id}/private", cardId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(requestPrivado)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("El usuario no puede estar vacio"))
+        );
+    }
+
+    @Test
+    void getPrivateDataWithEmptyPassword() throws Exception {
+        String cardId = "testCardId";
+        TarjetaRequestPrivado requestPrivado = TarjetaRequestPrivado.builder()
+                .username("validUser")
+                .userPass("")
+                .build();
+
+        MvcResult result = mockMvc.perform(
+                        MockMvcRequestBuilders.get("/v1/tarjetas/{id}/private", cardId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(requestPrivado)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("La contraseña no puede estar vacia"))
+        );
+    }
+
+    @Test
+    void getPrivateDataWithNullPassword() throws Exception {
+        String cardId = "testCardId";
+        TarjetaRequestPrivado requestPrivado = TarjetaRequestPrivado.builder()
+                .username("validUser")
+                .userPass(null)
+                .build();
+
+        MvcResult result = mockMvc.perform(
+                        MockMvcRequestBuilders.get("/v1/tarjetas/{id}/private", cardId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(requestPrivado)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus()),
+                () -> assertTrue(result.getResponse().getContentAsString().contains("La contraseña no puede estar vacia"))
+        );
+    }
+
+    @Test
+    void testHandleConstraintViolationException_EmptyViolations() {
+        ConstraintViolationException mockException = mock(ConstraintViolationException.class);
+
+        when(mockException.getConstraintViolations()).thenReturn(Set.of());
+
+        Map<String, String> errors = tarjetaRestController.handleValidationExceptions(mockException);
+
+        assertNotNull(errors);
+        assertTrue(errors.isEmpty());
     }
 }

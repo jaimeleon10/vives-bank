@@ -16,17 +16,27 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     // Registra uno por cada tipo de notificación que quieras con su handler y su ruta (endpoint)
     // Cuidado con la ruta que no se repita
-    // Para coinectar con el cliente, el cliente debe hacer una petición de conexión
+    // Para conectar con el cliente, el cliente debe hacer una petición de conexión
     // ws://localhost:3000/ws/v1/productos
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(webSocketMovimientosHandler(), "/ws/" + apiVersion + "/movimientos");
+        registry.addHandler(webSocketTarjetasHandler(), "/ws/" + apiVersion + "/tarjetas");
+        registry.addHandler(webSocketCuentasHandler(), "/ws/" + apiVersion + "/cuentas");
     }
 
     // Cada uno de los handlers como bean para que cada vez que nos atienda
     @Bean
     public WebSocketHandler webSocketMovimientosHandler() {
         return new WebSocketHandler("Movimientos");
+    }
+    @Bean
+    public WebSocketHandler webSocketTarjetasHandler() {
+        return new WebSocketHandler("Tarjetas");
+    }
+    @Bean
+    public WebSocketHandler webSocketCuentasHandler() {
+        return new WebSocketHandler("Cuentas");
     }
 
 }

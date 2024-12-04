@@ -1,13 +1,15 @@
 package org.example.vivesbankproject.tarjeta.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class TarjetaRequestPrivado {
-    @NotBlank(message = "El usuario no puede estar vacío")
+    @NotBlank(message = "El usuario no puede estar vacio")
     private String username;
 
-    @NotBlank(message = "La contraseña no puede estar vacía")
+    @NotBlank(message = "La contraseña no puede estar vacia")
     private String userPass;
 }

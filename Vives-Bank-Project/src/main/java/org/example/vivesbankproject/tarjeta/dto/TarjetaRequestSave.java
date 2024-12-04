@@ -10,19 +10,20 @@ import java.math.BigDecimal;
 @Data
 @Builder
 public class TarjetaRequestSave {
-    @NotBlank(message = "El PIN no puede estar vacío")
-    @Pattern(regexp = "^[0-9]{4}$", message = "El PIN debe ser un número de 3 dígitos")
+    @NotBlank(message = "El PIN debe ser un numero de 4 digitos")
+    @Pattern(regexp = "^[0-9]{4}$", message = "El PIN debe ser un numero de 4 digitos")
     private String pin;
 
-    @Positive(message = "El límite diario debe ser un número positivo")
+    @Positive(message = "El limite diario debe ser un numero positivo")
     private BigDecimal limiteDiario;
 
-    @Positive(message = "El límite semanal debe ser un número positivo")
+    @Positive(message = "El limite semanal debe ser un numero positivo")
     private BigDecimal limiteSemanal;
 
-    @Positive(message = "El límite mensual debe ser un número positivo")
+    @Positive(message = "El limite mensual debe ser un numero positivo")
     private BigDecimal limiteMensual;
 
     @NotNull(message = "El tipo de tarjeta no puede ser un campo nulo")
     private TipoTarjeta tipoTarjeta;
 }
+

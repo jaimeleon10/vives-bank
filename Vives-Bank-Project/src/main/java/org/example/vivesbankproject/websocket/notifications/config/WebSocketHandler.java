@@ -78,7 +78,7 @@ public class WebSocketHandler extends TextWebSocketHandler implements SubProtoco
     @Override
     // envía mensajes a un usuario específico basado en su nombre de usuario
     public void sendMessageToUser(String username, String message) throws IOException {
-        log.info("Enviar mensaje a usuario: " + username + " : " + message);
+        log.info("Enviar mensaje de cambios en la entidad: " + entity + " a usuario: " + username + " : " + message);
 
         WebSocketSession session = userSessionsMap.get(username);
         if (session != null && session.isOpen()) {

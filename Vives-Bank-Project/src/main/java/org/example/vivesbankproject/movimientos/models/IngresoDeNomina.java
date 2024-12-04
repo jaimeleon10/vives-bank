@@ -1,11 +1,7 @@
 package org.example.vivesbankproject.movimientos.models;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
-
-import java.time.LocalDateTime;
 
 @Data
 @Builder
