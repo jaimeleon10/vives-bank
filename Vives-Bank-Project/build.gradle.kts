@@ -77,6 +77,9 @@ dependencies {
     implementation ("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("redis.clients:jedis:5.2.0")
 
+    // csv
+    implementation("com.opencsv:opencsv:5.7.1")
+
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
