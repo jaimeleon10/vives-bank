@@ -69,7 +69,7 @@ public class MovimientosServiceImpl implements MovimientosService {
 
 
     @Autowired
-    public MovimientosServiceImpl( CuentaService cuentaService, MovimientosRepository movimientosRepository, ClienteService clienteService, MovimientoMapper movimientosMapper, DomiciliacionRepository domiciliacionRepository, TarjetaService tarjetaService, CuentaMapper cuentaMapper) {
+    public MovimientosServiceImpl( CuentaService cuentaService, MovimientosRepository movimientosRepository, ClienteService clienteService, MovimientoMapper movimientosMapper, DomiciliacionRepository domiciliacionRepository, TarjetaService tarjetaService, UserService userService, WebSocketConfig webSocketConfig, NotificationMapper notificationMapper) {
         this.clienteService = clienteService;
         this.movimientosRepository = movimientosRepository;
         this.movimientosMapper = movimientosMapper;
@@ -77,7 +77,7 @@ public class MovimientosServiceImpl implements MovimientosService {
         this.cuentaService = cuentaService;
         this.tarjetaService = tarjetaService;
         this.cuentaMapper = cuentaMapper;
-    }
+
 
         this.userService = userService;
         this.webSocketConfig = webSocketConfig;
@@ -218,6 +218,7 @@ public class MovimientosServiceImpl implements MovimientosService {
 
         // Guardar el movimiento
         Movimiento saved = movimientosRepository.save(movimineto);
+        onChangeIngresoNomina(Notification.Tipo.CREATE,ingresoDeNomina);
         return movimientosMapper.toMovimientoResponse(saved);
     }
 
@@ -359,7 +360,7 @@ public class MovimientosServiceImpl implements MovimientosService {
     }
 
     void onChangeIngresoNomina(Notification.Tipo tipo, IngresoDeNomina data) {
-        log.debug("Servicio de productos onChange con tipo: " + tipo + " y datos: " + data);
+        log.info("Servicio de productos onChange con tipo: " + tipo + " y datos: " + data);
 
         if (webSocketService == null) {
             log.warn("No se ha podido enviar la notificación a los clientes ws, no se ha encontrado el servicio");
