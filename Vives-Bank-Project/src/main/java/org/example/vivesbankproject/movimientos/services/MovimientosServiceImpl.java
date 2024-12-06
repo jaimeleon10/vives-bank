@@ -32,6 +32,7 @@ import org.example.vivesbankproject.users.services.UserService;
 import org.example.vivesbankproject.websocket.notifications.config.WebSocketConfig;
 import org.example.vivesbankproject.websocket.notifications.config.WebSocketHandler;
 import org.example.vivesbankproject.websocket.notifications.dto.IngresoNominaResponse;
+import org.example.vivesbankproject.websocket.notifications.dto.PagoConTarjetaResponse;
 import org.example.vivesbankproject.websocket.notifications.mappers.NotificationMapper;
 import org.example.vivesbankproject.websocket.notifications.models.Notification;
 import org.example.vivesbankproject.utils.validators.ValidarCif;
@@ -361,7 +362,7 @@ public class MovimientosServiceImpl implements MovimientosService {
     }
 
     void onChangeIngresoNomina(Notification.Tipo tipo, IngresoDeNomina data) {
-        log.info("Servicio de productos onChange con tipo: {} y datos: {}", tipo, data);
+        log.info("Servicio de Movimientos onChange con tipo: {} y datos: {}", tipo, data);
 
         if (webSocketService == null) {
             log.warn("No se ha podido enviar la notificación a los clientes ws, no se ha encontrado el servicio");
@@ -380,6 +381,45 @@ public class MovimientosServiceImpl implements MovimientosService {
 
             // Recuperar el cliente del usuario logueado
             String clienteId = cuentaService.getByIban(data.getIban_Destino()).getClienteId();
+            String userId = clienteService.getById(clienteId).getUserId();
+            String userName = userService.getById(userId).getUsername();
+
+            log.info("Enviando mensaje al cliente ws del usuario");
+            Thread senderThread = new Thread(() -> {
+                try {
+                    //webSocketService.sendMessage(json);
+                    webSocketService.sendMessageToUser(userName,json);
+                } catch (Exception e) {
+                    log.error("Error al enviar el mensaje a través del servicio WebSocket", e);
+                }
+            });
+            senderThread.start();
+        } catch (JsonProcessingException e) {
+            log.error("Error al convertir la notificación a JSON", e);
+        }
+    }
+
+    void onChangePagoConTarjeta(Notification.Tipo tipo, PagoConTarjeta data) {
+        log.info("Servicio de Movimientos onChange con tipo: {} y datos: {}", tipo, data);
+
+        if (webSocketService == null) {
+            log.warn("No se ha podido enviar la notificación a los clientes ws, no se ha encontrado el servicio");
+            webSocketService = this.webSocketConfig.webSocketMovimientosHandler();
+        }
+
+        try {
+            Notification<PagoConTarjetaResponse> notificacion = new Notification<>(
+                    "MOVIMIENTOS",
+                    tipo,
+                    notificationMapper.toPagoConTarjetaDto(data),
+                    LocalDateTime.now().toString()
+            );
+
+            String json = mapper.writeValueAsString(notificacion);
+
+            // Recuperar el cliente del usuario logueado
+            //String clienteId = cuentaService.getByIban(data.getIban_Destino()).getClienteId();
+            String clienteId = cuentaService.getByNumTarjeta(data.getNumeroTarjeta()).getClienteId();
             String userId = clienteService.getById(clienteId).getUserId();
             String userName = userService.getById(userId).getUsername();
 
