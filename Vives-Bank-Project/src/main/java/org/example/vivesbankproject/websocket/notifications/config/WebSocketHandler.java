@@ -2,6 +2,7 @@ package org.example.vivesbankproject.websocket.notifications.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.socket.CloseStatus;
@@ -114,11 +115,21 @@ public class WebSocketHandler extends TextWebSocketHandler implements SubProtoco
     }
 
     private String getUsername() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || authentication.getPrincipal() == null) {
+            log.warn("No authentication found");
+            return null;
+        }
+
+        Object principal = authentication.getPrincipal();
+        log.info("getUsername: " + principal.toString());
         if (principal instanceof UserDetails) {
             return ((UserDetails) principal).getUsername();
         } else {
             return principal.toString();
         }
+
     }
 }

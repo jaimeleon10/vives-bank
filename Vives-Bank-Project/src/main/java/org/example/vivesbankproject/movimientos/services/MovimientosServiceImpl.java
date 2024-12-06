@@ -63,14 +63,14 @@ public class MovimientosServiceImpl implements MovimientosService {
 
 
     @Autowired
-    public MovimientosServiceImpl( CuentaService cuentaService, MovimientosRepository movimientosRepository, ClienteService clienteService, MovimientoMapper movimientosMapper, DomiciliacionRepository domiciliacionRepository, TarjetaService tarjetaService) {
+    public MovimientosServiceImpl( CuentaService cuentaService, MovimientosRepository movimientosRepository, ClienteService clienteService, MovimientoMapper movimientosMapper, DomiciliacionRepository domiciliacionRepository, TarjetaService tarjetaService, UserService userService, WebSocketConfig webSocketConfig, NotificationMapper notificationMapper) {
         this.clienteService = clienteService;
         this.movimientosRepository = movimientosRepository;
         this.movimientosMapper = movimientosMapper;
         this.domiciliacionRepository = domiciliacionRepository;
         this.cuentaService = cuentaService;
         this.tarjetaService = tarjetaService;
-    }
+
 
         this.userService = userService;
         this.webSocketConfig = webSocketConfig;
