@@ -2,6 +2,7 @@ package org.example.vivesbankproject.movimientos.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 
@@ -59,17 +60,18 @@ public class MovimientosServiceImpl implements MovimientosService {
     private final MovimientoMapper movimientosMapper;
     private final TarjetaService tarjetaService;
     private final CuentaMapper cuentaMapper;
-
     private final UserService userService;
     private final WebSocketConfig webSocketConfig;
     private final ObjectMapper mapper;
     private final NotificationMapper notificationMapper;
+    // Para los test
+    @Setter
     private WebSocketHandler webSocketService;
 
 
 
     @Autowired
-    public MovimientosServiceImpl( CuentaService cuentaService, MovimientosRepository movimientosRepository, ClienteService clienteService, MovimientoMapper movimientosMapper, DomiciliacionRepository domiciliacionRepository, TarjetaService tarjetaService, UserService userService, WebSocketConfig webSocketConfig, NotificationMapper notificationMapper) {
+    public MovimientosServiceImpl( CuentaService cuentaService, MovimientosRepository movimientosRepository, ClienteService clienteService, MovimientoMapper movimientosMapper, DomiciliacionRepository domiciliacionRepository, TarjetaService tarjetaService, UserService userService, WebSocketConfig webSocketConfig, NotificationMapper notificationMapper, CuentaMapper cuentaMapper) {
         this.clienteService = clienteService;
         this.movimientosRepository = movimientosRepository;
         this.movimientosMapper = movimientosMapper;
@@ -171,10 +173,9 @@ public class MovimientosServiceImpl implements MovimientosService {
         // Guardar la domiciliación
         domiciliacion.setUltimaEjecucion(LocalDateTime.now()); // Registro inicial
         domiciliacion.setClienteGuid(cliente.getGuid()); // Asigno el id del cliente al domiciliación
-        Domiciliacion saved = domiciliacionRepository.save(domiciliacion);
 
         // Retornar respuesta
-        return saved;
+        return domiciliacionRepository.save(domiciliacion);
     }
 
 
@@ -206,7 +207,7 @@ public class MovimientosServiceImpl implements MovimientosService {
         }
 
         // sumar al cliente
-        var saldoActual = new BigDecimal(clienteCuenta.getSaldo().toString());
+        var saldoActual = new BigDecimal(clienteCuenta.getSaldo());
         clienteCuenta.setSaldo(String.valueOf(saldoActual.add(cantidadNomina)));
         cuentaService.update(clienteCuenta.getGuid(), cuentaMapper.toCuentaRequestUpdate(clienteCuenta));
 
@@ -360,7 +361,7 @@ public class MovimientosServiceImpl implements MovimientosService {
     }
 
     void onChangeIngresoNomina(Notification.Tipo tipo, IngresoDeNomina data) {
-        log.info("Servicio de productos onChange con tipo: " + tipo + " y datos: " + data);
+        log.info("Servicio de productos onChange con tipo: {} y datos: {}", tipo, data);
 
         if (webSocketService == null) {
             log.warn("No se ha podido enviar la notificación a los clientes ws, no se ha encontrado el servicio");
@@ -395,10 +396,5 @@ public class MovimientosServiceImpl implements MovimientosService {
         } catch (JsonProcessingException e) {
             log.error("Error al convertir la notificación a JSON", e);
         }
-    }
-
-    // Para los test
-    public void setWebSocketService(WebSocketHandler webSocketHandlerMock) {
-        this.webSocketService = webSocketHandlerMock;
     }
 }
