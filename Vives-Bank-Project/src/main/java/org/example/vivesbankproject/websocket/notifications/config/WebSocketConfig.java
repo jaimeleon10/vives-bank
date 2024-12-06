@@ -1,5 +1,6 @@
 package org.example.vivesbankproject.websocket.notifications.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,6 +10,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 
 @Configuration
 @EnableWebSocket
+@Slf4j
 public class WebSocketConfig implements WebSocketConfigurer {
 
     @Value("${api.version}")
@@ -20,9 +22,13 @@ public class WebSocketConfig implements WebSocketConfigurer {
     // ws://localhost:3000/ws/v1/productos
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(webSocketMovimientosHandler(), "/ws/" + apiVersion + "/movimientos");
-        registry.addHandler(webSocketTarjetasHandler(), "/ws/" + apiVersion + "/tarjetas");
-        registry.addHandler(webSocketCuentasHandler(), "/ws/" + apiVersion + "/cuentas");
+        registry.addHandler(webSocketMovimientosHandler(), "/ws/" + apiVersion + "/movimientos")
+                .addInterceptors(new WebSocketSecurityInterceptor());
+        registry.addHandler(webSocketTarjetasHandler(), "/ws/" + apiVersion + "/tarjetas")
+                .addInterceptors(new WebSocketSecurityInterceptor());
+        registry.addHandler(webSocketCuentasHandler(), "/ws/" + apiVersion + "/cuentas")
+                .addInterceptors(new WebSocketSecurityInterceptor());
+        log.info("WebSocket handlers registrados con éxito");
     }
 
     // Cada uno de los handlers como bean para que cada vez que nos atienda
