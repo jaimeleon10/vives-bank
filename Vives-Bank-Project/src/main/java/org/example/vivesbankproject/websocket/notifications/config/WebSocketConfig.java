@@ -22,9 +22,12 @@ public class WebSocketConfig implements WebSocketConfigurer {
     // ws://localhost:3000/ws/v1/productos
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(webSocketMovimientosHandler(), "/ws/" + apiVersion + "/movimientos");
-        registry.addHandler(webSocketTarjetasHandler(), "/ws/" + apiVersion + "/tarjetas");
-        registry.addHandler(webSocketCuentasHandler(), "/ws/" + apiVersion + "/cuentas");
+        registry.addHandler(webSocketMovimientosHandler(), "/ws/" + apiVersion + "/movimientos")
+                .addInterceptors(new WebSocketSecurityInterceptor());
+        registry.addHandler(webSocketTarjetasHandler(), "/ws/" + apiVersion + "/tarjetas")
+                .addInterceptors(new WebSocketSecurityInterceptor());
+        registry.addHandler(webSocketCuentasHandler(), "/ws/" + apiVersion + "/cuentas")
+                .addInterceptors(new WebSocketSecurityInterceptor());
         log.info("WebSocket handlers registrados con éxito");
     }
 

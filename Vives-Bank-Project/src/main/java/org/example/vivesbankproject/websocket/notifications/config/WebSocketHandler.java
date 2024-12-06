@@ -39,7 +39,11 @@ public class WebSocketHandler extends TextWebSocketHandler implements SubProtoco
 
         // obtenemos el nombre del usuario autenticado y asociamos la sesión de WebSocket
         // con el nombre de usuario en userSessionsMap
-        String username = getUsername();
+        //String username = getUsername();
+
+        // Recuperar el nombre de usuario desde los atributos de la sesión
+        String username = (String) session.getAttributes().get("username");
+
         if (username != null) {
             userSessionsMap.put(username, session);
             log.info("Usuario: " + username + " añadido a mapa de sesiones");
@@ -53,14 +57,16 @@ public class WebSocketHandler extends TextWebSocketHandler implements SubProtoco
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        log.info("Conexión cerrada con el servidor: " + status);
-        sessions.remove(session);
+        log.info("Cerrando conexión con el servidor: " + status);
 
         // Eliminar sesión del usuario del mapa de sesiones
-        String username = getUsername();
+        String username = (String) session.getAttributes().get("username");
+        //String username = getUsername();
         if (username != null) {
             userSessionsMap.remove(username);
         }
+        sessions.remove(session);
+        log.info("Conexión cerrada con el servidor: " + status);
     }
 
     // este método es para enviar mensajes a todas las sesiones
@@ -85,6 +91,9 @@ public class WebSocketHandler extends TextWebSocketHandler implements SubProtoco
         if (session != null && session.isOpen()) {
             log.info("Servidor WS envía a " + username + " : " + message);
             session.sendMessage(new TextMessage(message));
+        } else {
+            log.info("Usuario: " + username + " no conectado, no se le envió cambios en la entidad: " + entity);
+
         }
     }
 
