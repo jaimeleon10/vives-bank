@@ -67,7 +67,7 @@ public class PdfMovimientosController {
         }
 
         if (contentType == null) {
-            contentType = "application/octet-stream";
+            contentType = "application/pdf";
         }
 
         return ResponseEntity.ok()
