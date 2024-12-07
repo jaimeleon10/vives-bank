@@ -393,6 +393,11 @@ public class MovimientosServiceImpl implements MovimientosService {
         var movimientoOriginal = movimientosRepository.findByGuid(movimientoTransferenciaGuid)
                 .orElseThrow(() -> new MovimientoNotFound(movimientoTransferenciaGuid));
 
+        // validar que no haya pasado 1 dia
+        if (!LocalDateTime.now().isBefore(movimientoOriginal.getCreatedAt().plusDays(1))) {
+            throw new TransferenciaNoRevocableException(movimientoTransferenciaGuid);
+        }
+
         // Verificar que el movimiento es una transferencia
         if (movimientoOriginal.getTransferencia() == null) {
             throw new MovimientoIsNotTransferenciaException(movimientoTransferenciaGuid);
@@ -414,13 +419,13 @@ public class MovimientosServiceImpl implements MovimientosService {
         BigDecimal cantidadTransferencia = movimientoOriginal.getTransferencia().getCantidad();
 
         BigDecimal saldoDestino = new BigDecimal(cuentaDestino.getSaldo());
-        saldoDestino = saldoDestino.subtract(cantidadTransferencia);
+        saldoDestino = saldoDestino.add(cantidadTransferencia);
         cuentaDestino.setSaldo(saldoDestino.toString());
         cuentaService.update(cuentaDestino.getGuid(), cuentaMapper.toCuentaRequestUpdate(cuentaDestino));
 
         // Sumar a la cuenta origen
         BigDecimal saldoOrigen = new BigDecimal(cuentaOrigen.getSaldo());
-        saldoOrigen = saldoOrigen.add(cantidadTransferencia);
+        saldoOrigen = saldoOrigen.subtract(cantidadTransferencia);
         cuentaOrigen.setSaldo(saldoOrigen.toString());
         cuentaService.update(cuentaOrigen.getGuid(), cuentaMapper.toCuentaRequestUpdate(cuentaOrigen));
 
