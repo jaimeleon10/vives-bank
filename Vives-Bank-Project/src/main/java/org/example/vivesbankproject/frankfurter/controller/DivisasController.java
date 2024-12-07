@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -29,12 +27,15 @@ public class DivisasController {
 
     @GetMapping("/latest")
     public CompletableFuture<ResponseEntity<FrankFurterResponse>> getLatestRates(
-            @RequestParam(value = "amount" , defaultValue = "1") Double amount,
+            @RequestParam(value = "amount", defaultValue = "1") String amount,
             @RequestParam(value = "base", defaultValue = "EUR") String baseCurrency,
             @RequestParam(value = "symbols", required = false) String symbol
     ) {
         log.info("Obteniendo las últimas tasas de cambio desde {} a {}", baseCurrency, symbol);
         return divisasServiceImpl.getLatestRatesAsync(baseCurrency, symbol, amount)
-                .thenApply(ResponseEntity::ok);
+                .thenApply(result -> {
+                    log.info("Respuesta construida: {}", result);
+                    return ResponseEntity.ok(result);
+                });
     }
 }

@@ -1,5 +1,8 @@
 package org.example.vivesbankproject.movimientos.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 
@@ -25,6 +28,12 @@ import org.example.vivesbankproject.movimientos.repositories.MovimientosReposito
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFoundByNumero;
 import org.example.vivesbankproject.tarjeta.service.TarjetaService;
 import org.example.vivesbankproject.users.models.User;
+import org.example.vivesbankproject.users.services.UserService;
+import org.example.vivesbankproject.websocket.notifications.config.WebSocketConfig;
+import org.example.vivesbankproject.websocket.notifications.config.WebSocketHandler;
+import org.example.vivesbankproject.websocket.notifications.dto.IngresoNominaResponse;
+import org.example.vivesbankproject.websocket.notifications.mappers.NotificationMapper;
+import org.example.vivesbankproject.websocket.notifications.models.Notification;
 import org.example.vivesbankproject.utils.validators.ValidarCif;
 import org.example.vivesbankproject.utils.validators.ValidarIban;
 import org.example.vivesbankproject.utils.validators.ValidarTarjeta;
@@ -51,9 +60,18 @@ public class MovimientosServiceImpl implements MovimientosService {
     private final MovimientoMapper movimientosMapper;
     private final TarjetaService tarjetaService;
     private final CuentaMapper cuentaMapper;
+    private final UserService userService;
+    private final WebSocketConfig webSocketConfig;
+    private final ObjectMapper mapper;
+    private final NotificationMapper notificationMapper;
+    // Para los test
+    @Setter
+    private WebSocketHandler webSocketService;
+
+
 
     @Autowired
-    public MovimientosServiceImpl( CuentaService cuentaService, MovimientosRepository movimientosRepository, ClienteService clienteService, MovimientoMapper movimientosMapper, DomiciliacionRepository domiciliacionRepository, TarjetaService tarjetaService, CuentaMapper cuentaMapper) {
+    public MovimientosServiceImpl( CuentaService cuentaService, MovimientosRepository movimientosRepository, ClienteService clienteService, MovimientoMapper movimientosMapper, DomiciliacionRepository domiciliacionRepository, TarjetaService tarjetaService, UserService userService, WebSocketConfig webSocketConfig, NotificationMapper notificationMapper, CuentaMapper cuentaMapper) {
         this.clienteService = clienteService;
         this.movimientosRepository = movimientosRepository;
         this.movimientosMapper = movimientosMapper;
@@ -61,7 +79,16 @@ public class MovimientosServiceImpl implements MovimientosService {
         this.cuentaService = cuentaService;
         this.tarjetaService = tarjetaService;
         this.cuentaMapper = cuentaMapper;
-    }
+
+
+        this.userService = userService;
+        this.webSocketConfig = webSocketConfig;
+
+        webSocketService = webSocketConfig.webSocketMovimientosHandler();
+        mapper = new ObjectMapper();
+        this.notificationMapper = notificationMapper;
+
+        }
 
     @Override
     public Page<MovimientoResponse> getAll(Pageable pageable) {
@@ -146,10 +173,9 @@ public class MovimientosServiceImpl implements MovimientosService {
         // Guardar la domiciliación
         domiciliacion.setUltimaEjecucion(LocalDateTime.now()); // Registro inicial
         domiciliacion.setClienteGuid(cliente.getGuid()); // Asigno el id del cliente al domiciliación
-        Domiciliacion saved = domiciliacionRepository.save(domiciliacion);
 
         // Retornar respuesta
-        return saved;
+        return domiciliacionRepository.save(domiciliacion);
     }
 
     @Override
@@ -180,7 +206,7 @@ public class MovimientosServiceImpl implements MovimientosService {
         }
 
         // sumar al cliente
-        var saldoActual = new BigDecimal(clienteCuenta.getSaldo().toString());
+        var saldoActual = new BigDecimal(clienteCuenta.getSaldo());
         clienteCuenta.setSaldo(String.valueOf(saldoActual.add(cantidadNomina)));
         cuentaService.update(clienteCuenta.getGuid(), cuentaMapper.toCuentaRequestUpdate(clienteCuenta));
 
@@ -192,6 +218,7 @@ public class MovimientosServiceImpl implements MovimientosService {
 
         // Guardar el movimiento
         Movimiento saved = movimientosRepository.save(movimineto);
+        onChangeIngresoNomina(Notification.Tipo.CREATE,ingresoDeNomina);
         return movimientosMapper.toMovimientoResponse(saved);
     }
 
@@ -330,5 +357,43 @@ public class MovimientosServiceImpl implements MovimientosService {
         movimientosRepository.save(movimientoDestino);
 
         return movimientosMapper.toMovimientoResponse(saved);
+    }
+
+    void onChangeIngresoNomina(Notification.Tipo tipo, IngresoDeNomina data) {
+        log.info("Servicio de productos onChange con tipo: {} y datos: {}", tipo, data);
+
+        if (webSocketService == null) {
+            log.warn("No se ha podido enviar la notificación a los clientes ws, no se ha encontrado el servicio");
+            webSocketService = this.webSocketConfig.webSocketMovimientosHandler();
+        }
+
+        try {
+            Notification<IngresoNominaResponse> notificacion = new Notification<>(
+                    "MOVIMIENTOS",
+                    tipo,
+                    notificationMapper.toIngresoNominaDto(data),
+                    LocalDateTime.now().toString()
+            );
+
+            String json = mapper.writeValueAsString(notificacion);
+
+            // Recuperar el cliente del usuario logueado
+            String clienteId = cuentaService.getByIban(data.getIban_Destino()).getClienteId();
+            String userId = clienteService.getById(clienteId).getUserId();
+            String userName = userService.getById(userId).getUsername();
+
+            log.info("Enviando mensaje al cliente ws del usuario");
+            Thread senderThread = new Thread(() -> {
+                try {
+                    //webSocketService.sendMessage(json);
+                    webSocketService.sendMessageToUser(userName,json);
+                } catch (Exception e) {
+                    log.error("Error al enviar el mensaje a través del servicio WebSocket", e);
+                }
+            });
+            senderThread.start();
+        } catch (JsonProcessingException e) {
+            log.error("Error al convertir la notificación a JSON", e);
+        }
     }
 }
