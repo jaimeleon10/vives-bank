@@ -81,7 +81,7 @@ public class PdfMovimientosFileSystemStorage implements PdfMovimientosStorageSer
         Path pdfFilePath = this.rootLocation.resolve(storedFilename);
 
         try {
-            Optional<Movimiento> movimientoOpt = movimientosRepository.findMovimientosByClienteGuid(guid);
+            Optional<Movimiento> movimientoOpt = movimientosRepository.findByClienteGuid(guid);
 
             if (movimientoOpt.isEmpty()) {
                 throw new StorageNotFound("No se encontraron movimientos para el cliente con GUID: " + guid);
