@@ -83,7 +83,7 @@ public class CuentaServiceImpl implements CuentaService{
 
         this.userRepository = userRepository;
         this.webSocketConfig = webSocketConfig;
-        webSocketService = webSocketConfig.webSocketTarjetasHandler();
+        webSocketService = webSocketConfig.webSocketCuentasHandler();
         mapper = new ObjectMapper();
     }
 
