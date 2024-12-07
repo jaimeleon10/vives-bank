@@ -1,5 +1,7 @@
 package org.example.vivesbankproject.tarjeta.service;
 
+
+import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.tarjeta.dto.*;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFoundByNumero;
@@ -11,6 +13,8 @@ import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.users.exceptions.UserNotFoundByUsername;
 import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.users.repositories.UserRepository;
+import org.example.vivesbankproject.websocket.notifications.config.WebSocketConfig;
+import org.example.vivesbankproject.websocket.notifications.config.WebSocketHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +32,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.mockito.ArgumentCaptor;
+import java.time.LocalDate;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -37,10 +46,16 @@ import static org.mockito.Mockito.*;
 class TarjetaServiceImplTest {
 
     @Mock
+    private WebSocketConfig webSocketConfig;
+
+    @Mock
     private TarjetaRepository tarjetaRepository;
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private CuentaRepository cuentaRepository;
 
     @Mock
     private TarjetaMapper tarjetaMapper;
@@ -58,6 +73,18 @@ class TarjetaServiceImplTest {
 
     @BeforeEach
     void setUp() {
+
+        WebSocketHandler mockWebSocketHandler = mock(WebSocketHandler.class);
+        when(webSocketConfig.webSocketTarjetasHandler()).thenReturn(mockWebSocketHandler);
+
+        tarjetaService = new TarjetaServiceImpl(
+                tarjetaRepository,
+                tarjetaMapper,
+                userRepository,
+                webSocketConfig,
+                cuentaRepository
+        );
+
         tarjeta = Tarjeta.builder()
                 .id(1L)
                 .guid(GUID)
@@ -138,6 +165,123 @@ class TarjetaServiceImplTest {
     }
 
     @Test
+    void save() {
+        TarjetaRequestSave requestSave = TarjetaRequestSave.builder()
+                .tipoTarjeta(TipoTarjeta.CREDITO)
+                .limiteDiario(new BigDecimal("1500.00"))
+                .limiteSemanal(new BigDecimal("7500.00"))
+                .limiteMensual(new BigDecimal("25000.00"))
+                .pin("1234")
+                .build();
+
+        Tarjeta savedTarjeta = Tarjeta.builder()
+                .guid("new-guid")
+                .numeroTarjeta(requestSave.getPin())
+                .limiteDiario(requestSave.getLimiteDiario())
+                .limiteSemanal(requestSave.getLimiteSemanal())
+                .limiteMensual(requestSave.getLimiteMensual())
+                .tipoTarjeta(requestSave.getTipoTarjeta())
+                .build();
+
+        TarjetaResponse expectedResponse = TarjetaResponse.builder()
+                .guid("new-guid")
+                .limiteDiario(requestSave.getLimiteDiario().toString())
+                .limiteSemanal(requestSave.getLimiteSemanal().toString())
+                .limiteMensual(requestSave.getLimiteMensual().toString())
+                .tipoTarjeta(requestSave.getTipoTarjeta())
+                .build();
+
+        when(tarjetaMapper.toTarjeta(requestSave)).thenReturn(savedTarjeta);
+        when(tarjetaRepository.save(savedTarjeta)).thenReturn(savedTarjeta);
+        when(tarjetaMapper.toTarjetaResponse(savedTarjeta)).thenReturn(expectedResponse);
+
+        TarjetaResponse result = tarjetaService.save(requestSave);
+
+        assertNotNull(result);
+        assertEquals(expectedResponse.getGuid(), result.getGuid());
+        assertEquals(requestSave.getTipoTarjeta(), result.getTipoTarjeta());
+
+        verify(tarjetaMapper).toTarjeta(requestSave);
+        verify(tarjetaRepository).save(savedTarjeta);
+        verify(tarjetaMapper).toTarjetaResponse(savedTarjeta);
+    }
+
+    @Test
+    void update() {
+        TarjetaRequestUpdate requestUpdate = TarjetaRequestUpdate.builder()
+                .limiteDiario(new BigDecimal("2500.00"))
+                .limiteSemanal(new BigDecimal("12500.00"))
+                .limiteMensual(new BigDecimal("50000.00"))
+                .isDeleted(false)
+                .build();
+
+        Tarjeta existingTarjeta = Tarjeta.builder()
+                .guid(GUID)
+                .numeroTarjeta("1234567890123456")
+                .limiteDiario(new BigDecimal("1000.00"))
+                .limiteSemanal(new BigDecimal("5000.00"))
+                .limiteMensual(new BigDecimal("20000.00"))
+                .build();
+
+        Tarjeta updatedTarjeta = Tarjeta.builder()
+                .guid(GUID)
+                .numeroTarjeta("1234567890123456")
+                .limiteDiario(requestUpdate.getLimiteDiario())
+                .limiteSemanal(requestUpdate.getLimiteSemanal())
+                .limiteMensual(requestUpdate.getLimiteMensual())
+                .build();
+
+        TarjetaResponse expectedResponse = TarjetaResponse.builder()
+                .guid(GUID)
+                .numeroTarjeta("1234567890123456")
+                .limiteDiario(requestUpdate.getLimiteDiario().toString())
+                .limiteSemanal(requestUpdate.getLimiteSemanal().toString())
+                .limiteMensual(requestUpdate.getLimiteMensual().toString())
+                .build();
+
+        when(tarjetaRepository.findByGuid(GUID)).thenReturn(Optional.of(existingTarjeta));
+        when(tarjetaMapper.toTarjetaUpdate(requestUpdate, existingTarjeta)).thenReturn(updatedTarjeta);
+        when(tarjetaRepository.save(updatedTarjeta)).thenReturn(updatedTarjeta);
+        when(tarjetaMapper.toTarjetaResponse(updatedTarjeta)).thenReturn(expectedResponse);
+
+        TarjetaResponse result = tarjetaService.update(GUID, requestUpdate);
+
+        assertNotNull(result);
+        assertEquals(GUID, result.getGuid());
+        assertEquals(requestUpdate.getLimiteDiario().toString(), result.getLimiteDiario());
+        assertEquals(requestUpdate.getLimiteSemanal().toString(), result.getLimiteSemanal());
+        assertEquals(requestUpdate.getLimiteMensual().toString(), result.getLimiteMensual());
+
+        verify(tarjetaRepository).findByGuid(GUID);
+        verify(tarjetaMapper).toTarjetaUpdate(requestUpdate, existingTarjeta);
+        verify(tarjetaRepository).save(updatedTarjeta);
+        verify(tarjetaMapper).toTarjetaResponse(updatedTarjeta);
+    }
+
+    @Test
+    void delete() {
+        Tarjeta existingTarjeta = Tarjeta.builder()
+                .id(1L)
+                .guid(GUID)
+                .numeroTarjeta("1234567890123456")
+                .isDeleted(false)
+                .build();
+
+        when(tarjetaRepository.findByGuid(GUID)).thenReturn(Optional.of(existingTarjeta));
+        when(tarjetaRepository.save(any(Tarjeta.class))).thenReturn(existingTarjeta);
+
+        tarjetaService.deleteById(GUID);
+
+        verify(tarjetaRepository).findByGuid(GUID);
+
+        ArgumentCaptor<Tarjeta> tarjetaCaptor = ArgumentCaptor.forClass(Tarjeta.class);
+        verify(tarjetaRepository).save(tarjetaCaptor.capture());
+
+        Tarjeta savedTarjeta = tarjetaCaptor.getValue();
+        assertEquals(GUID, savedTarjeta.getGuid());
+    }
+
+    @Test
     void getByIdNotFound() {
         when(tarjetaRepository.findByGuid(GUID)).thenReturn(Optional.empty());
 
@@ -166,7 +310,6 @@ class TarjetaServiceImplTest {
         verify(tarjetaMapper).toTarjetaPrivado(tarjeta);
     }
 
-
     @Test
     void getPrivadoNotFound() {
         when(userRepository.findByUsername(tarjetaRequestPrivado.getUsername())).thenReturn(Optional.empty());
@@ -191,55 +334,6 @@ class TarjetaServiceImplTest {
     }
 
     @Test
-    void save() {
-        TarjetaRequestSave requestSave = TarjetaRequestSave.builder()
-                .pin("123")
-                .limiteDiario(new BigDecimal("1000.00"))
-                .limiteSemanal(new BigDecimal("5000.00"))
-                .limiteMensual(new BigDecimal("20000.00"))
-                .tipoTarjeta(TipoTarjeta.DEBITO)
-                .build();
-
-        when(tarjetaMapper.toTarjeta(requestSave)).thenReturn(tarjeta);
-        when(tarjetaRepository.save(tarjeta)).thenReturn(tarjeta);
-        when(tarjetaMapper.toTarjetaResponse(tarjeta)).thenReturn(tarjetaResponse);
-
-        TarjetaResponse result = tarjetaService.save(requestSave);
-
-        assertNotNull(result);
-        assertEquals(GUID, result.getGuid());
-        verify(tarjetaRepository).save(tarjeta);
-    }
-
-    @Test
-    void update() {
-        TarjetaRequestUpdate requestUpdate = TarjetaRequestUpdate.builder()
-                .limiteDiario(new BigDecimal("2000.00"))
-                .limiteSemanal(new BigDecimal("10000.00"))
-                .limiteMensual(new BigDecimal("40000.00"))
-                .isDeleted(false)
-                .build();
-
-        Tarjeta tarjetaActualizada = tarjeta.builder()
-                .limiteDiario(new BigDecimal("2000.00"))
-                .limiteSemanal(new BigDecimal("10000.00"))
-                .limiteMensual(new BigDecimal("40000.00"))
-                .build();
-
-        when(tarjetaRepository.findByGuid(GUID)).thenReturn(Optional.of(tarjeta));
-        when(tarjetaMapper.toTarjetaUpdate(requestUpdate, tarjeta)).thenReturn(tarjetaActualizada);
-        when(tarjetaRepository.save(tarjetaActualizada)).thenReturn(tarjetaActualizada);
-        when(tarjetaMapper.toTarjetaResponse(tarjetaActualizada)).thenReturn(tarjetaResponse);
-
-        TarjetaResponse result = tarjetaService.update(GUID, requestUpdate);
-
-        assertNotNull(result);
-        assertEquals(GUID, result.getGuid());
-        verify(tarjetaRepository).findByGuid(GUID);
-        verify(tarjetaRepository).save(tarjetaActualizada);
-    }
-
-    @Test
     void updateNotFound() {
         TarjetaRequestUpdate requestUpdate = TarjetaRequestUpdate.builder()
                 .limiteDiario(new BigDecimal("2000.00"))
@@ -253,16 +347,6 @@ class TarjetaServiceImplTest {
         assertThrows(TarjetaNotFound.class, () -> tarjetaService.update(GUID, requestUpdate));
         verify(tarjetaRepository).findByGuid(GUID);
         verify(tarjetaRepository, never()).save(any(Tarjeta.class));
-    }
-
-    @Test
-    void deleteById() {
-        when(tarjetaRepository.findByGuid(GUID)).thenReturn(Optional.of(tarjeta));
-
-        tarjetaService.deleteById(GUID);
-
-        verify(tarjetaRepository).findByGuid(GUID);
-        verify(tarjetaRepository).save(any(Tarjeta.class));
     }
 
     @Test
