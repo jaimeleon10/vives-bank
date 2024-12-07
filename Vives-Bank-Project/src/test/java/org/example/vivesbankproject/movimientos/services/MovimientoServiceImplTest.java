@@ -13,6 +13,7 @@ import org.example.vivesbankproject.movimientos.models.*;
 import org.example.vivesbankproject.movimientos.repositories.DomiciliacionRepository;
 import org.example.vivesbankproject.movimientos.repositories.MovimientosRepository;
 import org.example.vivesbankproject.tarjeta.service.TarjetaService;
+import org.example.vivesbankproject.websocket.notifications.config.WebSocketConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,6 +52,9 @@ class MovimientoServiceImplTest {
 
     @Mock
     private MovimientoMapper movimientosMapper;
+
+    @Mock
+    private WebSocketConfig webSocketConfig;
 
     @InjectMocks
     private MovimientosServiceImpl movimientosService;
