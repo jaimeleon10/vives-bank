@@ -1,5 +1,7 @@
 package org.example.vivesbankproject.cuenta.services;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
@@ -20,6 +22,14 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.Optional;
 
+/**
+ * Implementación del servicio para realizar operaciones con los tipos de cuenta.
+ * Implementa la lógica de negocio para acceder, actualizar, eliminar y crear
+ * información sobre los tipos de cuenta.
+ * Se interactúa con el repositorio y el mapper correspondiente para mapear entidades a DTOs.
+ * @author Jaime León, Natalia González, German Fernandez, Alba García, Mario de Domingo, Alvaro Herrero
+ * @version 1.0-SNAPSHOT
+ */
 @Service
 @Slf4j
 @CacheConfig(cacheNames = {"tipo_Cuentas"})
@@ -34,6 +44,11 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
     }
 
     @Override
+    @Operation(summary = "Obtener todos los tipos de cuenta con filtros opcionales",
+            description = "Devuelve una página de resultados de tipos de cuenta aplicando filtros opcionales como nombre, interés máximo y mínimo.")
+    @Parameter(name = "nombre", description = "Filtro opcional por nombre del tipo de cuenta", required = false)
+    @Parameter(name = "interesMax", description = "Filtro opcional para el interés máximo", required = false)
+    @Parameter(name = "interesMin", description = "Filtro opcional para el interés mínimo", required = false)
     public Page<TipoCuentaResponse> getAll(Optional<String> nombre, Optional<BigDecimal> interesMax, Optional<BigDecimal> interesMin, Pageable pageable) {
         log.info("Obteniendo todos los tipos de cuenta");
 
@@ -60,6 +75,9 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
 
     @Override
     @Cacheable
+    @Operation(summary = "Obtener un tipo de cuenta por su identificador",
+            description = "Obtiene un tipo de cuenta específico por su identificador (GUID).")
+    @Parameter(name = "id", description = "Identificador único del tipo de cuenta", required = true)
     public TipoCuentaResponse getById(String id) {
         log.info("Obteniendo tipo de cuenta con id: {}", id);
         var tipoCuenta = tipoCuentaRepository.findByGuid(id).orElseThrow(() -> new TipoCuentaNotFound(id));
@@ -68,6 +86,9 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
 
     @Override
     @CachePut
+    @Operation(summary = "Guardar un nuevo tipo de cuenta",
+            description = "Crea un nuevo tipo de cuenta en la base de datos.")
+    @Parameter(name = "tipoCuentaRequest", description = "Información para crear un nuevo tipo de cuenta", required = true)
     public TipoCuentaResponse save(TipoCuentaRequest tipoCuentaRequest) {
         log.info("Guardando tipo de cuenta: {}", tipoCuentaRequest);
         if (tipoCuentaRepository.findByNombre(tipoCuentaRequest.getNombre()).isPresent()) {
@@ -78,6 +99,10 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
     }
 
     @Override
+    @Operation(summary = "Actualizar un tipo de cuenta existente",
+            description = "Actualiza la información de un tipo de cuenta utilizando su identificador.")
+    @Parameter(name = "id", description = "Identificador del tipo de cuenta a actualizar", required = true)
+    @Parameter(name = "tipoCuentaRequest", description = "Información para actualizar el tipo de cuenta", required = true)
     @CachePut
     public TipoCuentaResponse update(String id, TipoCuentaRequest tipoCuentaRequest) {
         log.info("Actualizando tipo de cuenta con id {}", id);
@@ -87,6 +112,9 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
     }
 
     @Override
+    @Operation(summary = "Eliminar un tipo de cuenta por su identificador",
+            description = "Elimina un tipo de cuenta marcándola como eliminada en el sistema.")
+    @Parameter(name = "id", description = "Identificador del tipo de cuenta a eliminar", required = true)
     @CacheEvict
     public TipoCuentaResponse deleteById(String id) {
         log.info("Borrando tipo de cuenta con id {}", id);

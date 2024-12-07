@@ -9,10 +9,13 @@ import org.example.vivesbankproject.cliente.dto.ClienteJson;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
+import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.storage.exceptions.StorageInternal;
 import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
+import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
+import org.example.vivesbankproject.users.mappers.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -29,6 +32,7 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -41,11 +45,17 @@ public class JsonClientesFileSystemStorage implements JsonClientesStorageService
 
     private final Path rootLocation;
     private final ClienteRepository clienteRepository;
+    private final TarjetaMapper tarjetaMapper;
+    private final CuentaMapper cuentaMapper;
+    private final UserMapper userMapper;
 
     @Autowired
-    public JsonClientesFileSystemStorage(@Value("${upload.root-location}") String path, ClienteRepository clienteRepository) {
+    public JsonClientesFileSystemStorage(@Value("${upload.root-location}") String path, ClienteRepository clienteRepository, TarjetaMapper tarjetaMapper, CuentaMapper cuentaMapper, UserMapper userMapper) {
         this.rootLocation = Paths.get(path);
         this.clienteRepository = clienteRepository;
+        this.tarjetaMapper = tarjetaMapper;
+        this.cuentaMapper = cuentaMapper;
+        this.userMapper = userMapper;
     }
 
     @Override
@@ -54,6 +64,12 @@ public class JsonClientesFileSystemStorage implements JsonClientesStorageService
         Path jsonFilePath = this.rootLocation.resolve(storedFilename);
 
         try {
+
+            if (Files.exists(jsonFilePath)) {
+                Files.delete(jsonFilePath);
+                log.info("Archivo existente eliminado: {}", storedFilename);
+            }
+
             Optional<Cliente> clientes = clienteRepository.findByGuid(guid);
 
             List<ClienteJson> clienteMap = clientes.stream()
@@ -69,40 +85,24 @@ public class JsonClientesFileSystemStorage implements JsonClientesStorageService
                         clienteJson.setFotoPerfil(cliente.getFotoPerfil());
                         clienteJson.setFotoDni(cliente.getFotoDni());
 
+                        Set<TarjetaResponse> tarjetasResponse = new HashSet<>(Set.of());
                         Set<CuentaResponse> cuentasResponse = cliente.getCuentas().stream()
                                 .map(cuenta -> {
-                                    CuentaResponse cuentaResponse = new CuentaResponse();
-                                    cuentaResponse.setGuid(cuenta.getGuid());
-                                    cuentaResponse.setIban(cuenta.getIban());
-                                    cuentaResponse.setSaldo(cuenta.getSaldo().toString());
-                                    cuentaResponse.setTipoCuentaId(cuenta.getTipoCuenta().getGuid());
+                                    var cuentaResponse = cuentaMapper.toCuentaResponse(cuenta, cuenta.getTipoCuenta().getGuid(), cuenta.getTarjeta().getGuid(), cuenta.getCliente().getGuid());
 
                                     Tarjeta tarjeta = cuenta.getTarjeta();
                                     if (tarjeta != null) {
-                                        TarjetaResponse tarjetaResponse = new TarjetaResponse();
-                                        tarjetaResponse.setGuid(tarjeta.getGuid());
-                                        tarjetaResponse.setNumeroTarjeta(tarjeta.getNumeroTarjeta());
-                                        tarjetaResponse.setLimiteDiario(String.valueOf(tarjeta.getLimiteDiario()));
-                                        tarjetaResponse.setLimiteSemanal(String.valueOf(tarjeta.getLimiteSemanal()));
-                                        tarjetaResponse.setLimiteMensual(String.valueOf(tarjeta.getLimiteMensual()));
-                                        tarjetaResponse.setTipoTarjeta(tarjeta.getTipoTarjeta());
-                                        tarjetaResponse.setCreatedAt(tarjeta.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-                                        tarjetaResponse.setUpdatedAt(tarjeta.getUpdatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-                                        tarjetaResponse.setIsDeleted(tarjeta.getIsDeleted());
-                                        cuentaResponse.setTarjetaId(tarjeta.getGuid());
-                                        clienteJson.setTarjeta(tarjetaResponse);
+                                        var tarjetaResponse = tarjetaMapper.toTarjetaResponse(tarjeta);
+                                        tarjetasResponse.add(tarjetaResponse);
                                     }
 
-                                    cuentaResponse.setClienteId(cuenta.getCliente().getGuid());
-                                    cuentaResponse.setCreatedAt(String.valueOf(cuenta.getCreatedAt()));
-                                    cuentaResponse.setUpdatedAt(String.valueOf(cuenta.getUpdatedAt()));
-                                    cuentaResponse.setIsDeleted(cuenta.getIsDeleted());
                                     return cuentaResponse;
                                 })
                                 .collect(Collectors.toSet());
 
                         clienteJson.setCuentas(cuentasResponse);
-
+                        clienteJson.setTarjetas(tarjetasResponse);
+                        clienteJson.setUsuario(userMapper.toUserResponse(cliente.getUser()));
                         clienteJson.setCreatedAt(cliente.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
                         clienteJson.setUpdatedAt(cliente.getUpdatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
                         clienteJson.setIsDeleted(cliente.getIsDeleted());

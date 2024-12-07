@@ -9,6 +9,7 @@ import org.example.vivesbankproject.cliente.models.Direccion;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
+import org.example.vivesbankproject.users.dto.UserResponse;
 
 import java.util.Set;
 
@@ -52,10 +53,13 @@ public class ClienteJson {
 
     @Schema(description = "Conjunto de cuentas asociadas al cliente")
     private Set<CuentaResponse> cuentas;
+    
+    @Schema(description = "Tarjetas vinculada a las cuentas del cliente")
+    private Set<TarjetaResponse> tarjetas;
 
-    @Schema(description = "Tarjeta vinculada al cliente", implementation = TarjetaResponse.class)
-    private TarjetaResponse tarjeta;
-
+    @Schema(description = "Usuario vinculado al cliente", implementation = UserResponse.class)
+    private UserResponse usuario;
+    
     @Schema(description = "Fecha de creación del registro", example = "2023-01-01T10:00:00Z")
     private String createdAt;
 

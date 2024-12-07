@@ -4,9 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
+import org.example.vivesbankproject.cliente.dto.ClienteJsonZip;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
-import org.example.vivesbankproject.cuenta.models.Cuenta;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaZip;
 import org.example.vivesbankproject.storage.exceptions.StorageInternal;
 import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
@@ -48,25 +49,32 @@ public class JsonClientesAdminFileSystemStorage implements JsonClientesAdminStor
         Path jsonFilePath = this.rootLocation.resolve(storedFilename);
 
         try {
+
+            if (Files.exists(jsonFilePath)) {
+                Files.delete(jsonFilePath);
+                log.info("Archivo existente eliminado: {}", storedFilename);
+            }
+
             List<Cliente> clientes = clienteRepository.findAll();
 
-            List<Cliente> clienteMap = clientes.stream()
+            List<ClienteJsonZip> clienteMap = clientes.stream()
                 .map(cliente -> {
-                    Cliente cliente1 = new Cliente();
+                    ClienteJsonZip cliente1 = new ClienteJsonZip();
+                    cliente1.setId(cliente.getId());
                     cliente1.setGuid(cliente.getGuid());
                     cliente1.setDni(cliente.getDni());
                     cliente1.setNombre(cliente.getNombre());
                     cliente1.setApellidos(cliente.getApellidos());
                     cliente1.setDireccion(cliente.getDireccion());
                     cliente1.setEmail(cliente.getEmail());
-                    cliente1.setUser(cliente.getUser());
                     cliente1.setTelefono(cliente.getTelefono());
                     cliente1.setFotoPerfil(cliente.getFotoPerfil());
                     cliente1.setFotoDni(cliente.getFotoDni());
 
-                    Set<Cuenta> cuentas = cliente.getCuentas().stream()
+                    Set<CuentaZip> cuentas = cliente.getCuentas().stream()
                             .map(cuenta -> {
-                                Cuenta cuenta1 = new Cuenta();
+                                CuentaZip cuenta1 = new CuentaZip();
+                                cuenta1.setId(cuenta.getId());
                                 cuenta1.setGuid(cuenta.getGuid());
                                 cuenta1.setIban(cuenta.getIban());
                                 cuenta1.setSaldo(cuenta.getSaldo());
@@ -75,6 +83,7 @@ public class JsonClientesAdminFileSystemStorage implements JsonClientesAdminStor
                                 Tarjeta tarjeta = cuenta.getTarjeta();
                                 if (tarjeta != null) {
                                     Tarjeta tarjeta1 = new Tarjeta();
+                                    tarjeta1.setId(tarjeta.getId());
                                     tarjeta1.setGuid(tarjeta.getGuid());
                                     tarjeta1.setNumeroTarjeta(tarjeta.getNumeroTarjeta());
                                     tarjeta1.setLimiteDiario(tarjeta.getLimiteDiario());
@@ -87,7 +96,7 @@ public class JsonClientesAdminFileSystemStorage implements JsonClientesAdminStor
                                     cuenta1.setTarjeta(tarjeta);
                                 }
 
-                                cuenta1.setCliente(cuenta.getCliente());
+                                cuenta1.setClienteId(cuenta.getCliente().getGuid());
                                 cuenta1.setCreatedAt(cuenta.getCreatedAt());
                                 cuenta1.setUpdatedAt(cuenta.getUpdatedAt());
                                 cuenta1.setIsDeleted(cuenta.getIsDeleted());
@@ -96,9 +105,9 @@ public class JsonClientesAdminFileSystemStorage implements JsonClientesAdminStor
                             .collect(Collectors.toSet());
 
                     cliente1.setCuentas(cuentas);
-
-                    cliente1.setCreatedAt(cliente.getCreatedAt());
-                    cliente1.setUpdatedAt(cliente.getUpdatedAt());
+                    cliente1.setUsuario(cliente.getUser());
+                    cliente1.setCreatedAt(cliente.getCreatedAt().toString());
+                    cliente1.setUpdatedAt(cliente.getUpdatedAt().toString());
                     cliente1.setIsDeleted(cliente.getIsDeleted());
 
                     return cliente1;
@@ -116,7 +125,7 @@ public class JsonClientesAdminFileSystemStorage implements JsonClientesAdminStor
 
             Files.write(jsonFilePath, jsonData.getBytes());
 
-            log.info("Archivo JSON con clientes almacenado: " + storedFilename);
+            log.info("Archivo JSON con clientes almacenado: {}", storedFilename);
 
             return storedFilename;
         } catch (IOException e) {
@@ -138,13 +147,13 @@ public class JsonClientesAdminFileSystemStorage implements JsonClientesAdminStor
 
     @Override
     public Path load(String filename) {
-        log.info("Cargando fichero " + filename);
+        log.info("Cargando fichero {}", filename);
         return rootLocation.resolve(filename);
     }
 
     @Override
     public Resource loadAsResource(String filename) {
-        log.info("Cargando fichero " + filename);
+        log.info("Cargando fichero {}", filename);
         try {
             Path file = load(filename);
             Resource resource = new UrlResource(file.toUri());

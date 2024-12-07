@@ -66,8 +66,8 @@ public class MovimientosMeController {
 
     @DeleteMapping("/transferencia/{guid}")
     public ResponseEntity<MovimientoResponse> revocarMovimientoTransferencia(@AuthenticationPrincipal User user, @PathVariable String guid) {
-
-        return null;
+        log.info("Revocando Movimiento de Transferencia con guid: {}", guid);
+        return ResponseEntity.ok(movimientosService.revocarTransferencia(user, guid));
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

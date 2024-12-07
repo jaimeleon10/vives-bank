@@ -19,6 +19,7 @@ import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
+import org.example.vivesbankproject.websocket.notifications.config.WebSocketConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -38,6 +39,9 @@ class CuentaServiceImplTest {
 
     @InjectMocks
     private CuentaServiceImpl cuentaService;
+
+    @Mock
+    private WebSocketConfig webSocketConfig;
 
     @Mock
     private CuentaRepository cuentaRepository;
