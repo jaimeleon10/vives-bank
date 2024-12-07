@@ -4,20 +4,21 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.cliente.dto.ClienteJsonAdmin;
+import org.bson.types.ObjectId;
+import org.example.vivesbankproject.cliente.dto.ClienteJsonZip;
 import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
+import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
 import org.example.vivesbankproject.movimientos.models.Movimiento;
 import org.example.vivesbankproject.movimientos.repositories.MovimientosRepository;
 import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
 import org.example.vivesbankproject.storage.exceptions.StorageInternal;
-import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
+import org.example.vivesbankproject.users.mappers.UserMapper;
 import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,8 +36,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoField;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -52,14 +51,16 @@ public class ZipFileSystemStorage implements ZipStorageService {
     private final TarjetaRepository tarjetaRepository;
     private final CuentaRepository cuentaRepository;
     private final MovimientosRepository movimientosRepository;
+    private final UserMapper userMapper;
 
-    public ZipFileSystemStorage(@Value("${upload.root-location-2}") String path, ClienteRepository clienteRepository, MovimientosRepository movimientosRepository, UserRepository userRepository, TarjetaRepository tarjetaRepository, CuentaRepository cuentaRepository) {
+    public ZipFileSystemStorage(@Value("${upload.root-location-2}") String path, ClienteRepository clienteRepository, MovimientosRepository movimientosRepository, UserRepository userRepository, TarjetaRepository tarjetaRepository, CuentaRepository cuentaRepository, UserMapper userMapper) {
         this.rootLocation = Paths.get(path);
         this.clienteRepository = clienteRepository;
         this.movimientosRepository = movimientosRepository;
         this.userRepository = userRepository;
         this.tarjetaRepository = tarjetaRepository;
         this.cuentaRepository = cuentaRepository;
+        this.userMapper = userMapper;
     }
 
     @Override
@@ -78,6 +79,11 @@ public class ZipFileSystemStorage implements ZipStorageService {
         Path zipPath = this.rootLocation.resolve(storedFilename);
 
         try {
+            if (Files.exists(zipPath)) {
+                Files.delete(zipPath);
+                log.info("Archivo ZIP existente eliminado: {}", storedFilename);
+            }
+
             try (FileOutputStream fos = new FileOutputStream(zipPath.toFile());
                  ZipOutputStream zos = new ZipOutputStream(fos)) {
 
@@ -97,22 +103,21 @@ public class ZipFileSystemStorage implements ZipStorageService {
                                 Files.copy(file, zos);
                                 zos.closeEntry();
 
-                                log.info("Archivo agregado al ZIP: " + file.getFileName());
+                                log.info("Archivo agregado al ZIP: {}", file.getFileName());
                             } catch (IOException e) {
-                                log.error("Error al agregar archivo al ZIP: " + file.getFileName(), e);
+                                log.error("Error al agregar archivo al ZIP: {}", file.getFileName(), e);
                             }
                         });
 
-                log.info("Todos los archivos de 'data' (excepto .zip) se han agregado al archivo ZIP.");
-
+                log.info("Todos los archivos de 'dataAdmin' (excepto .zip) se han agregado al archivo ZIP.");
                 return storedFilename;
 
             }
-
         } catch (IOException e) {
-            throw new StorageInternal("Error al crear archivo ZIP con los archivos de 'data': " + e.getMessage());
+            throw new StorageInternal("Error al crear archivo ZIP con los archivos de 'dataAdmin': " + e.getMessage());
         }
     }
+
 
     @Override
     public void loadFromZip(File filename) {
@@ -136,67 +141,102 @@ public class ZipFileSystemStorage implements ZipStorageService {
                         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                         objectMapper.registerModule(module);
 
-                        List<ClienteJsonAdmin> clienteMap = objectMapper.readValue(jsonData, new TypeReference<>() {});
+                        try {
+                            List<ClienteJsonZip> clienteMap = objectMapper.readValue(jsonData, new TypeReference<>() {});
 
-                        for (ClienteJsonAdmin clienteJsonAdmin : clienteMap) {
-                            Cliente cliente = Cliente.builder()
-                                    .id(clienteJsonAdmin.getId())
-                                    .guid(clienteJsonAdmin.getGuid())
-                                    .dni(clienteJsonAdmin.getDni())
-                                    .nombre(clienteJsonAdmin.getNombre())
-                                    .apellidos(clienteJsonAdmin.getApellidos())
-                                    .direccion(clienteJsonAdmin.getDireccion())
-                                    .email(clienteJsonAdmin.getEmail())
-                                    .telefono(clienteJsonAdmin.getTelefono())
-                                    .fotoPerfil(clienteJsonAdmin.getFotoPerfil())
-                                    .fotoDni(clienteJsonAdmin.getFotoDni())
-                                    .user(clienteJsonAdmin.getUser())
-                                    .cuentas(clienteJsonAdmin.getCuentas())
-                                    .isDeleted(clienteJsonAdmin.getIsDeleted())
-                                    .build();
+                            for (ClienteJsonZip clienteJson : clienteMap) {
 
-                            cliente.getCuentas().forEach(cuenta -> {
-                                if (tarjetaRepository.findByGuid(cuenta.getTarjeta().getGuid()).isEmpty()) {
-                                    tarjetaRepository.save(cuenta.getTarjeta());
+                                Set<Cuenta> cuentasVacias = new HashSet<>();
+
+                                Cliente cliente = Cliente.builder()
+                                        .id(Long.parseLong("1"))
+                                        .guid(clienteJson.getGuid())
+                                        .dni(clienteJson.getDni())
+                                        .nombre(clienteJson.getNombre())
+                                        .apellidos(clienteJson.getApellidos())
+                                        .direccion(clienteJson.getDireccion())
+                                        .email(clienteJson.getEmail())
+                                        .telefono(clienteJson.getTelefono())
+                                        .fotoPerfil(clienteJson.getFotoPerfil())
+                                        .fotoDni(clienteJson.getFotoDni())
+                                        .user(clienteJson.getUsuario())
+                                        .cuentas(cuentasVacias)
+                                        .createdAt(LocalDateTime.parse(clienteJson.getCreatedAt()))
+                                        .updatedAt(LocalDateTime.parse(clienteJson.getUpdatedAt()))
+                                        .isDeleted(clienteJson.getIsDeleted())
+                                        .build();
+
+                                if (userRepository.findByGuid(cliente.getUser().getGuid()).isEmpty()) {
+                                    User usuario = cliente.getUser();
+                                    usuario.setId(null);
+                                    userRepository.save(usuario);
                                 }
-                            });
-                            if (userRepository.findByGuid(cliente.getUser().getGuid()).isEmpty()) {
-                                userRepository.save(cliente.getUser());
-                            }
-                            if (clienteRepository.findByGuid(cliente.getGuid()).isEmpty()) {
-                                Cliente cliente1 = cliente;
-                                cliente1.setCuentas(Set.of());
-                                clienteRepository.save(cliente1);
-                            }
-                            cliente.getCuentas().forEach(cuenta -> {
-                                if (cuentaRepository.findByGuid(cuenta.getGuid()).isEmpty()) {
-                                    cuentaRepository.save(cuenta);
+
+                                if (clienteRepository.findByGuid(cliente.getGuid()).isEmpty()) {
+                                    cliente.setCuentas(Set.of());
+                                    var clienteSaved = clienteRepository.save(cliente);
+                                    cliente.setId(clienteSaved.getId());
                                 }
-                            });
-                        }
 
-                        List<Movimiento> movimientos = movimientosRepository.findAll();
-                        for (Movimiento movimiento : movimientos) {
-                            Movimiento nuevoMovimiento = new Movimiento();
-                            nuevoMovimiento.setGuid(movimiento.getGuid());
-                            nuevoMovimiento.setClienteGuid(movimiento.getClienteGuid());
-                            nuevoMovimiento.setCreatedAt(movimiento.getCreatedAt());
-                            nuevoMovimiento.setIsDeleted(movimiento.getIsDeleted());
+                                Set<Cuenta> cuentasCliente = clienteJson.getCuentas().stream()
+                                        .map(cuentaZip ->
+                                                Cuenta.builder()
+                                                        .id(cuentaZip.getId())
+                                                        .guid(cuentaZip.getGuid())
+                                                        .iban(cuentaZip.getIban())
+                                                        .saldo(cuentaZip.getSaldo())
+                                                        .tipoCuenta(cuentaZip.getTipoCuenta())
+                                                        .tarjeta(cuentaZip.getTarjeta())
+                                                        .cliente(cliente)
+                                                        .createdAt(cuentaZip.getCreatedAt())
+                                                        .updatedAt(cuentaZip.getUpdatedAt())
+                                                        .isDeleted(cuentaZip.getIsDeleted())
+                                                        .build()
+                                        ).collect(Collectors.toSet());
 
-                            if (movimiento.getDomiciliacion() != null) {
-                                nuevoMovimiento.setDomiciliacion(movimiento.getDomiciliacion());
+                                cuentasCliente.forEach(cuenta -> {
+                                    if (cuentaRepository.findByGuid(cuenta.getGuid()).isEmpty()) {
+                                        cuentaRepository.save(cuenta);
+                                    }
+                                });
                             }
-                            if (movimiento.getIngresoDeNomina() != null) {
-                                nuevoMovimiento.setIngresoDeNomina(movimiento.getIngresoDeNomina());
-                            }
-                            if (movimiento.getPagoConTarjeta() != null) {
-                                nuevoMovimiento.setPagoConTarjeta(movimiento.getPagoConTarjeta());
-                            }
-                            if (movimiento.getTransferencia() != null) {
-                                nuevoMovimiento.setTransferencia(movimiento.getTransferencia());
-                            }
+                        } catch (Exception e1) {
+                            try {
+                                List<MovimientoResponse> movimientoMap = objectMapper.readValue(jsonData, new TypeReference<>() {});
 
-                            movimientosRepository.save(nuevoMovimiento);
+                                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+                                for (MovimientoResponse movimientoJson : movimientoMap) {
+                                    if (movimientosRepository.findByGuid(movimientoJson.getGuid()).isEmpty()) {
+                                        Movimiento nuevoMovimiento = new Movimiento();
+                                        nuevoMovimiento.setId(new ObjectId());
+                                        nuevoMovimiento.setGuid(movimientoJson.getGuid());
+                                        nuevoMovimiento.setClienteGuid(movimientoJson.getClienteGuid());
+
+                                        if (movimientoJson.getDomiciliacion() != null) {
+                                            nuevoMovimiento.setDomiciliacion(movimientoJson.getDomiciliacion());
+                                        }
+                                        if (movimientoJson.getIngresoDeNomina() != null) {
+                                            nuevoMovimiento.setIngresoDeNomina(movimientoJson.getIngresoDeNomina());
+                                        }
+                                        if (movimientoJson.getPagoConTarjeta() != null) {
+                                            nuevoMovimiento.setPagoConTarjeta(movimientoJson.getPagoConTarjeta());
+                                        }
+                                        if (movimientoJson.getTransferencia() != null) {
+                                            nuevoMovimiento.setTransferencia(movimientoJson.getTransferencia());
+                                        }
+
+                                        nuevoMovimiento.setCreatedAt(LocalDateTime.parse(movimientoJson.getCreatedAt(), formatter));
+                                        nuevoMovimiento.setIsDeleted(movimientoJson.getIsDeleted());
+
+                                        movimientosRepository.save(nuevoMovimiento);
+                                    }
+                                }
+
+                            } catch (Exception e2) {
+                                log.warn("El archivo JSON no corresponde a un tipo esperado.");
+                                log.warn(e2.getMessage());
+                            }
                         }
 
                         log.info("Archivo JSON del ZIP procesado correctamente.");
