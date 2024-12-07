@@ -425,9 +425,13 @@ public class MovimientosServiceImpl implements MovimientosService {
 
         // Marcar ambos movimientos como eliminados
         movimientoOriginal.setIsDeleted(true);
-         movimientoOriginalDestino.setIsDeleted(true);
-         movimientosRepository.save(movimientoOriginalDestino);
+            onChangeTransferencia(Notification.Tipo.DELETE,movimientoOriginal.getTransferencia());
+        movimientoOriginalDestino.setIsDeleted(true);
+            onChangeTransferencia(Notification.Tipo.DELETE,movimientoOriginalDestino.getTransferencia());
+        movimientosRepository.save(movimientoOriginalDestino);
+            onChangeTransferencia(Notification.Tipo.CREATE,movimientoOriginalDestino.getTransferencia());
         movimientosRepository.save(movimientoOriginal);
+            onChangeTransferencia(Notification.Tipo.CREATE,movimientoOriginal.getTransferencia());
 
 
         return movimientosMapper.toMovimientoResponse(movimientoOriginal);
