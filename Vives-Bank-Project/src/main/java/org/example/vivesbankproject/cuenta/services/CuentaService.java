@@ -21,9 +21,13 @@ public interface CuentaService {
 
     CuentaResponse getByIban(String iban);
 
+    CuentaResponse getByNumTarjeta(String numTarjeta);
+
     CuentaResponse save(CuentaRequest cuentaRequest);
 
     CuentaResponse update(String id, CuentaRequestUpdate cuentaRequestUpdate);
 
     void deleteById(String id);
+
+
 }
