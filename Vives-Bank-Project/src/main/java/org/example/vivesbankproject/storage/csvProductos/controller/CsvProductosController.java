@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @Slf4j
@@ -37,8 +38,11 @@ public class CsvProductosController {
 
             List<TipoCuenta> importedTiposCuenta = csvProductosStorageService.importTiposCuentaFromCsv(file);
 
-            return ResponseEntity.ok(String.format("Importación exitosa. %d tipos de cuenta importados. Archivo almacenado: %s",
-                    importedTiposCuenta.size(), storedFilename));
+            return ResponseEntity.ok(Map.of(
+                    "message", String.format("Importación exitosa. %d tipos de cuenta importados.", importedTiposCuenta.size()),
+                    "storedFilename", storedFilename,
+                    "importedTiposCuenta", importedTiposCuenta
+            ));
         } catch (Exception e) {
             log.error("Error en la importación de CSV", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
