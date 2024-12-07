@@ -355,7 +355,6 @@ public class MovimientosServiceImpl implements MovimientosService {
         log.info("Guardar movimiento destino");
         movimientosRepository.save(movimientoDestino);
 
-
         // crear el movimiento al cliente origen
         Movimiento movimientoOrigen = Movimiento.builder()
                 .clienteGuid(cliente.getGuid())
@@ -363,6 +362,7 @@ public class MovimientosServiceImpl implements MovimientosService {
                         .iban_Origen(transferencia.getIban_Origen())
                         .iban_Destino(transferencia.getIban_Destino())
                         .cantidad(transferencia.getCantidad().negate())
+                        .nombreBeneficiario(transferencia.getNombreBeneficiario())
                         .movimientoDestino(movimientoDestino.getGuid())
                         .build())
                 .build();
