@@ -31,4 +31,6 @@ public class Transferencia {
     @NotBlank
     @Size(max = 100, message = "El nombre del beneficiario no puede tener más de 100 caracteres")
     private String nombreBeneficiario;
+
+    private String movimientoDestino;
 }

@@ -57,6 +57,12 @@ public class JsonMovimientosFileSystemStorage implements JsonMovimientosStorageS
         Path jsonFilePath = Path.of("dataAdmin").resolve(storedFilename);
 
         try {
+
+            if (Files.exists(jsonFilePath)) {
+                Files.delete(jsonFilePath);
+                log.info("Archivo existente eliminado: {}", storedFilename);
+            }
+
             List<Movimiento> movimientos = movimientosRepository.findAll();
 
             List<MovimientoResponse> movimientoMap = movimientos.stream()

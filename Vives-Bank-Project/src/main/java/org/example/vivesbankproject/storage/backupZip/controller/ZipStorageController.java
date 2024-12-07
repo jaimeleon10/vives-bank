@@ -42,7 +42,7 @@ public class ZipStorageController {
         }
     }
 
-    @PostMapping("/import/{filename:.+}")
+    @GetMapping("/import/{filename:.+}")
     public ResponseEntity<Void> importFromZip(@PathVariable String filename) {
         try {
             zipStorageService.loadFromZip(new File(filename));
