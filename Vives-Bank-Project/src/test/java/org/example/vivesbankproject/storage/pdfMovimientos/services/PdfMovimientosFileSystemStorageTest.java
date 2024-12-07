@@ -20,6 +20,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -82,50 +83,82 @@ class PdfMovimientosFileSystemStorageTest {
         }
     }
 
-//    @Test
-//    void storeAll() throws IOException {
-//        List<Movimiento> movimientos = List.of(
-//                new Movimiento().builder()
-//                        .id(new ObjectId())
-//                        .guid("guid1")
-//                        .clienteGuid("cliente1")
-//                        .domiciliacion(new Domiciliacion())
-//                        .ingresoDeNomina(new IngresoDeNomina())
-//                        .pagoConTarjeta(new PagoConTarjeta())
-//                        .transferencia(new Transferencia())
-//                        .build(),
-//                new Movimiento().builder()
-//                        .id(new ObjectId())
-//                        .guid("guid2")
-//                        .clienteGuid("cliente2")
-//                        .domiciliacion(new Domiciliacion())
-//                        .ingresoDeNomina(new IngresoDeNomina())
-//                        .pagoConTarjeta(new PagoConTarjeta())
-//                        .transferencia(new Transferencia())
-//                        .build()
-//        );
-//
-//        when(movimientosRepository.findAll()).thenReturn(movimientos);
-//
-//        String filename = storageService.storeAll();
-//
-//        Path pdfPath = Path.of(TEST_ROOT_LOCATION).resolve("dataAdmin").resolve(filename);
-//
-//        System.out.println("Verificando existencia del archivo en: " + pdfPath.toAbsolutePath());
-//
-//        assertTrue(Files.exists(pdfPath), "El archivo PDF debería existir.");
-//
-//        long fileSize = Files.size(pdfPath);
-//        assertTrue(fileSize > 0, "El archivo PDF no debería estar vacío.");
-//
-//        try (PdfReader reader = new PdfReader(pdfPath.toString())) {
-//            PdfDocument pdfDoc = new PdfDocument(reader);
-//            assertTrue(pdfDoc.getNumberOfPages() > 0, "El PDF debería tener al menos una página.");
-//        }
-//    }
+    @Test
+    void storeAll() throws IOException {
+        List<Movimiento> movimientos = List.of(
+                new Movimiento().builder()
+                        .id(new ObjectId())
+                        .guid("guid1")
+                        .clienteGuid("cliente1")
+                        .domiciliacion(new Domiciliacion())
+                        .ingresoDeNomina(new IngresoDeNomina())
+                        .pagoConTarjeta(new PagoConTarjeta())
+                        .transferencia(new Transferencia())
+                        .build(),
+                new Movimiento().builder()
+                        .id(new ObjectId())
+                        .guid("guid2")
+                        .clienteGuid("cliente2")
+                        .domiciliacion(new Domiciliacion())
+                        .ingresoDeNomina(new IngresoDeNomina())
+                        .pagoConTarjeta(new PagoConTarjeta())
+                        .transferencia(new Transferencia())
+                        .build()
+        );
+
+        when(movimientosRepository.findAll()).thenReturn(movimientos);
+
+        String filename = storageService.storeAll();
+
+        Path pdfPath = Path.of("dataAdmin").resolve(filename);
+
+        System.out.println("Verificando existencia del archivo en: " + pdfPath.toAbsolutePath());
+
+        assertTrue(Files.exists(pdfPath), "El archivo PDF debería existir.");
+
+        long fileSize = Files.size(pdfPath);
+        assertTrue(fileSize > 0, "El archivo PDF no debería estar vacío.");
+
+        try (PdfReader reader = new PdfReader(pdfPath.toString())) {
+            PdfDocument pdfDoc = new PdfDocument(reader);
+            assertTrue(pdfDoc.getNumberOfPages() > 0, "El PDF debería tener al menos una página.");
+        }
+
+        try {
+            Files.deleteIfExists(pdfPath);
+        } catch (IOException e) {
+            fail("No se pudo eliminar el archivo de prueba");
+        }
+    }
 
     @Test
-    void store() {
+    void store() throws IOException {
+        String guid = "1234";
+        Movimiento mockMovimiento = new Movimiento();
+        mockMovimiento.setGuid(guid);
+        mockMovimiento.setClienteGuid("cliente123");
+        mockMovimiento.setDomiciliacion(new Domiciliacion());
+        mockMovimiento.setIngresoDeNomina(new IngresoDeNomina());
+        mockMovimiento.setPagoConTarjeta(new PagoConTarjeta());
+        mockMovimiento.setTransferencia(new Transferencia());
+
+        when(movimientosRepository.findMovimientosByClienteGuid(guid))
+                .thenReturn(Optional.of(mockMovimiento));
+
+        String storedFilename = storageService.store(guid);
+
+        assertNotNull(storedFilename);
+        assertTrue(storedFilename.contains(guid));
+        assertTrue(storedFilename.endsWith(".pdf"));
+
+        Path pdfPath = Path.of(TEST_ROOT_LOCATION).resolve(storedFilename);
+        assertTrue(pdfPath.toFile().exists(), "El archivo PDF debería haberse creado.");
+
+        try {
+            Files.deleteIfExists(pdfPath);
+        } catch (IOException e) {
+            fail("No se pudo eliminar el archivo de prueba");
+        }
     }
 
     @Test
