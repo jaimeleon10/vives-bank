@@ -8,6 +8,7 @@ import org.bson.types.ObjectId;
 
 import org.example.vivesbankproject.cliente.exceptions.ClienteNotFoundByUser;
 import org.example.vivesbankproject.cliente.service.ClienteService;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFound;
 import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFoundByClienteGuid;
 import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFoundByTarjetaId;
@@ -25,7 +26,9 @@ import org.example.vivesbankproject.movimientos.mappers.MovimientoMapper;
 import org.example.vivesbankproject.movimientos.models.*;
 import org.example.vivesbankproject.movimientos.repositories.DomiciliacionRepository;
 import org.example.vivesbankproject.movimientos.repositories.MovimientosRepository;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFoundByNumero;
+import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.service.TarjetaService;
 import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.users.services.UserService;
@@ -436,8 +439,9 @@ public class MovimientosServiceImpl implements MovimientosService {
             String json = mapper.writeValueAsString(notificacion);
 
             // Recuperar el cliente del usuario logueado
-            //String clienteId = cuentaService.getByIban(data.getIban_Destino()).getClienteId();
-            String clienteId = cuentaService.getByNumTarjeta(data.getNumeroTarjeta()).getClienteId();
+            TarjetaResponse tarjeta = tarjetaService.getByNumeroTarjeta(data.getNumeroTarjeta());
+            CuentaResponse cuenta =cuentaService.getByNumTarjeta(tarjeta.getNumeroTarjeta());
+            String clienteId = cuenta.getClienteId();
             String userId = clienteService.getById(clienteId).getUserId();
             String userName = userService.getById(userId).getUsername();
 
