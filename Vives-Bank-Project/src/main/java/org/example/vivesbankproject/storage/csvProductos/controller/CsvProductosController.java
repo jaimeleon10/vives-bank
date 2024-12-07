@@ -5,6 +5,7 @@ import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.storage.csvProductos.services.CsvProductosStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,7 +24,7 @@ public class CsvProductosController {
         this.csvProductosStorageService = csvProductosStorageService;
     }
 
-    @PostMapping("/import")
+    @PostMapping(value = "/import", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> importTiposCuentaCsv(@RequestParam("file") MultipartFile file) {
         try {
             if (file.isEmpty()) {
