@@ -541,7 +541,7 @@ public class MovimientosServiceImpl implements MovimientosService {
             String json = mapper.writeValueAsString(notificacion);
 
             // Recuperar el cliente del usuario logueado
-            String clienteId = cuentaService.getByIban(data.getIbanDestino()).getClienteId();
+            String clienteId = cuentaService.getByIban(data.getIbanOrigen()).getClienteId();
             String userId = clienteService.getById(clienteId).getUserId();
             String userName = userService.getById(userId).getUsername();
 

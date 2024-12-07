@@ -75,8 +75,7 @@ public class DomiciliacionScheduler {
         // Filtrar domiciliaciones activas que requieren ejecución
         List<Domiciliacion> domiciliaciones = domiciliacionRepository.findAll()
                 .stream()
-//                .filter(d -> d.getActiva() && requiereEjecucion(d, ahora))
-                .filter(d -> d.getActiva() )
+                .filter(d -> d.getActiva() && requiereEjecucion(d, ahora))
                 .toList();
 
         for (Domiciliacion domiciliacion : domiciliaciones) {
@@ -158,7 +157,7 @@ public class DomiciliacionScheduler {
             String json = mapper.writeValueAsString(notificacion);
 
             // Recuperar el cliente del usuario logueado
-            String clienteId = cuentaService.getByIban(data.getIbanDestino()).getClienteId();
+            String clienteId = cuentaService.getByIban(data.getIbanOrigen()).getClienteId();
             String userId = clienteService.getById(clienteId).getUserId();
             String userName = userService.getById(userId).getUsername();
 
