@@ -2,6 +2,7 @@ package org.example.vivesbankproject.tarjeta.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFoundByIban;
 import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFoundByTarjeta;
@@ -50,6 +51,8 @@ public class TarjetaServiceImpl implements TarjetaService {
     private final WebSocketConfig webSocketConfig;
     private final ObjectMapper mapper;
     private final CuentaRepository cuentaRepository;
+    // Para los test
+    @Setter
     private WebSocketHandler webSocketService;
 
     @Autowired
@@ -213,7 +216,7 @@ public class TarjetaServiceImpl implements TarjetaService {
 
             // Recuperar el usuario del cliente de la tarjeta
             var cuenta = cuentaRepository.findByTarjetaId(data.getId()).orElseThrow(() -> new CuentaNotFoundByTarjeta(data.getId()));
-            String userId = cuenta.getCliente().getUser().getId().toString();
+            String userId = cuenta.getCliente().getUser().getGuid();
             User user = userRepository.findByGuid(userId).orElseThrow(() -> new UserNotFoundById(userId));
             String userName = user.getUsername();
 
@@ -231,8 +234,4 @@ public class TarjetaServiceImpl implements TarjetaService {
         }
     }
 
-    // Para los test
-    public void setWebSocketService(WebSocketHandler webSocketHandlerMock) {
-        this.webSocketService = webSocketHandlerMock;
-    }
 }
