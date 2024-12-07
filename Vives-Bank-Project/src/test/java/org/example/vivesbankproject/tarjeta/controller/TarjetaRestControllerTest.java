@@ -4,6 +4,8 @@ import com.jayway.jsonpath.JsonPath;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.example.vivesbankproject.tarjeta.dto.*;
+import org.example.vivesbankproject.websocket.notifications.config.WebSocketConfig;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
@@ -49,9 +51,11 @@ class TarjetaRestControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-
     @Autowired
     private MockMvc mockMvc;
+
+    @Mock
+    private WebSocketConfig webSocketConfig;
 
     @MockBean
     private TarjetaService tarjetaService;
