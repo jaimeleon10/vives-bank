@@ -142,7 +142,7 @@ class PdfMovimientosFileSystemStorageTest {
         mockMovimiento.setPagoConTarjeta(new PagoConTarjeta());
         mockMovimiento.setTransferencia(new Transferencia());
 
-        when(movimientosRepository.findMovimientosByClienteGuid(guid))
+        when(movimientosRepository.findByClienteGuid(guid))
                 .thenReturn(Optional.of(mockMovimiento));
 
         String storedFilename = storageService.store(guid);
