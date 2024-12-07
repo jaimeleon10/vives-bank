@@ -102,7 +102,7 @@ public class WebSocketHandler extends TextWebSocketHandler implements SubProtoco
         for (WebSocketSession session : sessions) {
             if (session.isOpen()) {
                 String broadcast = "server periodic message " + LocalTime.now();
-                log.info("Server sends: " + broadcast);
+                //log.info("Server sends: " + broadcast);
                 session.sendMessage(new TextMessage(broadcast));
             }
         }

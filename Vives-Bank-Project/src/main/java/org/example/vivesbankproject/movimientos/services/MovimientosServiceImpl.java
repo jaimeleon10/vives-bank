@@ -369,6 +369,7 @@ public class MovimientosServiceImpl implements MovimientosService {
 
         // Guardar el movimiento origen
         var saved = movimientosRepository.save(movimientoOrigen);
+        onChangeTransferencia(Notification.Tipo.CREATE,transferencia);
 
         return movimientosMapper.toMovimientoResponse(saved);
     }
