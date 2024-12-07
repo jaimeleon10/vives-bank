@@ -3,6 +3,8 @@ package org.example.vivesbankproject.storage.csvProductos.services;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import lombok.extern.slf4j.Slf4j;
+import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
+import org.example.vivesbankproject.cuenta.mappers.TipoCuentaMapper;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.TipoCuentaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,20 +23,23 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
 public class CsvProductosStorageServiceImpl implements CsvProductosStorageService{
     private final Path rootLocation;
     private final TipoCuentaRepository tipoCuentaRepository;
+    private final TipoCuentaMapper tipoCuentaMapper;
 
     @Autowired
     public CsvProductosStorageServiceImpl(
             @Value("${upload.root-location}") String path,
-            TipoCuentaRepository tipoCuentaRepository
+            TipoCuentaRepository tipoCuentaRepository, TipoCuentaMapper tipoCuentaMapper
     ) {
         this.rootLocation = Paths.get(path);
         this.tipoCuentaRepository = tipoCuentaRepository;
+        this.tipoCuentaMapper = tipoCuentaMapper;
     }
 
     @Transactional
@@ -43,24 +48,45 @@ public class CsvProductosStorageServiceImpl implements CsvProductosStorageServic
         List<TipoCuenta> tiposCuenta = new ArrayList<>();
 
         try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
-            String[] header = reader.readNext();
+            // Saltar la fila de encabezado
+            reader.readNext();
 
             String[] nextLine;
             while ((nextLine = reader.readNext()) != null) {
-                TipoCuenta tipoCuenta = convertToTipoCuenta(nextLine);
-                tiposCuenta.add(tipoCuenta);
+                try {
+                    // Convertir la línea de datos CSV a un TipoCuentaRequest
+                    TipoCuentaRequest tipoCuentaRequest = convertToTipoCuentaRequest(nextLine);
+
+                    // Usar el mapper para convertir el TipoCuentaRequest en TipoCuenta
+                    TipoCuenta tipoCuenta = tipoCuentaMapper.toTipoCuenta(tipoCuentaRequest);
+
+                    // Comprobar si ya existe
+                    Optional<TipoCuenta> existingTipoCuenta = tipoCuentaRepository.findByNombre(tipoCuenta.getNombre());
+                    if (existingTipoCuenta.isEmpty()) {
+                        tiposCuenta.add(tipoCuenta);
+                    } else {
+                        log.warn("Tipo de cuenta ya existe: {}", tipoCuenta.getNombre());
+                    }
+                } catch (Exception e) {
+                    log.error("Error procesando línea de CSV: {}", (Object) nextLine, e);
+                }
             }
 
+            // Guardar todos los nuevos tipos de cuenta
             return tipoCuentaRepository.saveAll(tiposCuenta);
         } catch (IOException | CsvValidationException e) {
-            log.error("Error importing CSV: ", e);
-            throw new RuntimeException("Error importing CSV file", e);
+            log.error("Error importando CSV: ", e);
+            throw new RuntimeException("Error importando archivo CSV", e);
         }
     }
 
     @Override
-    public TipoCuenta convertToTipoCuenta(String[] data) {
-        return TipoCuenta.builder()
+    public TipoCuentaRequest convertToTipoCuentaRequest(String[] data) {
+        if (data == null || data.length < 2) {
+            throw new IllegalArgumentException("Datos de CSV inválidos para tipo de cuenta");
+        }
+
+        return TipoCuentaRequest.builder()
                 .nombre(data[0].trim())
                 .interes(new BigDecimal(data[1].trim()))
                 .build();
