@@ -13,6 +13,7 @@ import java.util.Map;
  * @author Jaime León, Natalia González, German Fernandez, Alba García, Mario de Domingo, Alvaro Herrero
  * @version 1.0-SNAPSHOT
  */
+@Data
 public class FrankFurterResponse {
 
     /**
