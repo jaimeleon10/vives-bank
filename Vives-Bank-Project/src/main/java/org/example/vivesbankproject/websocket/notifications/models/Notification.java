@@ -6,5 +6,5 @@ public record Notification<T>(
     T data,
     String createdAt
 ) {
-    public enum Tipo {CREATE, UPDATE, DELETE}
+    public enum Tipo {CREATE, UPDATE, DELETE, EXECUTE}
 }
