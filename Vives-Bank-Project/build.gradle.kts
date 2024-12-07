@@ -39,6 +39,9 @@ dependencies {
     // PostgreSQL
     implementation ("org.postgresql:postgresql")
 
+    // Swagger
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+
     // MongoDB
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 
