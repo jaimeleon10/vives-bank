@@ -27,4 +27,6 @@ public interface MovimientosService {
 
     MovimientoResponse saveTransferencia(User user, Transferencia transferencia);
 
+    MovimientoResponse revocarTransferencia(User user, String movimientoTransferenciaGuid);
+
 }
