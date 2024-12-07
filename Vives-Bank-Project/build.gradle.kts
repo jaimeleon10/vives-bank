@@ -91,7 +91,6 @@ dependencies {
 
     // Test Spring Security
     testImplementation("org.springframework.security:spring-security-test")
-
 }
 
 tasks.withType<Test> {
