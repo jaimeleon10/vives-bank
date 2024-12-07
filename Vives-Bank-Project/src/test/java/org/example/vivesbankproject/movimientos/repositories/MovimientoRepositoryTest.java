@@ -1,5 +1,6 @@
 package org.example.vivesbankproject.movimientos.repositories;
 
+import org.example.vivesbankproject.cliente.models.Cliente;
 import org.example.vivesbankproject.movimientos.models.Movimiento;
 import org.example.vivesbankproject.movimientos.models.Domiciliacion;
 import org.example.vivesbankproject.movimientos.models.IngresoDeNomina;
@@ -18,7 +19,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataMongoTest
-class MovimientosRepositoryTest {
+class MovimientoRepositoryTest {
 
     @Autowired
     private MovimientosRepository movimientosRepository;
@@ -46,8 +47,10 @@ class MovimientosRepositoryTest {
         mongoTemplate.insert(movimiento);
     }
 
+
+
     @Test
-    void findByGuid_deberiaDevolverMovimiento_cuandoGuidExiste() {
+    void findByGuid() {
         Optional<Movimiento> result = movimientosRepository.findByGuid(movimiento.getGuid());
 
         assertAll(
@@ -57,7 +60,7 @@ class MovimientosRepositoryTest {
     }
 
     @Test
-    void findByGuid_deberiaDevolverVacio_cuandoGuidNoExiste() {
+    void findByGuid_notFound() {
         String nonExistentGuid = IdGenerator.generarId();
 
         Optional<Movimiento> result = movimientosRepository.findByGuid(nonExistentGuid);
@@ -66,26 +69,30 @@ class MovimientosRepositoryTest {
     }
 
     @Test
-    void findMovimientosByClienteGuid_deberiaDevolverMovimiento_cuandoClienteExiste() {
-        Optional<Movimiento> result = movimientosRepository.findMovimientosByClienteGuid(clienteGuid);
+    void findMovimientosByClienteGuid() {
+        System.out.println("Cliente GUID esperado: " + clienteGuid );
+
+        movimientosRepository.save(movimiento);
+
+        Optional<Movimiento> result = movimientosRepository.findByClienteGuid(clienteGuid);
 
         assertAll(
-                () -> assertEquals(true, result.isPresent(), "Movimiento deberia ser encontrado para el cliente existente"),
-                () -> assertEquals(clienteGuid, result.get().getClienteGuid(), "El movimiento recuperado debe tener el GUID del cliente correcto")
+                () -> assertTrue(result.isPresent(), "Movimiento deberia ser encontrado para el cliente existente"),
+                () -> assertEquals(clienteGuid, movimiento.getClienteGuid())
         );
     }
 
     @Test
-    void findMovimientosByClienteGuid_deberiaDevolverVacio_cuandoClienteNoExiste() {
+    void findMovimientosByClienteGuid_ClienteNoExiste() {
         String nonExistentClienteGuid = IdGenerator.generarId();
 
-        Optional<Movimiento> result = movimientosRepository.findMovimientosByClienteGuid(nonExistentClienteGuid);
+        Optional<Movimiento> result = movimientosRepository.findByClienteGuid(nonExistentClienteGuid);
 
         assertTrue(result.isEmpty(), "El resultado deberia estar vacio para un GUID de cliente inexistente");
     }
 
     @Test
-    void save_deberiaPersistirMovimiento() {
+    void save() {
         Movimiento newMovimiento = Movimiento.builder()
                 .guid(IdGenerator.generarId())
                 .clienteGuid(IdGenerator.generarId())
@@ -106,7 +113,7 @@ class MovimientosRepositoryTest {
     }
 
     @Test
-    void delete_deberiaEliminarMovimiento() {
+    void delete() {
         Movimiento savedMovimiento = movimientosRepository.save(movimiento);
 
         movimientosRepository.delete(savedMovimiento);
@@ -117,7 +124,7 @@ class MovimientosRepositoryTest {
     }
 
     @Test
-    void update_deberiaModificarMovimientoExistente() {
+    void update() {
         Movimiento savedMovimiento = movimientosRepository.save(movimiento);
 
         savedMovimiento.setIsDeleted(true);

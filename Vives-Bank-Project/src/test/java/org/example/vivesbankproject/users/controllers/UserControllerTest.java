@@ -10,6 +10,7 @@ import org.example.vivesbankproject.utils.pagination.PageResponse;
 import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,6 +27,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest
 @AutoConfigureMockMvc
 @WithMockUser(username = "admin", password = "adminPassword123", roles = {"ADMIN", "USER"})
@@ -118,7 +121,8 @@ class UserControllerTest {
     }
 
     @Test
-    void save_UsernameEmpty() throws Exception {
+    void
+    save_UsernameEmpty() throws Exception {
         UserRequest userRequest = UserRequest.builder()
                 .username("")
                 .password("password123")

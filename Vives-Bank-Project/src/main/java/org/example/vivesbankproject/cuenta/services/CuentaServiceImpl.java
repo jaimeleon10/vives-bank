@@ -3,6 +3,7 @@ package org.example.vivesbankproject.cuenta.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.criteria.Join;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cliente.exceptions.ClienteNotFound;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
@@ -52,6 +53,8 @@ public class CuentaServiceImpl implements CuentaService{
     private final UserRepository userRepository;
     private final WebSocketConfig webSocketConfig;
     private final ObjectMapper mapper;
+    // Para los test
+    @Setter
     private WebSocketHandler webSocketService;
 
     @Autowired
@@ -162,7 +165,9 @@ public class CuentaServiceImpl implements CuentaService{
         clienteRepository.flush();
         evictClienteCache(cliente.getGuid());
 
-        onChange(Notification.Tipo.CREATE, cuentaSaved);
+        CuentaResponse cuentaResponse = cuentaMapper.toCuentaResponse(cuentaSaved, cuentaSaved.getTipoCuenta().getGuid(), cuentaSaved.getTarjeta().getGuid(), cuentaSaved.getCliente().getGuid());
+
+        onChange(Notification.Tipo.CREATE, cuentaResponse, cuentaSaved);
         return cuentaMapper.toCuentaResponse(cuentaSaved, cuentaSaved.getTipoCuenta().getGuid(), cuentaSaved.getTarjeta().getGuid(), cuentaSaved.getCliente().getGuid());
     }
 
@@ -197,8 +202,11 @@ public class CuentaServiceImpl implements CuentaService{
         }
 
         var cuentaUpdated = cuentaRepository.save(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta, tipoCuenta, tarjeta, cliente));
-        onChange(Notification.Tipo.UPDATE, cuentaUpdated);
-        return cuentaMapper.toCuentaResponse(cuentaUpdated, cuentaUpdated.getTipoCuenta().getGuid(), cuentaUpdated.getTipoCuenta().getGuid(), cuentaUpdated.getCliente().getGuid());
+
+        CuentaResponse cuentaResponse = cuentaMapper.toCuentaResponse(cuentaUpdated, cuentaUpdated.getTipoCuenta().getGuid(), cuentaUpdated.getTarjeta().getGuid(), cuentaUpdated.getCliente().getGuid());
+
+        onChange(Notification.Tipo.UPDATE, cuentaResponse, cuentaUpdated);
+        return cuentaMapper.toCuentaResponse(cuentaUpdated, cuentaUpdated.getTipoCuenta().getGuid(), cuentaUpdated.getTarjeta().getGuid(), cuentaUpdated.getCliente().getGuid());
     }
 
     @Override
@@ -210,7 +218,10 @@ public class CuentaServiceImpl implements CuentaService{
         );
         cuentaExistente.setIsDeleted(true);
         cuentaRepository.save(cuentaExistente);
-        onChange(Notification.Tipo.DELETE, cuentaExistente);
+
+        CuentaResponse cuentaResponse = cuentaMapper.toCuentaResponse(cuentaExistente, cuentaExistente.getTipoCuenta().getGuid(), cuentaExistente.getTarjeta().getGuid(), cuentaExistente.getCliente().getGuid());
+
+        onChange(Notification.Tipo.DELETE, cuentaResponse, cuentaExistente);
     }
 
     @CacheEvict
@@ -219,8 +230,8 @@ public class CuentaServiceImpl implements CuentaService{
     }
 
 
-    void onChange(Notification.Tipo tipo, Cuenta data) {
-        log.debug("Servicio de Cuentas onChange con tipo: " + tipo + " y datos: " + data);
+    void onChange(Notification.Tipo tipo, CuentaResponse data, Cuenta cuenta) {
+        log.info("Servicio de Cuentas onChange con tipo: " + tipo + " y datos: " + data);
 
         if (webSocketService == null) {
             log.warn("No se ha podido enviar la notificación a los clientes ws, no se ha encontrado el servicio");
@@ -232,10 +243,10 @@ public class CuentaServiceImpl implements CuentaService{
                     "CUENTAS",
                     tipo,
                     cuentaMapper.toCuentaResponse(
-                            data,
-                            data.getTipoCuenta().getId().toString(),
-                            data.getTarjeta().getId().toString(),
-                            data.getCliente().getId().toString()
+                            cuenta,
+                            data.getTipoCuentaId(),
+                            data.getTarjetaId(),
+                            data.getClienteId()
                             ),
                     LocalDateTime.now().toString()
             );
@@ -243,7 +254,7 @@ public class CuentaServiceImpl implements CuentaService{
             String json = mapper.writeValueAsString(notificacion);
 
             // Recuperar el usuario del cliente de la cuenta
-            String userId = data.getCliente().getUser().getId().toString();
+            String userId = cuenta.getCliente().getUser().getGuid();
             User user = userRepository.findByGuid(userId).orElseThrow(() -> new UserNotFoundById(userId));
             String userName = user.getUsername();
 
@@ -260,10 +271,5 @@ public class CuentaServiceImpl implements CuentaService{
         } catch (JsonProcessingException e) {
             log.error("Error al convertir la notificación a JSON", e);
         }
-    }
-
-    // Para los test
-    public void setWebSocketService(WebSocketHandler webSocketHandlerMock) {
-        this.webSocketService = webSocketHandlerMock;
     }
 }
