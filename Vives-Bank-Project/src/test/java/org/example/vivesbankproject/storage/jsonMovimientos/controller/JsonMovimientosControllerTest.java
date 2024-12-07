@@ -1,8 +1,7 @@
 package org.example.vivesbankproject.storage.jsonMovimientos.controller;
 
+import org.example.vivesbankproject.storage.exceptions.StorageInternal;
 import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
-import org.example.vivesbankproject.storage.jsonClientes.controller.JsonClientesController;
-import org.example.vivesbankproject.storage.jsonClientes.services.JsonClientesStorageService;
 import org.example.vivesbankproject.storage.jsonMovimientos.services.JsonMovimientosFileSystemStorage;
 import org.junit.jupiter.api.*;
 import org.mockito.InjectMocks;
@@ -22,12 +21,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -74,30 +72,53 @@ class JsonMovimientosControllerTest {
         }
     }
 
-//    @Test
-//    void generateMovimientosJson() throws Exception {
-//        String expectedFilename = "admin_movimientos_2024-12-03.json";
-//
-//        when(jsonMovimientosFileSystemStorage.storeAll()).thenReturn(expectedFilename);
-//
-//        mockMvc.perform(post("/generate"))
-//                .andExpect(status().isOk())
-//                .andExpect(content().string("Archivo JSON de movimientos generado con éxito: " + expectedFilename));
-//    }
+    @Test
+    void generateMovimientosJson() throws Exception {
+        String storedFilename = "movimientos.json";
+        when(jsonMovimientosFileSystemStorage.storeAll()).thenReturn(storedFilename);
 
-//    @Test
-//    void generateMovimientoJson() throws Exception {
-//        String guid = "54321";
-//        String expectedFilename = "movimientos_54321_2024-12-03.json";
-//
-//        when(jsonMovimientosFileSystemStorage.store(guid)).thenReturn(expectedFilename);
-//
-//        mockMvc.perform(post("/generate/{guid}", guid))
-//                .andExpect(status().isOk())
-//                .andExpect(content().string("Archivo JSON de movimientos de cliente generado con éxito: " + expectedFilename));
-//
-//        verify(jsonMovimientosFileSystemStorage, times(1)).store(guid);
-//    }
+        mockMvc.perform(post("/storage/jsonMovimientos/generate"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Archivo JSON de movimientos generado con éxito: " + storedFilename));
+
+        verify(jsonMovimientosFileSystemStorage, times(1)).storeAll();
+    }
+
+    @Test
+    void generateMovimientosJson_InternalServerError() throws Exception {
+        when(jsonMovimientosFileSystemStorage.storeAll()).thenThrow(new StorageInternal("Error interno al generar el archivo"));
+
+        mockMvc.perform(post("/storage/jsonMovimientos/generate"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Error al generar el archivo JSON de movimientos."));
+
+        verify(jsonMovimientosFileSystemStorage, times(1)).storeAll();
+    }
+
+    @Test
+    void generateMovimientoJson() throws Exception {
+        String guid = "1234-5678-abcd-efgh";
+        String storedFilename = "movimientos_cliente.json";
+        when(jsonMovimientosFileSystemStorage.store(guid)).thenReturn(storedFilename);
+
+        mockMvc.perform(post("/storage/jsonMovimientos/generate/{guid}", guid))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Archivo JSON de movimientos de cliente generado con éxito: " + storedFilename));
+
+        verify(jsonMovimientosFileSystemStorage, times(1)).store(guid);
+    }
+
+    @Test
+    void generateMovimientoJson_InternalServerError() throws Exception {
+        String guid = "1234-5678-abcd-efgh";
+        when(jsonMovimientosFileSystemStorage.store(guid)).thenThrow(new StorageInternal("Error interno al generar el archivo"));
+
+        mockMvc.perform(post("/storage/jsonMovimientos/generate/{guid}", guid))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Error al generar el archivo JSON de movimientos de cliente."));
+
+        verify(jsonMovimientosFileSystemStorage, times(1)).store(guid);
+    }
 
     @Test
     void serveFile() throws Exception {
@@ -138,5 +159,14 @@ class JsonMovimientosControllerTest {
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0]").value("data\\test\\movimientos_test_2024-12-01.json"))
                 .andExpect(jsonPath("$[1]").value("data\\test\\movimientos_test_2024-12-02.json"));
+    }
+
+    @Test
+    void listAllFiles_error() throws Exception {
+        when(jsonMovimientosFileSystemStorage.loadAll()).thenThrow(new StorageInternal("Error al obtener archivos"));
+
+        mockMvc.perform(get("/storage/jsonMovimientos/list"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().json("[]"));
     }
 }

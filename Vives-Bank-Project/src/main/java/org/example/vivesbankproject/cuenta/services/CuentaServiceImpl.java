@@ -15,16 +15,15 @@ import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequestUpdate;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFound;
 import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFoundByIban;
-import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFoundByTarjeta;
+import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFoundByNumTarjeta;
 import org.example.vivesbankproject.cuenta.exceptions.tipoCuenta.TipoCuentaNotFound;
 import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.cuenta.repositories.TipoCuentaRepository;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
-import org.example.vivesbankproject.tarjeta.models.Tarjeta;
+import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFoundByNumero;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.users.exceptions.UserNotFoundById;
 import org.example.vivesbankproject.users.models.User;
@@ -44,7 +43,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -224,6 +222,13 @@ public class CuentaServiceImpl implements CuentaService{
      * @param cuentaRequest Solicitud de información de cuenta para guardar.
      * @return La cuenta guardada con su información mapeada.
      */
+    @Override
+    public CuentaResponse getByNumTarjeta(String numTarjeta) {
+        var tarjeta = tarjetaRepository.findByNumeroTarjeta(numTarjeta).orElseThrow(() -> new TarjetaNotFoundByNumero(numTarjeta));
+        var cuenta = cuentaRepository.findByTarjetaId(tarjeta.getId()).orElseThrow(() -> new CuentaNotFoundByNumTarjeta(tarjeta.getId().toString()));
+        return cuentaMapper.toCuentaResponse(cuenta, cuenta.getTipoCuenta().getGuid(), cuenta.getTarjeta().getGuid(), cuenta.getCliente().getGuid());
+    }
+
     @Override
     @CachePut
     @Operation(summary = "Guardar una nueva cuenta", description = "Crea una cuenta en el sistema con la información proporcionada.")

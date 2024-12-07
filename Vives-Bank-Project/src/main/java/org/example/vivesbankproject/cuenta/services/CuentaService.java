@@ -91,6 +91,8 @@ public interface CuentaService {
             description = "Crea una nueva cuenta utilizando la información proporcionada en el objeto cuentaRequest.")
     @Parameter(name = "cuentaRequest", description = "Información para crear una cuenta", required = true)
     CuentaResponse save(CuentaRequest cuentaRequest);
+  
+    CuentaResponse getByNumTarjeta(String numTarjeta);
 
     /**
      * Actualiza una cuenta existente en el sistema utilizando la información proporcionada.
@@ -114,4 +116,6 @@ public interface CuentaService {
             description = "Elimina una cuenta del sistema utilizando su identificador.")
     @Parameter(name = "id", description = "Identificador de la cuenta a eliminar", required = true)
     void deleteById(String id);
+
+
 }

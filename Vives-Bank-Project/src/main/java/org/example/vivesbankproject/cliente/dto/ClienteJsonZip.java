@@ -6,8 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.vivesbankproject.cliente.models.Direccion;
-import org.example.vivesbankproject.cuenta.models.Cuenta;
-import org.example.vivesbankproject.tarjeta.models.Tarjeta;
+import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaZip;
 import org.example.vivesbankproject.users.models.User;
 
 import java.util.Set;
@@ -22,7 +21,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "Modelo que representa la información administrativa de un cliente")
-public class ClienteJsonAdmin {
+public class ClienteJsonZip {
 
     @Schema(description = "Identificador único del cliente", example = "1")
     private Long id;
@@ -53,15 +52,12 @@ public class ClienteJsonAdmin {
 
     @Schema(description = "URL de la imagen del DNI del cliente", example = "https://example.com/foto-dni.jpg")
     private String fotoDni;
-
+    
     @Schema(description = "Conjunto de cuentas asociadas al cliente")
-    private Set<Cuenta> cuentas;
-
-    @Schema(description = "Tarjeta vinculada al cliente", implementation = Tarjeta.class)
-    private Tarjeta tarjeta;
-
+    private Set<CuentaZip> cuentas;
+    
     @Schema(description = "Usuario asociado al cliente", implementation = User.class)
-    private User user;
+    private User usuario;
 
     @Schema(description = "Fecha de creación del registro", example = "2023-01-01T10:00:00Z")
     private String createdAt;

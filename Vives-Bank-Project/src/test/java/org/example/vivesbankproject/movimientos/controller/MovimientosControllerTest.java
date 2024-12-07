@@ -3,7 +3,7 @@ package org.example.vivesbankproject.movimientos.controller;
 import org.example.vivesbankproject.movimientos.dto.MovimientoRequest;
 import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
 import org.example.vivesbankproject.movimientos.models.*;
-import org.example.vivesbankproject.movimientos.services.MovimientosService;
+import org.example.vivesbankproject.movimientos.services.MovimientosServiceImpl;
 import org.example.vivesbankproject.utils.pagination.PageResponse;
 import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -33,7 +34,7 @@ import static org.mockito.Mockito.*;
 class MovimientosControllerTest {
 
     @Mock
-    private MovimientosService service;
+    private MovimientosServiceImpl service;
 
     @Mock
     private PaginationLinksUtils paginationLinksUtils;
@@ -41,12 +42,19 @@ class MovimientosControllerTest {
     @InjectMocks
     private MovimientosController movimientosController;
 
+
+
     private MovimientoResponse movimientoResponse;
     private MovimientoRequest movimientoRequest;
     private MockHttpServletRequest mockRequest;
 
     @BeforeEach
     void setUp() {
+
+        MockitoAnnotations.openMocks(this); // Inicializa todos los mocks
+
+        movimientosController = new MovimientosController(service, paginationLinksUtils);
+
         Transferencia transferencia = Transferencia.builder()
                 .cantidad(BigDecimal.valueOf(100.00))
                 .iban_Origen("ES1234567890")
@@ -72,6 +80,12 @@ class MovimientosControllerTest {
         mockRequest.setServerPort(8080);
 
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(mockRequest));
+    }
+
+    @Test
+    void testControllerInitialization() {
+        assertNotNull(movimientosController);
+        assertNotNull(service);  // Asegúrate de que el servicio no sea null
     }
 
     @Test
