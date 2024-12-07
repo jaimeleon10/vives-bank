@@ -68,7 +68,7 @@ public class CsvProductosStorageServiceImpl implements CsvProductosStorageServic
                         log.warn("Tipo de cuenta ya existe: {}", tipoCuenta.getNombre());
                     }
                 } catch (Exception e) {
-                    log.error("Error procesando línea de CSV: {}", (Object) nextLine, e);
+                    log.error("Error procesando linea de CSV: {}", (Object) nextLine, e);
                 }
             }
 
@@ -83,7 +83,7 @@ public class CsvProductosStorageServiceImpl implements CsvProductosStorageServic
     @Override
     public TipoCuentaRequest convertToTipoCuentaRequest(String[] data) {
         if (data == null || data.length < 2) {
-            throw new IllegalArgumentException("Datos de CSV inválidos para tipo de cuenta");
+            throw new IllegalArgumentException("Datos de CSV invalidos para tipo de cuenta");
         }
 
         return TipoCuentaRequest.builder()

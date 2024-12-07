@@ -61,7 +61,7 @@ class CsvProductosControllerTest {
                         .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Importación exitosa. 1 tipos de cuenta importados."))
+                .andExpect(jsonPath("$.message").value("Importacion exitosa. 1 tipos de cuenta importados."))
                 .andExpect(jsonPath("$.storedFilename").value("tipos_cuenta_stored.csv"))
                 .andExpect(jsonPath("$.importedTiposCuenta[0].nombre").value("Cuenta Corriente"));
 
@@ -82,7 +82,7 @@ class CsvProductosControllerTest {
                         .file(emptyFile)
                         .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("El archivo CSV está vacío"));
+                .andExpect(content().string("El archivo CSV esta vacio"));
     }
 
     @Test
@@ -98,7 +98,7 @@ class CsvProductosControllerTest {
                         .file(notCsvFile)
                         .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Por favor, suba un archivo CSV válido"));
+                .andExpect(content().string("Por favor, suba un archivo CSV valido"));
     }
 
     @Test

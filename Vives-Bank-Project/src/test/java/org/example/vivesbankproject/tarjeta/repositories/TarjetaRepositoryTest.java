@@ -1,6 +1,5 @@
 package org.example.vivesbankproject.tarjeta.repositories;
 
-import jakarta.transaction.Transactional;
 import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @DataJpaTest
 @ExtendWith(SpringExtension.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Transactional  // Asegura que los cambios se revierten después de cada prueba
 class TarjetaRepositoryTest {
 
     @Autowired
@@ -49,14 +47,13 @@ class TarjetaRepositoryTest {
                 .updatedAt(LocalDateTime.now())
                 .isDeleted(false)
                 .build();
-
-        // Persistir los datos antes de cada prueba
-        entityManager.persist(tarjetaMock);
-        entityManager.flush();  // Asegura que los datos estén en la base de datos
     }
 
     @Test
     void findByGuid() {
+        entityManager.persist(tarjetaMock);
+        entityManager.flush();
+
         Optional<Tarjeta> found = tarjetaRepository.findByGuid("isTest");
 
         assertTrue(found.isPresent());

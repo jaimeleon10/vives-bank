@@ -28,11 +28,11 @@ public class CsvProductosController {
     public ResponseEntity<?> importTiposCuentaCsv(@RequestParam("file") MultipartFile file) {
         try {
             if (file.isEmpty()) {
-                return ResponseEntity.badRequest().body("El archivo CSV está vacío");
+                return ResponseEntity.badRequest().body("El archivo CSV esta vacio");
             }
 
             if (!file.getOriginalFilename().toLowerCase().endsWith(".csv")) {
-                return ResponseEntity.badRequest().body("Por favor, suba un archivo CSV válido");
+                return ResponseEntity.badRequest().body("Por favor, suba un archivo CSV valido");
             }
 
             String storedFilename = csvProductosStorageService.storeImportedCsv(file);
@@ -40,12 +40,12 @@ public class CsvProductosController {
             List<TipoCuenta> importedTiposCuenta = csvProductosStorageService.importTiposCuentaFromCsv(file);
 
             return ResponseEntity.ok(Map.of(
-                    "message", String.format("Importación exitosa. %d tipos de cuenta importados.", importedTiposCuenta.size()),
+                    "message", String.format("Importacion exitosa. %d tipos de cuenta importados.", importedTiposCuenta.size()),
                     "storedFilename", storedFilename,
                     "importedTiposCuenta", importedTiposCuenta
             ));
         } catch (Exception e) {
-            log.error("Error en la importación de CSV", e);
+            log.error("Error en la importacion de CSV", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al importar el archivo CSV: " + e.getMessage());
         }

@@ -72,11 +72,7 @@ class TarjetaRestControllerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-
-        reset(tarjetaService, paginationLinksUtils, webSocketConfig);
-
         tarjetaRestController = new TarjetaRestController(tarjetaService, paginationLinksUtils);
-
         request = new MockHttpServletRequest();
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
 
@@ -108,7 +104,6 @@ class TarjetaRestControllerTest {
                 .isDeleted(false)
                 .build();
     }
-
 
 
     @Test
