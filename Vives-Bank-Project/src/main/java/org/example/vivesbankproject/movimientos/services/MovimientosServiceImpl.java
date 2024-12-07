@@ -18,10 +18,7 @@ import org.example.vivesbankproject.movimientos.dto.MovimientoRequest;
 import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
 import org.example.vivesbankproject.movimientos.exceptions.domiciliacion.DuplicatedDomiciliacionException;
 import org.example.vivesbankproject.movimientos.exceptions.domiciliacion.SaldoInsuficienteException;
-import org.example.vivesbankproject.movimientos.exceptions.movimientos.ClienteHasNoMovements;
-import org.example.vivesbankproject.movimientos.exceptions.movimientos.MovimientoNotFound;
-import org.example.vivesbankproject.movimientos.exceptions.movimientos.NegativeAmount;
-import org.example.vivesbankproject.movimientos.exceptions.movimientos.UnknownIban;
+import org.example.vivesbankproject.movimientos.exceptions.movimientos.*;
 import org.example.vivesbankproject.movimientos.mappers.MovimientoMapper;
 import org.example.vivesbankproject.movimientos.models.*;
 import org.example.vivesbankproject.movimientos.repositories.DomiciliacionRepository;
@@ -356,24 +353,6 @@ public class MovimientosServiceImpl implements MovimientosService {
         cuentaDestino.setSaldo(String.valueOf(saldoActualDestino));
         cuentaService.update(cuentaDestino.getGuid(), cuentaMapper.toCuentaRequestUpdate(cuentaDestino));
 
-
-
-        // crear el movimiento al cliente origen
-        log.info("Crear movimiento origen");
-        Movimiento movimientoOrigen = Movimiento.builder()
-                .clienteGuid(cliente.getGuid())
-                .transferencia(Transferencia.builder()
-                        .iban_Origen(transferencia.getIban_Origen())
-                        .iban_Destino(transferencia.getIban_Destino())
-                        .cantidad(transferencia.getCantidad().negate())
-                        .nombreBeneficiario(transferencia.getNombreBeneficiario())
-                        .build())
-                .build();
-
-        // Guardar el movimiento origen
-        log.info("Guardar movimiento origen");
-        var saved = movimientosRepository.save(movimientoOrigen);
-
         // crear el movimiento al cliente destino
         log.info("Crear movimiento destino");
         Movimiento movimientoDestino = Movimiento.builder()
@@ -385,8 +364,84 @@ public class MovimientosServiceImpl implements MovimientosService {
         log.info("Guardar movimiento destino");
         movimientosRepository.save(movimientoDestino);
 
+
+        // crear el movimiento al cliente origen
+        Movimiento movimientoOrigen = Movimiento.builder()
+                .clienteGuid(cliente.getGuid())
+                .transferencia(Transferencia.builder()
+                        .iban_Origen(transferencia.getIban_Origen())
+                        .iban_Destino(transferencia.getIban_Destino())
+                        .cantidad(transferencia.getCantidad().negate())
+                        .movimientoDestino(movimientoDestino.getGuid())
+                        .build())
+                .build();
+
+        // Guardar el movimiento origen
+        var saved = movimientosRepository.save(movimientoOrigen);
+
+
         log.info("Movimiento mapper");
+
         return movimientosMapper.toMovimientoResponse(saved);
+    }
+
+    @Override
+    public MovimientoResponse revocarTransferencia(User user, String movimientoTransferenciaGuid) {
+        log.info("Revocando Transferencia: {}", movimientoTransferenciaGuid);
+
+        // Obtener el movimiento original
+        var movimientoOriginal = movimientosRepository.findByGuid(movimientoTransferenciaGuid)
+                .orElseThrow(() -> new MovimientoNotFound(movimientoTransferenciaGuid));
+
+        // validar que no haya pasado 1 dia
+        if (!LocalDateTime.now().isBefore(movimientoOriginal.getCreatedAt().plusDays(1))) {
+            throw new TransferenciaNoRevocableException(movimientoTransferenciaGuid);
+        }
+
+        // Verificar que el movimiento es una transferencia
+        if (movimientoOriginal.getTransferencia() == null) {
+            throw new MovimientoIsNotTransferenciaException(movimientoTransferenciaGuid);
+        }
+
+        // Verificar que el usuario que solicita la revocación es el propietario de la cuenta de origen
+        var cliente = clienteService.getUserAuthenticatedByGuid(user.getGuid());
+        if (!cliente.getGuid().equals(movimientoOriginal.getClienteGuid())) {
+            throw new UnknownIban(movimientoOriginal.getTransferencia().getIban_Origen());
+        }
+
+        // Obtener las cuentas involucradas
+        var cuentaOrigen = cuentaService.getByIban(movimientoOriginal.getTransferencia().getIban_Origen());
+        var cuentaDestino = cuentaService.getByIban(movimientoOriginal.getTransferencia().getIban_Destino());
+
+        // Revertir la transferencia
+
+        // Restar de la cuenta destino
+        BigDecimal cantidadTransferencia = movimientoOriginal.getTransferencia().getCantidad();
+
+        BigDecimal saldoDestino = new BigDecimal(cuentaDestino.getSaldo());
+        saldoDestino = saldoDestino.add(cantidadTransferencia);
+        cuentaDestino.setSaldo(saldoDestino.toString());
+        cuentaService.update(cuentaDestino.getGuid(), cuentaMapper.toCuentaRequestUpdate(cuentaDestino));
+
+        // Sumar a la cuenta origen
+        BigDecimal saldoOrigen = new BigDecimal(cuentaOrigen.getSaldo());
+        saldoOrigen = saldoOrigen.subtract(cantidadTransferencia);
+        cuentaOrigen.setSaldo(saldoOrigen.toString());
+        cuentaService.update(cuentaOrigen.getGuid(), cuentaMapper.toCuentaRequestUpdate(cuentaOrigen));
+
+        // Marcar el movimiento original como revocado (si es necesario)
+        var movimientoOriginalDestino = movimientosRepository.findByGuid(movimientoOriginal.getTransferencia().getMovimientoDestino()).orElseThrow(
+                () -> new MovimientoNotFound(movimientoOriginal.getTransferencia().getMovimientoDestino())
+        );
+
+        // Marcar ambos movimientos como eliminados
+        movimientoOriginal.setIsDeleted(true);
+         movimientoOriginalDestino.setIsDeleted(true);
+         movimientosRepository.save(movimientoOriginalDestino);
+        movimientosRepository.save(movimientoOriginal);
+
+
+        return movimientosMapper.toMovimientoResponse(movimientoOriginal);
     }
 
     void onChangeIngresoNomina(Notification.Tipo tipo, IngresoDeNomina data) {
