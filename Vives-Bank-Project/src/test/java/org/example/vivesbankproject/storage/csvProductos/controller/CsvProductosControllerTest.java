@@ -2,113 +2,127 @@ package org.example.vivesbankproject.storage.csvProductos.controller;
 
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.storage.csvProductos.services.CsvProductosStorageService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(CsvProductosController.class)
+@ExtendWith(MockitoExtension.class)
 class CsvProductosControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @Mock
     private CsvProductosStorageService csvProductosStorageService;
+
+    @InjectMocks
+    private CsvProductosController csvProductosController;
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(csvProductosController).build();
+    }
 
     @Test
     void testImportTiposCuentaCsv_Success() throws Exception {
-        // Preparar datos de prueba
-        List<TipoCuenta> tiposCuenta = Arrays.asList(
-                TipoCuenta.builder()
-                        .nombre("Cuenta Corriente")
-                        .interes(new BigDecimal("0.50"))
-                        .build(),
-                TipoCuenta.builder()
-                        .nombre("Cuenta Ahorro")
-                        .interes(new BigDecimal("2.75"))
-                        .build()
-        );
-
-        // Configurar mocks
-        when(csvProductosStorageService.storeImportedCsv(any())).thenReturn("tipos_cuenta_test.csv");
-        when(csvProductosStorageService.importTiposCuentaFromCsv(any())).thenReturn(tiposCuenta);
-
-        // Preparar archivo CSV de prueba
+        // Prepare test data
         MockMultipartFile file = new MockMultipartFile(
                 "file",
-                "tipos_cuenta.csv",
-                "text/csv",
-                "nombre,interes\nCuenta Corriente,0.50\nCuenta Ahorro,2.75".getBytes()
+                "test.csv",
+                MediaType.TEXT_PLAIN_VALUE,
+                "Cuenta Corriente,3.5".getBytes()
         );
 
-        // Realizar la solicitud y verificar la respuesta
+        // Prepare mocked service response
+        List<TipoCuenta> mockTiposCuenta = List.of(
+                createMockTipoCuenta("Cuenta Corriente", new BigDecimal("3.5"))
+        );
+
+        when(csvProductosStorageService.storeImportedCsv(any())).thenReturn("tipos_cuenta_stored.csv");
+        when(csvProductosStorageService.importTiposCuentaFromCsv(any())).thenReturn(mockTiposCuenta);
+
         mockMvc.perform(multipart("/storage/csvProductos/import")
                         .file(file)
                         .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(content().string(
-                        "Importación exitosa. 2 tipos de cuenta importados. Archivo almacenado: tipos_cuenta_test.csv"
-                ));
+                .andExpect(jsonPath("$.message").value("Importación exitosa. 1 tipos de cuenta importados."))
+                .andExpect(jsonPath("$.storedFilename").value("tipos_cuenta_stored.csv"))
+                .andExpect(jsonPath("$.importedTiposCuenta[0].nombre").value("Cuenta Corriente"));
 
-        // Verificar que se llamaron los métodos del servicio
         verify(csvProductosStorageService).storeImportedCsv(any());
         verify(csvProductosStorageService).importTiposCuentaFromCsv(any());
     }
 
     @Test
     void testImportTiposCuentaCsv_EmptyFile() throws Exception {
-        // Preparar archivo CSV vacío
         MockMultipartFile emptyFile = new MockMultipartFile(
                 "file",
                 "empty.csv",
-                "text/csv",
+                MediaType.TEXT_PLAIN_VALUE,
                 "".getBytes()
         );
 
-        // Realizar la solicitud y verificar la respuesta
         mockMvc.perform(multipart("/storage/csvProductos/import")
                         .file(emptyFile)
                         .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("El archivo CSV está vacío"));
-
-        // Verificar que no se llamaron los métodos del servicio
-        verify(csvProductosStorageService, never()).storeImportedCsv(any());
-        verify(csvProductosStorageService, never()).importTiposCuentaFromCsv(any());
     }
 
     @Test
     void testImportTiposCuentaCsv_InvalidFileType() throws Exception {
-        // Preparar archivo que no es CSV
-        MockMultipartFile invalidFile = new MockMultipartFile(
+        MockMultipartFile notCsvFile = new MockMultipartFile(
                 "file",
-                "tipos_cuenta.txt",
-                "text/plain",
+                "test.txt",
+                MediaType.TEXT_PLAIN_VALUE,
                 "Some content".getBytes()
         );
 
-        // Realizar la solicitud y verificar la respuesta
         mockMvc.perform(multipart("/storage/csvProductos/import")
-                        .file(invalidFile)
+                        .file(notCsvFile)
                         .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("Por favor, suba un archivo CSV válido"));
+    }
 
-        // Verificar que no se llamaron los métodos del servicio
-        verify(csvProductosStorageService, never()).storeImportedCsv(any());
-        verify(csvProductosStorageService, never()).importTiposCuentaFromCsv(any());
+    @Test
+    void testImportTiposCuentaCsv_InternalServerError() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "test.csv",
+                MediaType.TEXT_PLAIN_VALUE,
+                "Cuenta Corriente,3.5".getBytes()
+        );
+
+        when(csvProductosStorageService.storeImportedCsv(any())).thenThrow(new RuntimeException("Storage error"));
+
+        mockMvc.perform(multipart("/storage/csvProductos/import")
+                        .file(file)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isInternalServerError());
+    }
+
+    // Utility method to create mock TipoCuenta
+    private TipoCuenta createMockTipoCuenta(String nombre, BigDecimal interes) {
+        TipoCuenta tipoCuenta = new TipoCuenta();
+        tipoCuenta.setNombre(nombre);
+        tipoCuenta.setInteres(interes);
+        return tipoCuenta;
     }
 }
