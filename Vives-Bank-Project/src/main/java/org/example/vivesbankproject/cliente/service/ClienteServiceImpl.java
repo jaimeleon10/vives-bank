@@ -216,8 +216,9 @@ public class ClienteServiceImpl implements ClienteService {
         log.info("Buscando cliente por user guid: {}", guid);
 
         // Buscamos el cliente directamente por el userGuid
-        var cliente = clienteRepository.findByUserGuid(guid)
-                .orElseThrow(() -> new ClienteNotFoundByUser(guid));
+        var cliente = clienteRepository.findByUserGuid(guid).orElseThrow(
+                () -> new ClienteNotFoundByUser(guid)
+        );
 
         // Obtenemos el usuario asociado al cliente
         var usuarioExistente = cliente.getUser();
