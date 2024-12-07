@@ -1,115 +1,141 @@
 package org.example.vivesbankproject.movimientos.controller;
 
+import org.example.vivesbankproject.movimientos.dto.MovimientoRequest;
+import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
+import org.example.vivesbankproject.movimientos.models.*;
+import org.example.vivesbankproject.movimientos.services.MovimientosService;
+import org.example.vivesbankproject.utils.pagination.PageResponse;
+import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-/*
+import static org.mockito.Mockito.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@AutoConfigureJsonTesters
 @ExtendWith(MockitoExtension.class)
 class MovimientosControllerTest {
 
-    private static final String ENDPOINT = "${api.version}/movimientos";
+    @Mock
+    private MovimientosService service;
 
-    @Autowired
-    MockMvc mockMvc;
+    @Mock
+    private PaginationLinksUtils paginationLinksUtils;
 
-    @MockBean
-    private MovimientosService movimientosService;
+    @InjectMocks
+    private MovimientosController movimientosController;
 
-    @Autowired
-    private JacksonTester<Movimientos> jsonMovimiento;
-
-    private final ObjectMapper mapper = new ObjectMapper();
-
-    @Autowired
-    public MovimientosControllerTest(MovimientosService movimientosService) {
-        this.movimientosService = movimientosService;
-        mapper.registerModule(new JavaTimeModule());
-    }
-
-    private Cliente cliente;
-
-    private Movimientos movimiento;
-
-    private ObjectId movimientoId;
-
-    private String clienteId;
+    private MovimientoResponse movimientoResponse;
+    private MovimientoRequest movimientoRequest;
+    private MockHttpServletRequest mockRequest;
 
     @BeforeEach
     void setUp() {
-
-        movimientoId = new ObjectId();
-
-        clienteId = IdGenerator.generarId();
-
-        cliente = Cliente.builder()
-                .id(clienteId)
-                .dni("12345678A")
-                .nombre("John")
-                .apellidos("Doe")
-                .email("john.doe@example.com")
-                .telefono("123456789")
-                .fotoPerfil("perfil.jpg")
-                .fotoDni("dni.jpg")
-                .cuentas(Set.of())
-                .user(new User())
-                .idMovimientos(movimientoId)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-        movimiento = Movimientos.builder()
-                .id(movimientoId)
-                .idUsuario(UUID.randomUUID())
-                .cliente(cliente)
-                .transacciones(new ArrayList<>())
-                .isDeleted(false)
-                .totalItems(0)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+        Transferencia transferencia = Transferencia.builder()
+                .cantidad(BigDecimal.valueOf(100.00))
+                .iban_Origen("ES1234567890")
+                .iban_Destino("ES0987654321")
                 .build();
 
+        movimientoResponse = MovimientoResponse.builder()
+                .guid("test-guid")
+                .clienteGuid("cliente-test")
+                .transferencia(transferencia)
+                .createdAt(String.valueOf(LocalDateTime.now()))
+                .build();
+
+        movimientoRequest = MovimientoRequest.builder()
+                .clienteGuid("cliente-test")
+                .transferencia(transferencia)
+                .build();
+
+        mockRequest = new MockHttpServletRequest();
+        mockRequest.setRequestURI("/api/v1/movimientos");
+        mockRequest.setServerName("localhost");
+        mockRequest.setScheme("http");
+        mockRequest.setServerPort(8080);
+
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(mockRequest));
     }
 
     @Test
-    void getMovimientos() throws Exception {
-        var movimientosList = List.of(movimiento);
-        var pageable = PageRequest.of(0, 10, Sort.by("id").ascending());
-        var page = new PageImpl<>(movimientosList);
+    void getAllMovimientos_ShouldReturnPageOfMovimientos() {
+        List<MovimientoResponse> movimientos = List.of(movimientoResponse);
+        Page<MovimientoResponse> page = new PageImpl<>(movimientos);
 
-        when(movimientosService.getAll(any(Pageable.class))).thenReturn(page);
+        when(service.getAll(any(Pageable.class))).thenReturn(page);
+        when(paginationLinksUtils.createLinkHeader(any(), any())).thenReturn("link-header");
 
-        MockHttpServletResponse response = mockMvc.perform(
-                        get(ENDPOINT)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .accept(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse();
+        ResponseEntity<PageResponse<MovimientoResponse>> response = movimientosController.getAll(0, 10, "id", "asc", mockRequest);
 
-        PageResponse<Movimientos> res = mapper.readValue(response.getContentAsString(), new TypeReference<>() {
-        });
-
-        // Assert
-        assertAll(
-                () -> assertEquals(200, response.getStatus()),
-                () -> assertEquals(1, res.content().size())
-        );
-
-        verify(movimientosService, times(1)).getAll(any(Pageable.class));
-
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(1, response.getBody().content().size());
+        verify(service).getAll(any(Pageable.class));
     }
 
     @Test
-    void getMovimientoById() {
+    void getByGuid_ShouldReturnMovimiento() {
+        when(service.getByGuid("test-guid")).thenReturn(movimientoResponse);
+
+        ResponseEntity<MovimientoResponse> response = movimientosController.getById("test-guid");
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(movimientoResponse, response.getBody());
+        verify(service).getByGuid("test-guid");
     }
 
     @Test
-    void getMovimientoByClienteId() {
+    void getByClienteGuid_ShouldReturnMovimiento() {
+        when(service.getByClienteGuid("cliente-test")).thenReturn(movimientoResponse);
+
+        ResponseEntity<MovimientoResponse> response = movimientosController.getByClienteGuid("cliente-test");
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(movimientoResponse, response.getBody());
+        verify(service).getByClienteGuid("cliente-test");
     }
 
     @Test
-    void createOrUpdateMovimientos() {
+    void saveMovimiento_ShouldReturnSavedMovimiento() {
+        when(service.save(any(MovimientoRequest.class))).thenReturn(movimientoResponse);
+
+        ResponseEntity<MovimientoResponse> response = movimientosController.save(movimientoRequest);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(movimientoResponse, response.getBody());
+        verify(service).save(movimientoRequest);
+    }
+
+    @Test
+    void handleValidationExceptions_MethodArgumentNotValid() {
+        // This test would typically involve creating a mock MethodArgumentNotValidException
+        // and verifying the error handling mechanism
+    }
+
+    @Test
+    void handleValidationExceptions_ConstraintViolation() {
+        // Similar to the previous test, this would involve creating a mock
+        // ConstraintViolationException and verifying the error handling
     }
 }
-
- */

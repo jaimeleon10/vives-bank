@@ -12,6 +12,6 @@ import java.util.Optional;
 public interface MovimientosRepository extends MongoRepository<Movimiento, ObjectId> {
     Optional<Movimiento> findByGuid(String guid);
 
-    @Query("{ 'cliente.guid': ?0 }")
-    Optional<Movimiento> findMovimientosByClienteGuid(String clienteId);
+
+    Optional<Movimiento> findByClienteGuid(String clienteId);
 }

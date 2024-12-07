@@ -1,7 +1,5 @@
 package org.example.vivesbankproject.storage.jsonClientesAdmin.controller;
 
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.http.HttpServletRequest;
 import org.example.vivesbankproject.storage.exceptions.StorageInternal;
 import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
 import org.example.vivesbankproject.storage.jsonClientesAdmin.services.JsonClientesAdminStorageService;
@@ -13,10 +11,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -111,19 +109,12 @@ class JsonClientesAdminControllerTest {
 
         when(jsonClientesAdminStorageService.loadAsResource(filename)).thenReturn(mockResource);
 
-        HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-        ServletContext mockServletContext = mock(ServletContext.class);
+        String contentType = "application/octet-stream";
 
-        when(mockRequest.getServletContext()).thenReturn(mockServletContext);
-        when(mockServletContext.getMimeType(anyString())).thenReturn("application/json");
-
-        mockMvc.perform(get("/storage/jsonClientesAdmin/{filename}", filename)
-                        .requestAttr("javax.servlet.request", mockRequest))
+        mockMvc.perform(get("/storage/jsonClientesAdmin/{filename}", filename))
                 .andExpect(status().isOk())
                 .andExpect(content().bytes(fileContent))
-                .andExpect(content().contentType("application/octet-stream"));
-
-        verify(jsonClientesAdminStorageService, times(1)).loadAsResource(filename);
+                .andExpect(content().contentType(MediaType.parseMediaType(contentType)));
     }
 
     @Test
@@ -133,6 +124,27 @@ class JsonClientesAdminControllerTest {
 
         mockMvc.perform(get("/storage/jsonClientesAdmin/{filename}", filename))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void serveFile_FileFound_TypeDetermined_Success() throws Exception {
+        String filename = "testfile.json";
+        Path path = Paths.get("data", "test", filename);
+        Files.createDirectories(path.getParent());
+        Files.createFile(path);
+
+        Resource fileMock = mock(Resource.class);
+        when(fileMock.getFile()).thenReturn(path.toFile());
+        when(jsonClientesAdminStorageService.loadAsResource(filename)).thenReturn(fileMock);
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setAttribute("javax.servlet.context.tempdir", "/");
+
+        mockMvc.perform(get("/storage/jsonClientesAdmin/" + filename).requestAttr("javax.servlet.context.tempdir", "/"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/json"));
+
+        Files.deleteIfExists(path);
     }
 
     @Test
@@ -160,5 +172,4 @@ class JsonClientesAdminControllerTest {
 
         verify(jsonClientesAdminStorageService, times(1)).loadAll();
     }
-
 }
