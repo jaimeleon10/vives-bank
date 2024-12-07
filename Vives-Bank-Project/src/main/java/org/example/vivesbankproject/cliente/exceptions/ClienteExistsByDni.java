@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  * Excepción personalizada para manejar el caso en el que un cliente ya existe en el sistema
- 
+
  * @author Jaime León, Natalia González, German Fernandez, Alba García, Mario de Domingo, Alvaro Herrero
  * @version 1.0-SNAPSHOT
  */
