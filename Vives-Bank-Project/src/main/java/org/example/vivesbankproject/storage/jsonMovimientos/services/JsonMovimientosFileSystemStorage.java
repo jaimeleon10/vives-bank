@@ -113,7 +113,7 @@ public class JsonMovimientosFileSystemStorage implements JsonMovimientosStorageS
         Path jsonFilePath = this.rootLocation.resolve(storedFilename);
 
         try {
-            Optional<Movimiento> movimientos = movimientosRepository.findMovimientosByClienteGuid(guid);
+            Optional<Movimiento> movimientos = movimientosRepository.findByClienteGuid(guid);
 
             List<MovimientoResponse> movimientoMap = movimientos.stream()
                     .map(movimiento -> {

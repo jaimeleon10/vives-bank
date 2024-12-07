@@ -39,8 +39,8 @@ public class ValidarCif {
             return digitoControl == letraControl;
         } else {
             // Empresas que pueden tener dígito o letra de control
-            return Character.getNumericValue(digitoControl) == unidadControl || 
-                   digitoControl == "JABCDEFGHI".charAt(unidadControl);
+            return Character.getNumericValue(digitoControl) == unidadControl ||
+                    digitoControl == "JABCDEFGHI".charAt(unidadControl);
         }
     }
 }

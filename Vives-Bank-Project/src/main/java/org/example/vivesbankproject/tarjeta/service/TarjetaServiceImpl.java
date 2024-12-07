@@ -1,6 +1,13 @@
 package org.example.vivesbankproject.tarjeta.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFoundByIban;
+import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFoundByTarjeta;
+import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
+import org.example.vivesbankproject.movimientos.models.IngresoDeNomina;
 import org.example.vivesbankproject.tarjeta.dto.*;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFoundByNumero;
@@ -11,7 +18,13 @@ import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.users.exceptions.UserNotFoundById;
 import org.example.vivesbankproject.users.exceptions.UserNotFoundByUsername;
+import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.users.repositories.UserRepository;
+import org.example.vivesbankproject.websocket.notifications.config.WebSocketConfig;
+import org.example.vivesbankproject.websocket.notifications.config.WebSocketHandler;
+import org.example.vivesbankproject.websocket.notifications.dto.IngresoNominaResponse;
+import org.example.vivesbankproject.websocket.notifications.mappers.NotificationMapper;
+import org.example.vivesbankproject.websocket.notifications.models.Notification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -23,6 +36,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Slf4j
@@ -34,11 +48,23 @@ public class TarjetaServiceImpl implements TarjetaService {
     private final TarjetaMapper tarjetaMapper;
     private final UserRepository userRepository;
 
+    private final WebSocketConfig webSocketConfig;
+    private final ObjectMapper mapper;
+    private final CuentaRepository cuentaRepository;
+    // Para los test
+    @Setter
+    private WebSocketHandler webSocketService;
+
     @Autowired
-    public TarjetaServiceImpl(TarjetaRepository tarjetaRepository, TarjetaMapper tarjetaMapper, UserRepository userRepository) {
+    public TarjetaServiceImpl(TarjetaRepository tarjetaRepository, TarjetaMapper tarjetaMapper, UserRepository userRepository, WebSocketConfig webSocketConfig, CuentaRepository cuentaRepository) {
         this.tarjetaRepository = tarjetaRepository;
         this.tarjetaMapper = tarjetaMapper;
         this.userRepository = userRepository;
+
+        this.webSocketConfig = webSocketConfig;
+        webSocketService = webSocketConfig.webSocketTarjetasHandler();
+        mapper = new ObjectMapper();
+        this.cuentaRepository = cuentaRepository;
     }
 
     @Override
@@ -144,6 +170,7 @@ public class TarjetaServiceImpl implements TarjetaService {
     public TarjetaResponse save(TarjetaRequestSave tarjetaRequestSave) {
         log.info("Guardando tarjeta: {}", tarjetaRequestSave);
         var tarjeta = tarjetaRepository.save(tarjetaMapper.toTarjeta(tarjetaRequestSave));
+        onChange(Notification.Tipo.CREATE, tarjeta);
         return tarjetaMapper.toTarjetaResponse(tarjeta);
     }
 
@@ -155,6 +182,7 @@ public class TarjetaServiceImpl implements TarjetaService {
                 () -> new TarjetaNotFound(id)
         );
         var tarjetaUpdated = tarjetaRepository.save(tarjetaMapper.toTarjetaUpdate(tarjetaRequestUpdate, tarjeta));
+        onChange(Notification.Tipo.UPDATE, tarjetaUpdated);
         return tarjetaMapper.toTarjetaResponse(tarjetaUpdated);
     }
 
@@ -165,5 +193,45 @@ public class TarjetaServiceImpl implements TarjetaService {
         var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
         tarjeta.setIsDeleted(true);
         tarjetaRepository.save(tarjeta);
+        onChange(Notification.Tipo.DELETE, tarjeta);
     }
+
+    void onChange(Notification.Tipo tipo, Tarjeta data) {
+        log.debug("Servicio de Tarjetas onChange con tipo: " + tipo + " y datos: " + data);
+
+        if (webSocketService == null) {
+            log.warn("No se ha podido enviar la notificación a los clientes ws, no se ha encontrado el servicio");
+            webSocketService = this.webSocketConfig.webSocketTarjetasHandler();
+        }
+
+        try {
+            Notification<TarjetaResponse> notificacion = new Notification<>(
+                    "TARJETAS",
+                    tipo,
+                    tarjetaMapper.toTarjetaResponse(data),
+                    LocalDateTime.now().toString()
+            );
+
+            String json = mapper.writeValueAsString(notificacion);
+
+            // Recuperar el usuario del cliente de la tarjeta
+            var cuenta = cuentaRepository.findByTarjetaId(data.getId()).orElseThrow(() -> new CuentaNotFoundByTarjeta(data.getId()));
+            String userId = cuenta.getCliente().getUser().getGuid();
+            User user = userRepository.findByGuid(userId).orElseThrow(() -> new UserNotFoundById(userId));
+            String userName = user.getUsername();
+
+            log.info("Enviando mensaje al cliente ws del usuario");
+            Thread senderThread = new Thread(() -> {
+                try {
+                    webSocketService.sendMessageToUser(userName,json);
+                } catch (Exception e) {
+                    log.error("Error al enviar el mensaje a través del servicio WebSocket", e);
+                }
+            });
+            senderThread.start();
+        } catch (JsonProcessingException e) {
+            log.error("Error al convertir la notificación a JSON", e);
+        }
+    }
+
 }
