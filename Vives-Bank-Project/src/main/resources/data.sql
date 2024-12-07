@@ -31,5 +31,10 @@ VALUES
 -- Inserción de Cuentas
 INSERT INTO cuentas (guid, iban, saldo, tipo_Cuenta_id, tarjeta_id, cliente_id, created_at, updated_at, is_deleted)
 VALUES
+    ('9999iiii', 'ES9121000418450200051332', 1000.00, 1, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false),
+    ('0000jjjj', 'ES6214910901234567890123', 2000.00, 2, 2, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false);
+
+/*INSERT INTO cuentas (guid, iban, saldo, tipo_Cuenta_id, tarjeta_id, cliente_id, created_at, updated_at, is_deleted)
+VALUES
     ('9999iiii', 'ES64123412344820495463', 1000.00, 1, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false),
-    ('0000jjjj', 'ES60123412347246753334', 2000.00, 2, 2, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false);
+    ('0000jjjj', 'ES60123412347246753334', 2000.00, 2, 2, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false);*/

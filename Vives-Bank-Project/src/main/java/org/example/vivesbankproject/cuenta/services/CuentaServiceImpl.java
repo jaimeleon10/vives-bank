@@ -1,5 +1,7 @@
 package org.example.vivesbankproject.cuenta.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.criteria.Join;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cliente.exceptions.ClienteNotFound;
@@ -9,14 +11,23 @@ import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequestUpdate;
 import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFound;
 import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFoundByIban;
+import org.example.vivesbankproject.cuenta.exceptions.cuenta.CuentaNotFoundByTarjeta;
 import org.example.vivesbankproject.cuenta.exceptions.tipoCuenta.TipoCuentaNotFound;
 import org.example.vivesbankproject.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.cuenta.repositories.TipoCuentaRepository;
+import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
+import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
+import org.example.vivesbankproject.users.exceptions.UserNotFoundById;
+import org.example.vivesbankproject.users.models.User;
+import org.example.vivesbankproject.users.repositories.UserRepository;
+import org.example.vivesbankproject.websocket.notifications.config.WebSocketConfig;
+import org.example.vivesbankproject.websocket.notifications.config.WebSocketHandler;
+import org.example.vivesbankproject.websocket.notifications.models.Notification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -27,6 +38,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -41,13 +53,23 @@ public class CuentaServiceImpl implements CuentaService{
     private final TarjetaRepository tarjetaRepository;
     private final ClienteRepository clienteRepository;
 
+    private final UserRepository userRepository;
+    private final WebSocketConfig webSocketConfig;
+    private final ObjectMapper mapper;
+    private WebSocketHandler webSocketService;
+
     @Autowired
-    public CuentaServiceImpl(CuentaRepository cuentaRepository, CuentaMapper cuentaMapper, TipoCuentaRepository tipoCuentaRepository, TarjetaRepository tarjetaRepository, ClienteRepository clienteRepository) {
+    public CuentaServiceImpl(CuentaRepository cuentaRepository, CuentaMapper cuentaMapper, TipoCuentaRepository tipoCuentaRepository, TarjetaRepository tarjetaRepository, ClienteRepository clienteRepository, WebSocketConfig webSocketConfig, UserRepository userRepository) {
         this.cuentaRepository = cuentaRepository;
         this.cuentaMapper = cuentaMapper;
         this.tipoCuentaRepository = tipoCuentaRepository;
         this.tarjetaRepository = tarjetaRepository;
         this.clienteRepository = clienteRepository;
+
+        this.userRepository = userRepository;
+        this.webSocketConfig = webSocketConfig;
+        webSocketService = webSocketConfig.webSocketTarjetasHandler();
+        mapper = new ObjectMapper();
     }
 
     @Override
@@ -144,6 +166,7 @@ public class CuentaServiceImpl implements CuentaService{
         clienteRepository.flush();
         evictClienteCache(cliente.getGuid());
 
+        onChange(Notification.Tipo.CREATE, cuentaSaved);
         return cuentaMapper.toCuentaResponse(cuentaSaved, cuentaSaved.getTipoCuenta().getGuid(), cuentaSaved.getTarjeta().getGuid(), cuentaSaved.getCliente().getGuid());
     }
 
@@ -178,6 +201,7 @@ public class CuentaServiceImpl implements CuentaService{
         }
 
         var cuentaUpdated = cuentaRepository.save(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta, tipoCuenta, tarjeta, cliente));
+        onChange(Notification.Tipo.UPDATE, cuentaUpdated);
         return cuentaMapper.toCuentaResponse(cuentaUpdated, cuentaUpdated.getTipoCuenta().getGuid(), cuentaUpdated.getTipoCuenta().getGuid(), cuentaUpdated.getCliente().getGuid());
     }
 
@@ -190,10 +214,60 @@ public class CuentaServiceImpl implements CuentaService{
         );
         cuentaExistente.setIsDeleted(true);
         cuentaRepository.save(cuentaExistente);
+        onChange(Notification.Tipo.DELETE, cuentaExistente);
     }
 
     @CacheEvict
     public void evictClienteCache(String clienteGuid) {
         log.info("Invalidando la caché del cliente con GUID: {}", clienteGuid);
+    }
+
+
+    void onChange(Notification.Tipo tipo, Cuenta data) {
+        log.debug("Servicio de Cuentas onChange con tipo: " + tipo + " y datos: " + data);
+
+        if (webSocketService == null) {
+            log.warn("No se ha podido enviar la notificación a los clientes ws, no se ha encontrado el servicio");
+            webSocketService = this.webSocketConfig.webSocketCuentasHandler();
+        }
+
+        try {
+            Notification<CuentaResponse> notificacion = new Notification<>(
+                    "CUENTAS",
+                    tipo,
+                    cuentaMapper.toCuentaResponse(
+                            data,
+                            data.getTipoCuenta().getId().toString(),
+                            data.getTarjeta().getId().toString(),
+                            data.getCliente().getId().toString()
+                            ),
+                    LocalDateTime.now().toString()
+            );
+
+            String json = mapper.writeValueAsString(notificacion);
+
+            // Recuperar el usuario del cliente de la cuenta
+            String userId = data.getCliente().getUser().getId().toString();
+            User user = userRepository.findByGuid(userId).orElseThrow(() -> new UserNotFoundById(userId));
+            String userName = user.getUsername();
+
+            log.info("Enviando mensaje al cliente ws del usuario");
+            Thread senderThread = new Thread(() -> {
+                try {
+                    webSocketService.sendMessageToUser(userName,json);
+                } catch (Exception e) {
+                    log.error("Error al enviar el mensaje a través del servicio WebSocket", e);
+                }
+            });
+            senderThread.start();
+
+        } catch (JsonProcessingException e) {
+            log.error("Error al convertir la notificación a JSON", e);
+        }
+    }
+
+    // Para los test
+    public void setWebSocketService(WebSocketHandler webSocketHandlerMock) {
+        this.webSocketService = webSocketHandlerMock;
     }
 }
