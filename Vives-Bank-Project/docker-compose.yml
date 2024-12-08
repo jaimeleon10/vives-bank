@@ -52,9 +52,20 @@ services:
       - redis
     volumes:
       - bank-data:/app/
+      # copiar documentacion
       - documentation_doc:/app/doc
       - documentation_jacoco:/app/jacoco
       - documentation_tests:/app/tests
+      # copiar configuracion
+      - apache_doc_conf:/app/despliegueServers/apacheDoc
+      - nginx_coverage_conf:/app/despliegueServers/nginxCoverage
+      - nginx_test_conf:/app/despliegueServers/nginxTest
+      # proxy config
+      - proxy_conf:/app/despliegueServers/proxy/config
+      - proxy_certs:/app/despliegueServers/proxy/sslcerts
+      # index
+      - presentacion_data:/app/despliegueServers/presentacion/index
+      - presentacion_conf:/app/despliegueServers/presentacion/config
     ports:
       - ${API_PORT}:3000
     networks:
@@ -65,7 +76,7 @@ services:
     container_name: apache_doc
     volumes:
       - documentation_doc:/var/www/html/
-      - ./despliegueServers/apacheDoc/000-default.conf:/etc/apache2/sites-available/000-default.conf
+      - apache_doc_conf:/etc/apache2/sites-available/
     restart: always
     depends_on:
       - vives-bank
@@ -77,7 +88,7 @@ services:
       container_name: nginx_coverage
       volumes:
         - documentation_jacoco:/var/www/html/
-        - ./despliegueServers/nginxCoverage/default:/etc/nginx/sites-available/default
+        - nginx_coverage_conf:/etc/nginx/sites-available/
       restart: always
       depends_on:
         - vives-bank
@@ -89,7 +100,7 @@ services:
       container_name: nginx_test
       volumes:
         - documentation_tests:/var/www/html/
-        - ./despliegueServers/nginxTest/default:/etc/nginx/sites-available/default
+        - nginx_test_conf:/etc/nginx/sites-available/
       restart: always
       depends_on:
         - vives-bank
@@ -100,8 +111,8 @@ services:
       image: ubuntu/nginx:latest
       container_name: reverse_proxy
       volumes:
-        - ./despliegueServers/proxy/nginx.conf:/etc/nginx/nginx.conf
-        - ./despliegueServers/proxy/sslcerts:/etc/nginx/certs
+        - proxy_conf:/etc/nginx/
+        - proxy_certs:/etc/nginx/certs/
       ports:
         - "80:80"
         - "443:443"
@@ -118,8 +129,8 @@ services:
     image: ubuntu/nginx:latest
     container_name: nginx_presentacion
     volumes:
-      - ./despliegueServers/presentacion/index.html:/var/www/html/presentacion/index.html
-      - ./despliegueServers/presentacion/default:/etc/nginx/sites-available/default
+      - presentacion_data:/var/www/html/presentacion
+      - presentacion_conf:/etc/nginx/sites-available/
     restart: always
     depends_on:
       - vives-bank
@@ -135,6 +146,13 @@ volumes:
   documentation_doc:
   documentation_jacoco:
   documentation_tests:
+  apache_doc_conf:
+  nginx_coverage_conf:
+  nginx_test_conf:
+  proxy_conf:
+  proxy_certs:
+  presentacion_data:
+  presentacion_conf:
 
 networks:
   banco-network:

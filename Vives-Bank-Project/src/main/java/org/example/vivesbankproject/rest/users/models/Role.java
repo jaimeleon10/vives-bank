@@ -19,8 +19,5 @@ public enum Role {
     /** Rol de administrador con privilegios adicionales */
     @Schema(description = "Rol con privilegios de administrador para realizar tareas avanzadas.")
     ADMIN,
-
-    /** Rol de superadministrador con el máximo nivel de privilegio */
-    @Schema(description = "Rol con el máximo nivel de privilegio en el sistema para realizar todas las acciones.")
-    SUPER_ADMIN
+    
 }

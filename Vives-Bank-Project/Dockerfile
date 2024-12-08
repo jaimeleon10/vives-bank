@@ -9,6 +9,7 @@ COPY build.gradle.kts .
 COPY gradlew .
 COPY gradle gradle
 COPY src src
+COPY despliegueServers despliegueServers
 
 RUN ./gradlew clean build -x test
 RUN ./gradlew javadoc
@@ -20,6 +21,7 @@ WORKDIR /app
 
 COPY --from=build /app/build/libs/*.jar /app/my-app.jar
 COPY --from=build /app/build/docs /app/doc
+COPY --from=build /app/despliegueServers /app/despliegueServers
 #COPY --from=build /app/build/jacoco /app/jacoco
 #COPY --from=build /app/build/reports/tests /app/tests
 # Expone el puerto 3000
