@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Base64;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.springframework.core.io.Resource;
+import org.springframework.util.StreamUtils;
 
 import java.nio.file.Files;
 import java.security.KeyFactory;
@@ -64,7 +66,7 @@ public class JwtServiceImpl implements JwtService {
      * @throws Exception if unable to decode or parse the private key.
      */
     private RSAPrivateKey loadPrivateKey(Resource resource) throws Exception {
-        String privateKeyPEM = new String(Files.readAllBytes(resource.getFile().toPath()))
+        String privateKeyPEM = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8)
                 .replace("-----BEGIN PRIVATE KEY-----", "")
                 .replace("-----END PRIVATE KEY-----", "")
                 .replaceAll("\\s", "");
@@ -83,7 +85,7 @@ public class JwtServiceImpl implements JwtService {
      * @throws Exception if unable to decode or parse the public key.
      */
     private RSAPublicKey loadPublicKey(Resource resource) throws Exception {
-        String publicKeyPEM = new String(Files.readAllBytes(resource.getFile().toPath()))
+        String publicKeyPEM = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8)
                 .replace("-----BEGIN PUBLIC KEY-----", "")
                 .replace("-----END PUBLIC KEY-----", "")
                 .replaceAll("\\s", "");
