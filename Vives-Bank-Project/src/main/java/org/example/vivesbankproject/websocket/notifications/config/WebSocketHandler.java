@@ -36,7 +36,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * @version 1.0-SNAPSHOT
  */
 @Slf4j
-@Component
+//@Component
 @Tag(name = "WebSocketHandler", description = "Clase para manejar la lógica de conexión y envío de mensajes mediante WebSocket")
 public class WebSocketHandler extends TextWebSocketHandler implements SubProtocolCapable, WebSocketSender {
 
@@ -64,17 +64,23 @@ public class WebSocketHandler extends TextWebSocketHandler implements SubProtoco
     @Operation(summary = "Conexión establecida", description = "Maneja la lógica después de establecer una nueva conexión WebSocket")
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         log.info("Conexión establecida con el servidor: " + session);
+        log.info("Sesión: " + session);
 
+        // obtenemos el nombre del usuario autenticado y asociamos la sesión de WebSocket
+        // con el nombre de usuario en userSessionsMap
+        //String username = getUsername();
+
+        // Recuperar el nombre de usuario desde los atributos de la sesión
         String username = (String) session.getAttributes().get("username");
 
         if (username != null) {
             userSessionsMap.put(username, session);
-            log.info("Usuario: {} añadido al mapa de sesiones", username);
+            log.info("Usuario: " + username + " añadido a mapa de sesiones");
         }
 
         sessions.add(session);
-        TextMessage message = new TextMessage("Actualizaciones WebSocket: " + entity + " - Vives Bank");
-        log.info("Mensaje enviado: {}", message);
+        TextMessage message = new TextMessage("Updates Web socket: " + entity + " - Vives Bank");
+        log.info("Servidor envía: {}", message);
         session.sendMessage(message);
     }
 
@@ -87,7 +93,7 @@ public class WebSocketHandler extends TextWebSocketHandler implements SubProtoco
     @Override
     @Operation(summary = "Cerrar conexión", description = "Lógica al cerrar una conexión WebSocket")
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        log.info("Cerrando la conexión: {}", status);
+        log.info("Cerrando la conexión con el servidor: {}", status);
 
         String username = (String) session.getAttributes().get("username");
 
@@ -97,7 +103,7 @@ public class WebSocketHandler extends TextWebSocketHandler implements SubProtoco
         }
 
         sessions.remove(session);
-        log.info("Sesión cerrada");
+        log.info("Conexión cerrada con el servidor: " + status);
     }
 
     /**
@@ -108,12 +114,12 @@ public class WebSocketHandler extends TextWebSocketHandler implements SubProtoco
     @Override
     @Operation(summary = "Enviar mensaje a todas las sesiones", description = "Envía un mensaje a todas las sesiones activas")
     public void sendMessage(String message) throws IOException {
-        log.info("Enviando mensaje a todas las sesiones activas: {}", message);
+        log.info("Enviar mensaje de cambios en la entidad: " + entity + " : " + message);
 
         for (WebSocketSession session : sessions) {
             if (session.isOpen()) {
+                log.info("Servidor WS envía: " + message);
                 session.sendMessage(new TextMessage(message));
-                log.info("Mensaje enviado: {}", message);
             }
         }
     }
@@ -127,16 +133,18 @@ public class WebSocketHandler extends TextWebSocketHandler implements SubProtoco
     @Override
     @Operation(summary = "Enviar mensaje a usuario específico", description = "Envía un mensaje a una sesión específica de usuario")
     public void sendMessageToUser(String username, String message) throws IOException {
-        log.info("Intentando enviar mensaje a {}: {}", username, message);
+
+        log.info("Enviar mensaje de cambios en la entidad: " + entity + " a usuario: " + username + " : " + message);
 
         WebSocketSession session = userSessionsMap.get(username);
 
         if (session != null && session.isOpen()) {
             session.sendMessage(new TextMessage(message));
-            log.info("Mensaje enviado a usuario {}: {}", username, message);
+            log.info("Servidor WS envía a " + username + " : " + message);
         } else {
-            log.warn("Usuario {} no está conectado, no se enviará el mensaje", username);
+            log.info("Usuario: " + username + " no conectado, no se le envió cambios en la entidad: " + entity);
         }
+
     }
 
     /**
@@ -157,13 +165,13 @@ public class WebSocketHandler extends TextWebSocketHandler implements SubProtoco
     @Override
     @Operation(summary = "Mensajes recibidos", description = "Lógica para procesar mensajes recibidos (actualmente vacía)")
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        log.info("Mensaje recibido: {}", message.getPayload());
+        // No hacer nada con los mensajes recibidos
     }
 
     @Override
     @Operation(summary = "Manejo de errores", description = "Maneja los errores durante la comunicación WebSocket")
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-        log.error("Error en la conexión WebSocket: {}", exception.getMessage());
+        // No hacer nada con los mensajes recibidos
     }
 
     @Override
@@ -172,17 +180,21 @@ public class WebSocketHandler extends TextWebSocketHandler implements SubProtoco
     }
 
     private String getUsername() {
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         if (authentication == null || authentication.getPrincipal() == null) {
             log.warn("No authentication found");
             return null;
         }
 
         Object principal = authentication.getPrincipal();
+        log.info("getUsername: " + principal.toString());
         if (principal instanceof UserDetails) {
             return ((UserDetails) principal).getUsername();
         } else {
             return principal.toString();
         }
+
     }
 }
