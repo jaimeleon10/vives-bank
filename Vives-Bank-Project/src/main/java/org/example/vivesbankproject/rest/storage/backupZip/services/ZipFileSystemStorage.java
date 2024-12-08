@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.example.vivesbankproject.rest.cliente.dto.ClienteJsonZip;
@@ -41,7 +44,13 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-
+/**
+ * Servicio para operaciones de almacenamiento relacionadas con archivos ZIP.
+ * Esta clase gestiona la creación, importación, exportación, procesamiento y eliminación de archivos ZIP.
+ *
+ * @author Jaime León, Natalia González, Germán Fernández, Alba García, Mario de Domingo, Alvaro Herrero
+ * @version 1.0-SNAPSHOT
+ */
 @Service
 @Slf4j
 public class ZipFileSystemStorage implements ZipStorageService {
@@ -52,7 +61,17 @@ public class ZipFileSystemStorage implements ZipStorageService {
     private final CuentaRepository cuentaRepository;
     private final MovimientosRepository movimientosRepository;
     private final UserMapper userMapper;
-
+    /**
+     * Constructor que inyecta las dependencias necesarias para el almacenamiento.
+     *
+     * @param path Ruta de almacenamiento para los archivos ZIP.
+     * @param clienteRepository Repositorio para operaciones de clientes.
+     * @param movimientosRepository Repositorio para operaciones de movimientos.
+     * @param userRepository Repositorio para operaciones de usuarios.
+     * @param tarjetaRepository Repositorio para operaciones de tarjetas.
+     * @param cuentaRepository Repositorio para operaciones de cuentas.
+     * @param userMapper Manejador para convertir datos de usuario.
+     */
     public ZipFileSystemStorage(@Value("${upload.root-location-2}") String path, ClienteRepository clienteRepository, MovimientosRepository movimientosRepository, UserRepository userRepository, TarjetaRepository tarjetaRepository, CuentaRepository cuentaRepository, UserMapper userMapper) {
         this.rootLocation = Paths.get(path);
         this.clienteRepository = clienteRepository;
@@ -63,7 +82,11 @@ public class ZipFileSystemStorage implements ZipStorageService {
         this.userMapper = userMapper;
     }
 
+    /**
+     * Inicializa el almacenamiento de archivos ZIP creando los directorios necesarios.
+     */
     @Override
+    @Operation(summary = "Inicializa el almacenamiento de archivos ZIP", description = "Crea directorios necesarios para el almacenamiento de archivos ZIP si no existen.")
     public void init() {
         log.info("Inicializando almacenamiento de ZIP");
         try {
@@ -72,8 +95,17 @@ public class ZipFileSystemStorage implements ZipStorageService {
             throw new StorageInternal("No se puede inicializar el almacenamiento ZIP" + e);
         }
     }
-
+    /**
+     * Genera un archivo ZIP con datos relevantes de la carpeta `dataAdmin`.
+     *
+     * @return El nombre del archivo ZIP creado.
+     */
     @Override
+    @Operation(summary = "Genera un archivo ZIP con los datos", description = "Crea un archivo ZIP con los archivos relevantes de la carpeta `dataAdmin`. Esta operación elimina el archivo existente si ya existe.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "ZIP creado exitosamente."),
+            @ApiResponse(responseCode = "500", description = "Error interno en el servidor.")
+    })
     public String export() {
         String storedFilename = "clientes.zip";
         Path zipPath = this.rootLocation.resolve(storedFilename);
@@ -118,8 +150,17 @@ public class ZipFileSystemStorage implements ZipStorageService {
         }
     }
 
-
+    /**
+     * Procesa un archivo ZIP y deserializa los datos JSON contenidos en él.
+     *
+     * @param filename Archivo ZIP para procesar.
+     */
     @Override
+    @Operation(summary = "Carga los datos desde un archivo ZIP", description = "Procesa un archivo ZIP y deserializa los datos JSON contenidos en él.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Datos importados exitosamente."),
+            @ApiResponse(responseCode = "500", description = "Error interno al procesar el ZIP.")
+    })
     public void loadFromZip(File filename) {
         log.warn("inicio");
         Path zipFilePath = this.rootLocation.resolve(filename.toPath());
@@ -247,9 +288,18 @@ public class ZipFileSystemStorage implements ZipStorageService {
             throw new StorageInternal("Fallo al procesar el archivo ZIP: " + e);
         }
     }
-
-
+    /**
+     * Carga un archivo JSON desde el almacenamiento local.
+     *
+     * @param jsonFile Archivo JSON a cargar.
+     * @return Lista de objetos deserializados desde el JSON.
+     */
     @Override
+    @Operation(summary = "Carga un archivo JSON en memoria", description = "Carga un archivo JSON para su procesamiento desde el almacenamiento local.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Archivo JSON cargado correctamente."),
+            @ApiResponse(responseCode = "500", description = "Error interno al procesar el archivo JSON.")
+    })
     public List<Object> loadJson(File jsonFile) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
@@ -259,14 +309,39 @@ public class ZipFileSystemStorage implements ZipStorageService {
             throw new StorageNotFound("Error al deserializar el archivo JSON: " + e.getMessage());
         }
     }
-
+    /**
+     * Devuelve el recurso ZIP solicitado desde el almacenamiento local.
+     *
+     * @param filename Nombre del archivo ZIP a cargar.
+     * @return Ruta al recurso solicitado.
+     */
     @Override
+    @Operation(summary = "Carga un recurso desde almacenamiento local", description = "Devuelve el recurso ZIP solicitado desde el almacenamiento local.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Recurso ZIP cargado correctamente.")
+    })
     public Path load(String filename) {
         log.info("Cargando fichero ZIP " + filename);
         return rootLocation.resolve(filename);
     }
-
     @Override
+/**
+ * Carga un archivo ZIP como recurso para su descarga o procesamiento.
+ *
+ * Este método permite convertir un archivo ZIP en un recurso accesible para la aplicación,
+ * verificando si existe y es accesible antes de devolverlo. En caso contrario, lanza una excepción.
+ *
+ * @param filename Nombre del archivo ZIP que se desea cargar.
+ * @return Un recurso (Resource) que apunta al archivo ZIP especificado.
+ * @throws StorageNotFound Si el archivo no existe o no se puede acceder.
+ */
+    @Operation(summary = "Carga un archivo ZIP como recurso",
+            description = "Este método permite cargar un archivo ZIP desde el almacenamiento local como un recurso para su descarga o uso.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Archivo ZIP cargado correctamente."),
+                    @ApiResponse(responseCode = "404", description = "El archivo ZIP no existe o no es accesible."),
+                    @ApiResponse(responseCode = "500", description = "Error interno al intentar cargar el archivo ZIP.")
+            })
     public Resource loadAsResource(String filename) {
         log.info("Cargando fichero ZIP " + filename);
         try {
@@ -281,8 +356,24 @@ public class ZipFileSystemStorage implements ZipStorageService {
             throw new StorageNotFound("No se puede leer fichero ZIP: " + filename + " " + e);
         }
     }
-
     @Override
+/**
+ * Elimina un archivo ZIP del almacenamiento local.
+ *
+ * Este método intenta eliminar el archivo especificado en el almacenamiento local. Se verifica
+ * la existencia del archivo antes de intentar eliminarlo. En caso de que ocurra un error durante
+ * la eliminación, se lanzará una excepción.
+ *
+ * @param filename Nombre del archivo ZIP que se desea eliminar.
+ * @throws StorageInternal Si ocurre un error durante la operación de eliminación.
+ */
+    @Operation(summary = "Elimina un archivo ZIP del almacenamiento",
+            description = "Este método elimina un archivo ZIP del almacenamiento local. Se valida la existencia del archivo antes de intentar eliminarlo.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "El archivo ZIP fue eliminado correctamente."),
+                    @ApiResponse(responseCode = "404", description = "El archivo ZIP no existe."),
+                    @ApiResponse(responseCode = "500", description = "Error interno al intentar eliminar el archivo ZIP.")
+            })
     public void delete(String filename) {
         String justFilename = StringUtils.getFilename(filename);
         try {
