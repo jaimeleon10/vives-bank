@@ -1,9 +1,10 @@
 package org.example.vivesbankproject.movimientos.controller;
 
-import org.example.vivesbankproject.movimientos.dto.MovimientoRequest;
-import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
-import org.example.vivesbankproject.movimientos.models.*;
-import org.example.vivesbankproject.movimientos.services.MovimientosServiceImpl;
+import org.example.vivesbankproject.rest.movimientos.controller.MovimientosController;
+import org.example.vivesbankproject.rest.movimientos.dto.MovimientoRequest;
+import org.example.vivesbankproject.rest.movimientos.dto.MovimientoResponse;
+import org.example.vivesbankproject.rest.movimientos.models.Transferencia;
+import org.example.vivesbankproject.rest.movimientos.services.MovimientosServiceImpl;
 import org.example.vivesbankproject.utils.pagination.PageResponse;
 import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
 import org.junit.jupiter.api.BeforeEach;

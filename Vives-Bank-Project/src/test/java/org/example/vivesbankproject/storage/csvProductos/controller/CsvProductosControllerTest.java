@@ -1,6 +1,6 @@
 package org.example.vivesbankproject.storage.csvProductos.controller;
 
-import org.example.vivesbankproject.cuenta.models.TipoCuenta;
+import org.example.vivesbankproject.rest.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.storage.csvProductos.services.CsvProductosStorageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -3,7 +3,10 @@ package org.example.vivesbankproject.websocket.notifications.mappers;
 
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.example.vivesbankproject.movimientos.models.*;
+import org.example.vivesbankproject.rest.movimientos.models.Domiciliacion;
+import org.example.vivesbankproject.rest.movimientos.models.IngresoDeNomina;
+import org.example.vivesbankproject.rest.movimientos.models.PagoConTarjeta;
+import org.example.vivesbankproject.rest.movimientos.models.Transferencia;
 import org.example.vivesbankproject.websocket.notifications.dto.*;
 import org.springframework.stereotype.Component;
 

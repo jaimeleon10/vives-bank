@@ -2,9 +2,10 @@ package org.example.vivesbankproject.storage.jsonClientes.controller;
 
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
-import org.example.vivesbankproject.storage.exceptions.StorageInternal;
-import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
-import org.example.vivesbankproject.storage.jsonClientes.services.JsonClientesStorageService;
+import org.example.vivesbankproject.rest.storage.exceptions.StorageInternal;
+import org.example.vivesbankproject.rest.storage.exceptions.StorageNotFound;
+import org.example.vivesbankproject.rest.storage.jsonClientes.controller.JsonClientesController;
+import org.example.vivesbankproject.rest.storage.jsonClientes.services.JsonClientesStorageService;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;

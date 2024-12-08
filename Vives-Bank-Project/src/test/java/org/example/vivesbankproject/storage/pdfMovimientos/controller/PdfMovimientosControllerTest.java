@@ -1,7 +1,8 @@
 package org.example.vivesbankproject.storage.pdfMovimientos.controller;
 
-import org.example.vivesbankproject.storage.exceptions.StorageInternal;
-import org.example.vivesbankproject.storage.pdfMovimientos.services.PdfMovimientosStorageService;
+import org.example.vivesbankproject.rest.storage.exceptions.StorageInternal;
+import org.example.vivesbankproject.rest.storage.pdfMovimientos.controller.PdfMovimientosController;
+import org.example.vivesbankproject.rest.storage.pdfMovimientos.services.PdfMovimientosStorageService;
 import org.junit.jupiter.api.*;
 import org.mockito.InjectMocks;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.containsString;

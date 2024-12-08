@@ -1,9 +1,10 @@
 package org.example.vivesbankproject.cliente.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.vivesbankproject.cliente.dto.*;
-import org.example.vivesbankproject.cliente.service.ClienteService;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequest;
+import org.example.vivesbankproject.rest.cliente.dto.ClienteRequestSave;
+import org.example.vivesbankproject.rest.cliente.dto.ClienteRequestUpdate;
+import org.example.vivesbankproject.rest.cliente.dto.ClienteResponse;
+import org.example.vivesbankproject.rest.cliente.service.ClienteService;
 import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;

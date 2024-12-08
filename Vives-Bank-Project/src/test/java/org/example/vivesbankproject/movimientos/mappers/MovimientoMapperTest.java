@@ -1,12 +1,13 @@
 package org.example.vivesbankproject.movimientos.mappers;
 
-import org.example.vivesbankproject.movimientos.dto.MovimientoRequest;
-import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
-import org.example.vivesbankproject.movimientos.models.Domiciliacion;
-import org.example.vivesbankproject.movimientos.models.IngresoDeNomina;
-import org.example.vivesbankproject.movimientos.models.Movimiento;
-import org.example.vivesbankproject.movimientos.models.PagoConTarjeta;
-import org.example.vivesbankproject.movimientos.models.Transferencia;
+import org.example.vivesbankproject.rest.movimientos.dto.MovimientoRequest;
+import org.example.vivesbankproject.rest.movimientos.dto.MovimientoResponse;
+import org.example.vivesbankproject.rest.movimientos.mappers.MovimientoMapper;
+import org.example.vivesbankproject.rest.movimientos.models.Domiciliacion;
+import org.example.vivesbankproject.rest.movimientos.models.IngresoDeNomina;
+import org.example.vivesbankproject.rest.movimientos.models.Movimiento;
+import org.example.vivesbankproject.rest.movimientos.models.PagoConTarjeta;
+import org.example.vivesbankproject.rest.movimientos.models.Transferencia;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -1,12 +1,11 @@
 package org.example.vivesbankproject.cuenta.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequest;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequestUpdate;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaResponse;
-import org.example.vivesbankproject.cuenta.services.CuentaService;
+import org.example.vivesbankproject.rest.cuenta.dto.cuenta.CuentaRequest;
+import org.example.vivesbankproject.rest.cuenta.dto.cuenta.CuentaRequestUpdate;
+import org.example.vivesbankproject.rest.cuenta.dto.cuenta.CuentaResponse;
+import org.example.vivesbankproject.rest.cuenta.services.CuentaService;
 import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;

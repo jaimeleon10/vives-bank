@@ -1,15 +1,16 @@
 package org.example.vivesbankproject.cuenta.mappers;
 
-import org.example.vivesbankproject.cliente.dto.ClienteResponse;
-import org.example.vivesbankproject.cliente.models.Cliente;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequestUpdate;
-import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
-import org.example.vivesbankproject.cuenta.models.Cuenta;
-import org.example.vivesbankproject.cuenta.models.TipoCuenta;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
-import org.example.vivesbankproject.tarjeta.models.Tarjeta;
-import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
-import org.example.vivesbankproject.users.models.User;
+import org.example.vivesbankproject.rest.cliente.dto.ClienteResponse;
+import org.example.vivesbankproject.rest.cliente.models.Cliente;
+import org.example.vivesbankproject.rest.cuenta.dto.cuenta.CuentaRequestUpdate;
+import org.example.vivesbankproject.rest.cuenta.dto.tipoCuenta.TipoCuentaResponse;
+import org.example.vivesbankproject.rest.cuenta.mappers.CuentaMapper;
+import org.example.vivesbankproject.rest.cuenta.models.Cuenta;
+import org.example.vivesbankproject.rest.cuenta.models.TipoCuenta;
+import org.example.vivesbankproject.rest.tarjeta.dto.TarjetaResponse;
+import org.example.vivesbankproject.rest.tarjeta.models.Tarjeta;
+import org.example.vivesbankproject.rest.tarjeta.models.TipoTarjeta;
+import org.example.vivesbankproject.rest.users.models.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

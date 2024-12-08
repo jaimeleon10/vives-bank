@@ -1,11 +1,11 @@
 package org.example.vivesbankproject.movimientos.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.vivesbankproject.movimientos.models.Domiciliacion;
-import org.example.vivesbankproject.movimientos.models.IngresoDeNomina;
-import org.example.vivesbankproject.movimientos.models.PagoConTarjeta;
-import org.example.vivesbankproject.movimientos.models.Transferencia;
-import org.example.vivesbankproject.movimientos.services.MovimientosService;
+import org.example.vivesbankproject.rest.movimientos.models.Domiciliacion;
+import org.example.vivesbankproject.rest.movimientos.models.IngresoDeNomina;
+import org.example.vivesbankproject.rest.movimientos.models.PagoConTarjeta;
+import org.example.vivesbankproject.rest.movimientos.models.Transferencia;
+import org.example.vivesbankproject.rest.movimientos.services.MovimientosService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

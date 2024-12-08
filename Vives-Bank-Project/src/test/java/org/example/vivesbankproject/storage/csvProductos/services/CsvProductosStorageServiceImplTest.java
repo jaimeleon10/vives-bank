@@ -1,8 +1,8 @@
 package org.example.vivesbankproject.storage.csvProductos.services;
 
-import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
-import org.example.vivesbankproject.cuenta.mappers.TipoCuentaMapper;
-import org.example.vivesbankproject.cuenta.repositories.TipoCuentaRepository;
+import org.example.vivesbankproject.rest.cuenta.dto.tipoCuenta.TipoCuentaRequest;
+import org.example.vivesbankproject.rest.cuenta.mappers.TipoCuentaMapper;
+import org.example.vivesbankproject.rest.cuenta.repositories.TipoCuentaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
