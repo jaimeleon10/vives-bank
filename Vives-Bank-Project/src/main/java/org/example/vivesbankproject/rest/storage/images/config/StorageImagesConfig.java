@@ -45,7 +45,6 @@ public class StorageImagesConfig {
      * Comprueba la configuración para determinar si se deben borrar todos los archivos de almacenamiento al iniciar.
      * Además, inicializa el almacenamiento a través del servicio {@link StorageImagesService}.
      *
-     * @throws Exception si ocurre algún error al ejecutar la configuración.
      */
     @PostConstruct
     @Operation(

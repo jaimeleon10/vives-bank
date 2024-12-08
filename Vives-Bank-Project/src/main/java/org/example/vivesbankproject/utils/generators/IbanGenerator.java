@@ -28,12 +28,8 @@ public class IbanGenerator {
      *   <li>Número de cuenta</li>
      * </ul>
      * Además, calcula los dígitos de verificación utilizando el método módulo 97.
-     * </p>
      *
      * @return Un código IBAN válido y aleatorio.
-     * @operationId generateIban
-     * @summary Generar IBAN
-     * @description Genera un IBAN aleatorio válido para el formato español, incluyendo la validación del checksum.
      */
     public String generateIban() {
         String countryCode = "ES";

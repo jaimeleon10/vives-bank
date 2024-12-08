@@ -10,10 +10,7 @@ import java.util.stream.Stream;
  * Interfaz para el servicio de almacenamiento de archivos JSON que contienen información de movimientos de clientes.
  * Define los métodos necesarios para interactuar con el almacenamiento de estos archivos JSON, incluyendo
  * operaciones para almacenamiento, recuperación, eliminación y listado de archivos.
- * <p>
  * @author Jaime León, Natalia González, Germán Fernández, Alba García, Mario de Domingo, Alvaro Herrero
- * </p>
- *
  * @version 1.0-SNAPSHOT
  */
 public interface JsonMovimientosStorageService {

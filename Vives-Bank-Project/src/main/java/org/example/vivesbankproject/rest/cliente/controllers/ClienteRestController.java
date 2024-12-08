@@ -44,8 +44,6 @@ import java.util.Optional;
  *
  * @author Jaime León, Natalia González, German Fernandez, Alba García, Mario de Domingo, Alvaro Herrero
  * @version 1.0-SNAPSHOT
- * @Autowired es una anotación que permite inyectar dependencias basadas en las anotaciones
- * @Controller, @Service, @Component, etc., que se encuentran en el contenedor de Spring.
  */
 @RestController
 @RequestMapping("${api.version}/clientes")

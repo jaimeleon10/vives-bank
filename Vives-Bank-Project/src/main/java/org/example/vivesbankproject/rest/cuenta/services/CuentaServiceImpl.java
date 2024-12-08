@@ -273,7 +273,6 @@ public class CuentaServiceImpl implements CuentaService{
      * @throws TipoCuentaNotFound Si el tipo de cuenta no existe en el sistema.
      * @throws TarjetaNotFound Si la tarjeta no existe en el sistema.
      * @throws ClienteNotFound Si el cliente no existe en el sistema.
-     * @throws JsonProcessingException Si ocurre un error al procesar la información JSON al enviar notificaciones.
      *
      * @see CuentaRepository
      * @see TipoCuentaRepository
