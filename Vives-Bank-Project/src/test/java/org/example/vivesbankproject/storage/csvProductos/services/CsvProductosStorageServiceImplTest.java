@@ -3,6 +3,7 @@ package org.example.vivesbankproject.storage.csvProductos.services;
 import org.example.vivesbankproject.rest.cuenta.dto.tipoCuenta.TipoCuentaRequest;
 import org.example.vivesbankproject.rest.cuenta.mappers.TipoCuentaMapper;
 import org.example.vivesbankproject.rest.cuenta.repositories.TipoCuentaRepository;
+import org.example.vivesbankproject.rest.storage.csvProductos.services.CsvStorageServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,14 +27,14 @@ class CsvProductosStorageServiceImplTest {
     @Mock
     private TipoCuentaMapper tipoCuentaMapper;
 
-    private CsvProductosStorageServiceImpl csvProductosStorageService;
+    private CsvStorageServiceImpl csvProductosStorageService;
 
     private Path tempDirectory;
 
     @BeforeEach
     void setUp() throws IOException {
         tempDirectory = Files.createTempDirectory("test-storage");
-        csvProductosStorageService = new CsvProductosStorageServiceImpl(tempDirectory.toString(), tipoCuentaRepository, tipoCuentaMapper);
+        csvProductosStorageService = new CsvStorageServiceImpl(tempDirectory.toString(), tipoCuentaRepository, tipoCuentaMapper);
     }
 
     @Test

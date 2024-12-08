@@ -1,7 +1,8 @@
 package org.example.vivesbankproject.storage.csvProductos.controller;
 
 import org.example.vivesbankproject.rest.cuenta.models.TipoCuenta;
-import org.example.vivesbankproject.storage.csvProductos.services.CsvProductosStorageService;
+import org.example.vivesbankproject.rest.storage.csvProductos.controller.CsvStorageController;
+import org.example.vivesbankproject.rest.storage.csvProductos.services.CsvStorageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,10 +29,10 @@ class CsvProductosControllerTest {
     private MockMvc mockMvc;
 
     @Mock
-    private CsvProductosStorageService csvProductosStorageService;
+    private CsvStorageService csvProductosStorageService;
 
     @InjectMocks
-    private CsvProductosController csvProductosController;
+    private CsvStorageController csvProductosController;
 
     @BeforeEach
     void setUp() {
@@ -54,7 +55,7 @@ class CsvProductosControllerTest {
         );
 
         when(csvProductosStorageService.storeImportedCsv(any())).thenReturn("tipos_cuenta_stored.csv");
-        when(csvProductosStorageService.importTiposCuentaFromCsv(any())).thenReturn(mockTiposCuenta);
+        when(csvProductosStorageService.importCsv(any())).thenReturn(mockTiposCuenta);
 
         mockMvc.perform(multipart("/storage/csvProductos/import")
                         .file(file)
