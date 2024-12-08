@@ -1,10 +1,10 @@
 package org.example.vivesbankproject.cuenta.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
-import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
-import org.example.vivesbankproject.cuenta.services.TipoCuentaService;
-import org.example.vivesbankproject.utils.pagination.PageResponse;
+import org.example.vivesbankproject.rest.cuenta.controllers.TipoCuentaController;
+import org.example.vivesbankproject.rest.cuenta.dto.tipoCuenta.TipoCuentaRequest;
+import org.example.vivesbankproject.rest.cuenta.dto.tipoCuenta.TipoCuentaResponse;
+import org.example.vivesbankproject.rest.cuenta.services.TipoCuentaService;
 import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,8 +14,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -26,9 +24,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static com.mongodb.assertions.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.*;

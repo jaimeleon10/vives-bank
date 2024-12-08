@@ -1,6 +1,7 @@
 package org.example.vivesbankproject.cuenta.repositories;
 
-import org.example.vivesbankproject.cuenta.models.TipoCuenta;
+import org.example.vivesbankproject.rest.cuenta.models.TipoCuenta;
+import org.example.vivesbankproject.rest.cuenta.repositories.TipoCuentaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

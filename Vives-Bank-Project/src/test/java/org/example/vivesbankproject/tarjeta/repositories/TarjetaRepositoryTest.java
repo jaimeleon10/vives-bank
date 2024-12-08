@@ -1,7 +1,8 @@
 package org.example.vivesbankproject.tarjeta.repositories;
 
-import org.example.vivesbankproject.tarjeta.models.Tarjeta;
-import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
+import org.example.vivesbankproject.rest.tarjeta.models.Tarjeta;
+import org.example.vivesbankproject.rest.tarjeta.models.TipoTarjeta;
+import org.example.vivesbankproject.rest.tarjeta.repositories.TarjetaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

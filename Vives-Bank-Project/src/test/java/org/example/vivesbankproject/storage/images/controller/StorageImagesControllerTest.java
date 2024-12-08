@@ -2,7 +2,8 @@ package org.example.vivesbankproject.storage.images.controller;
 
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
-import org.example.vivesbankproject.storage.images.services.StorageImagesService;
+import org.example.vivesbankproject.rest.storage.images.controller.StorageImagesController;
+import org.example.vivesbankproject.rest.storage.images.services.StorageImagesService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

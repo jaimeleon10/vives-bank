@@ -3,14 +3,14 @@ package org.example.vivesbankproject.users.mappers;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
-import org.example.vivesbankproject.users.dto.UserRequest;
-import org.example.vivesbankproject.users.dto.UserResponse;
-import org.example.vivesbankproject.users.models.Role;
-import org.example.vivesbankproject.users.models.User;
+import org.example.vivesbankproject.rest.users.dto.UserRequest;
+import org.example.vivesbankproject.rest.users.dto.UserResponse;
+import org.example.vivesbankproject.rest.users.mappers.UserMapper;
+import org.example.vivesbankproject.rest.users.models.Role;
+import org.example.vivesbankproject.rest.users.models.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

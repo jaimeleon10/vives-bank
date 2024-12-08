@@ -1,10 +1,10 @@
 package org.example.vivesbankproject.tarjeta.controller;
 
 import com.jayway.jsonpath.JsonPath;
-import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-import org.example.vivesbankproject.tarjeta.dto.*;
-import org.example.vivesbankproject.websocket.notifications.config.WebSocketConfig;
+import org.example.vivesbankproject.rest.tarjeta.controller.TarjetaRestController;
+import org.example.vivesbankproject.rest.tarjeta.dto.*;
+import org.example.vivesbankproject.config.websockets.WebSocketConfig;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -13,9 +13,9 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.web.context.request.RequestContextHolder;
-import org.example.vivesbankproject.tarjeta.service.TarjetaService;
+import org.example.vivesbankproject.rest.tarjeta.service.TarjetaService;
 import org.example.vivesbankproject.utils.pagination.PageResponse;
-import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
+import org.example.vivesbankproject.rest.tarjeta.models.TipoTarjeta;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
