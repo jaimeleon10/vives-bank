@@ -1,14 +1,15 @@
 package org.example.vivesbankproject.storage.csvProductos.controller;
 
-import org.example.vivesbankproject.rest.storage.csvProductos.controller.CsvStorageController;
 import org.example.vivesbankproject.rest.storage.csvProductos.services.CsvStorageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.IOException;
@@ -18,7 +19,9 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(CsvStorageController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
+@WithMockUser(username = "admin", password = "adminPassword123", roles = {"ADMIN", "USER"})
 class CsvStorageControllerTest {
 
     @Autowired
