@@ -1,5 +1,10 @@
 package org.example.vivesbankproject.frankfurter.services;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.example.vivesbankproject.frankfurter.exceptions.FrankFurterConnectionException;
 import org.example.vivesbankproject.frankfurter.exceptions.FrankFurterUnexpectedException;
 import org.example.vivesbankproject.frankfurter.exceptions.FrankfurterEmptyResponseException;

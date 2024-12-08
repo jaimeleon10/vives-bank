@@ -25,7 +25,6 @@ import org.example.vivesbankproject.movimientos.repositories.DomiciliacionReposi
 import org.example.vivesbankproject.movimientos.repositories.MovimientosRepository;
 import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
 import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFoundByNumero;
-import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.service.TarjetaService;
 import org.example.vivesbankproject.users.models.User;
 import org.example.vivesbankproject.users.services.UserService;
@@ -462,16 +461,6 @@ public class MovimientosServiceImpl implements MovimientosService {
 
             sendMessageUser(userName, json);
 
-/*            log.info("Enviando mensaje al cliente ws del usuario");
-            Thread senderThread = new Thread(() -> {
-                try {
-                    //webSocketService.sendMessage(json);
-                    webSocketService.sendMessageToUser(userName,json);
-                } catch (Exception e) {
-                    log.error("Error al enviar el mensaje a través del servicio WebSocket", e);
-                }
-            });
-            senderThread.start();*/
         } catch (JsonProcessingException e) {
             log.error("Error al convertir la notificación a JSON", e);
         }
@@ -509,16 +498,6 @@ public class MovimientosServiceImpl implements MovimientosService {
             userName = userService.getById(userId).getUsername();
             sendMessageUser(userName, json);
 
-           /* log.info("Enviando mensaje al cliente ws del usuario");
-            Thread senderThread = new Thread(() -> {
-                try {
-                    //webSocketService.sendMessage(json);
-                    webSocketService.sendMessageToUser(userName,json);
-                } catch (Exception e) {
-                    log.error("Error al enviar el mensaje a través del servicio WebSocket", e);
-                }
-            });
-            senderThread.start();*/
         } catch (JsonProcessingException e) {
             log.error("Error al convertir la notificación a JSON", e);
         }
@@ -551,18 +530,6 @@ public class MovimientosServiceImpl implements MovimientosService {
 
             sendMessageUser(userName, json);
 
-/*
-            log.info("Enviando mensaje al cliente ws del usuario");
-            Thread senderThread = new Thread(() -> {
-                try {
-                    //webSocketService.sendMessage(json);
-                    webSocketService.sendMessageToUser(userName,json);
-                } catch (Exception e) {
-                    log.error("Error al enviar el mensaje a través del servicio WebSocket", e);
-                }
-            });
-            senderThread.start();
-*/
         } catch (JsonProcessingException e) {
             log.error("Error al convertir la notificación a JSON", e);
         }
@@ -595,21 +562,21 @@ public class MovimientosServiceImpl implements MovimientosService {
 
             sendMessageUser(userName, json);
 
-/*            log.info("Enviando mensaje al cliente ws del usuario");
-            Thread senderThread = new Thread(() -> {
-                try {
-                    //webSocketService.sendMessage(json);
-                    webSocketService.sendMessageToUser(userName,json);
-                } catch (Exception e) {
-                    log.error("Error al enviar el mensaje a través del servicio WebSocket", e);
-                }
-            });
-            senderThread.start();*/
         } catch (JsonProcessingException e) {
             log.error("Error al convertir la notificación a JSON", e);
         }
     }
 
+    /**
+     * Hace la llamada al método para enviar mensaje al usuario concreto
+     * @param userName  Usuario al que se enviará el mensaje
+     * @param json      Mensaje a enviar
+     * @see WebSocketHandler
+     *
+     * @author Jaime León, Natalia González,
+     *         German Fernandez, Alba García, Mario de Domingo, Alvaro Herrero
+     * @version 1.0-SNAPSHOT
+     */
     private void sendMessageUser(String userName, String json){
         log.info("Enviando mensaje al cliente ws del usuario");
         Thread senderThread = new Thread(() -> {
