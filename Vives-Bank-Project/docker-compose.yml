@@ -52,16 +52,89 @@ services:
       - redis
     volumes:
       - bank-data:/app/
+      - documentation_doc:/app/doc
+      - documentation_jacoco:/app/jacoco
+      - documentation_tests:/app/tests
     ports:
       - ${API_PORT}:3000
     networks:
       - banco-network
+
+  apache_doc:
+    image: ubuntu/apache2:latest
+    container_name: apache_doc
+    volumes:
+      - documentation_doc:/var/www/html/
+      - ./despliegueServers/apacheDoc/000-default.conf:/etc/apache2/sites-available/000-default.conf
+    restart: always
+    depends_on:
+      - vives-bank
+    networks:
+      - banco-network
+
+  nginx_coverage:
+      image: ubuntu/nginx:latest
+      container_name: nginx_coverage
+      volumes:
+        - documentation_jacoco:/var/www/html/
+        - ./despliegueServers/nginxCoverage/default:/etc/nginx/sites-available/default
+      restart: always
+      depends_on:
+        - vives-bank
+      networks:
+        - banco-network
+
+  nginx_test:
+      image: ubuntu/nginx:latest
+      container_name: nginx_test
+      volumes:
+        - documentation_tests:/var/www/html/
+        - ./despliegueServers/nginxTest/default:/etc/nginx/sites-available/default
+      restart: always
+      depends_on:
+        - vives-bank
+      networks:
+        - banco-network
+
+  reverse_proxy:
+      image: ubuntu/nginx:latest
+      container_name: reverse_proxy
+      volumes:
+        - ./despliegueServers/proxy/nginx.conf:/etc/nginx/nginx.conf
+        - ./despliegueServers/proxy/sslcerts:/etc/nginx/certs
+      ports:
+        - "80:80"
+        - "443:443"
+      restart: always
+      depends_on:
+        - nginx_presentacion
+        - apache_doc
+        - nginx_coverage
+        - nginx_test
+      networks:
+        - banco-network
+
+  nginx_presentacion:
+    image: ubuntu/nginx:latest
+    container_name: nginx_presentacion
+    volumes:
+      - ./despliegueServers/presentacion/index.html:/var/www/html/presentacion/index.html
+      - ./despliegueServers/presentacion/default:/etc/nginx/sites-available/default
+    restart: always
+    depends_on:
+      - vives-bank
+    networks:
+      - banco-network
+
 
 
 
 volumes:
   redis-data:
   bank-data:
+  documentation_doc:
+  documentation_jacoco:
+  documentation_tests:
 
 networks:
   banco-network:

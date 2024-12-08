@@ -11,6 +11,7 @@ COPY gradle gradle
 COPY src src
 
 RUN ./gradlew clean build -x test
+RUN ./gradlew javadoc
 
 FROM openjdk:21 AS run
 
@@ -18,7 +19,9 @@ FROM openjdk:21 AS run
 WORKDIR /app
 
 COPY --from=build /app/build/libs/*.jar /app/my-app.jar
-
+COPY --from=build /app/build/docs /app/doc
+#COPY --from=build /app/build/jacoco /app/jacoco
+#COPY --from=build /app/build/reports/tests /app/tests
 # Expone el puerto 3000
 EXPOSE 3000
 
