@@ -3,6 +3,7 @@ package org.example.vivesbankproject.storage.csvProductos.services;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
+import org.example.vivesbankproject.cuenta.exceptions.tipoCuenta.TipoCuentaExists;
 import org.example.vivesbankproject.cuenta.services.TipoCuentaService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,31 +31,40 @@ public class CsvStorageServiceImpl implements CsvStorageService {
             boolean isFirstLine = true;
 
             while ((line = reader.readLine()) != null) {
-                // Omitir la primera línea si es el encabezado
+                // Comprobamos si existe el encabezado
                 if (isFirstLine) {
                     isFirstLine = false;
-                    continue;
+                    continue; // Con esto saltamos a la siguiente linea del csv
                 }
 
                 String[] data = line.split(",");
 
-                // Validar que los datos sean correctos
                 if (data.length != 2) {
-                    throw new IllegalArgumentException("El archivo CSV tiene un formato incorrecto.");
+                    log.error("Línea con formato incorrecto: {}", line);
+                    continue; // Con esto saltamos a la siguiente linea del csv
                 }
 
-                // Crear el objeto TipoCuentaRequest
-                TipoCuentaRequest tipoCuentaRequest = TipoCuentaRequest.builder()
-                        .nombre(data[0].trim())
-                        .interes(new BigDecimal(data[1].trim()))
-                        .build();
+                try {
+                    // Crear el objeto TipoCuentaRequest
+                    TipoCuentaRequest tipoCuentaRequest = TipoCuentaRequest.builder()
+                            .nombre(data[0].trim())
+                            .interes(new BigDecimal(data[1].trim()))
+                            .build();
 
-                tipoCuentaService.save(tipoCuentaRequest);
+                    // Intentar guardar el tipo de cuenta
+                    tipoCuentaService.save(tipoCuentaRequest);
+                    log.info("Tipo de cuenta guardado: {}", tipoCuentaRequest.getNombre());
+                } catch (TipoCuentaExists e) {
+                    log.warn("El tipo de cuenta '{}' ya existe.", data[0].trim());
+                } catch (NumberFormatException e) {
+                    log.error("Error de formato en la columna 'interes' para la línea: {}", line, e);
+                } catch (Exception e) {
+                    log.error("Error desconocido al procesar la línea: {}", line, e);
+                }
             }
         } catch (IOException e) {
             throw new IOException("Error al leer el archivo CSV.", e);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("El archivo CSV contiene datos inválidos en la columna 'interes':", e);
         }
     }
+
 }
