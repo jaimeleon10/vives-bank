@@ -1,9 +1,10 @@
 package org.example.vivesbankproject.storage.jsonMovimientos.services;
 
-import org.example.vivesbankproject.movimientos.models.Movimiento;
-import org.example.vivesbankproject.movimientos.repositories.MovimientosRepository;
-import org.example.vivesbankproject.storage.exceptions.StorageInternal;
-import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
+import org.example.vivesbankproject.rest.movimientos.models.Movimiento;
+import org.example.vivesbankproject.rest.movimientos.repositories.MovimientosRepository;
+import org.example.vivesbankproject.rest.storage.exceptions.StorageInternal;
+import org.example.vivesbankproject.rest.storage.exceptions.StorageNotFound;
+import org.example.vivesbankproject.rest.storage.jsonMovimientos.services.JsonMovimientosFileSystemStorage;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

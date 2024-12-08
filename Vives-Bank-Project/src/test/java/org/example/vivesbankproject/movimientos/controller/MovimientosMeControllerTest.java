@@ -1,9 +1,10 @@
 package org.example.vivesbankproject.movimientos.controller;
 
-import org.example.vivesbankproject.movimientos.dto.MovimientoResponse;
-import org.example.vivesbankproject.movimientos.models.*;
-import org.example.vivesbankproject.movimientos.services.MovimientosService;
-import org.example.vivesbankproject.users.models.User;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.vivesbankproject.rest.movimientos.services.MovimientosService;
+import org.example.vivesbankproject.rest.movimientos.dto.MovimientoResponse;
+import org.example.vivesbankproject.rest.movimientos.models.*;
+import org.example.vivesbankproject.rest.users.models.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

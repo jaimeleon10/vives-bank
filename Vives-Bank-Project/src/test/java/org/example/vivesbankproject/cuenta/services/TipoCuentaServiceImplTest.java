@@ -1,11 +1,12 @@
 package org.example.vivesbankproject.cuenta.services;
 
-import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
-import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaResponse;
-import org.example.vivesbankproject.cuenta.exceptions.tipoCuenta.TipoCuentaNotFound;
-import org.example.vivesbankproject.cuenta.mappers.TipoCuentaMapper;
-import org.example.vivesbankproject.cuenta.models.TipoCuenta;
-import org.example.vivesbankproject.cuenta.repositories.TipoCuentaRepository;
+import org.example.vivesbankproject.rest.cuenta.dto.tipoCuenta.TipoCuentaRequest;
+import org.example.vivesbankproject.rest.cuenta.dto.tipoCuenta.TipoCuentaResponse;
+import org.example.vivesbankproject.rest.cuenta.exceptions.tipoCuenta.TipoCuentaNotFound;
+import org.example.vivesbankproject.rest.cuenta.mappers.TipoCuentaMapper;
+import org.example.vivesbankproject.rest.cuenta.models.TipoCuenta;
+import org.example.vivesbankproject.rest.cuenta.repositories.TipoCuentaRepository;
+import org.example.vivesbankproject.rest.cuenta.services.TipoCuentaServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

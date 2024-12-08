@@ -1,20 +1,21 @@
 package org.example.vivesbankproject.tarjeta.service;
 
 
-import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
-import org.example.vivesbankproject.tarjeta.dto.*;
-import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFound;
-import org.example.vivesbankproject.tarjeta.exceptions.TarjetaNotFoundByNumero;
-import org.example.vivesbankproject.tarjeta.exceptions.TarjetaUserPasswordNotValid;
-import org.example.vivesbankproject.tarjeta.mappers.TarjetaMapper;
-import org.example.vivesbankproject.tarjeta.models.Tarjeta;
-import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
-import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
-import org.example.vivesbankproject.users.exceptions.UserNotFoundByUsername;
-import org.example.vivesbankproject.users.models.User;
-import org.example.vivesbankproject.users.repositories.UserRepository;
-import org.example.vivesbankproject.websocket.notifications.config.WebSocketConfig;
-import org.example.vivesbankproject.websocket.notifications.config.WebSocketHandler;
+import org.example.vivesbankproject.rest.cuenta.repositories.CuentaRepository;
+import org.example.vivesbankproject.rest.tarjeta.dto.*;
+import org.example.vivesbankproject.rest.tarjeta.service.TarjetaServiceImpl;
+import org.example.vivesbankproject.rest.tarjeta.exceptions.TarjetaNotFound;
+import org.example.vivesbankproject.rest.tarjeta.exceptions.TarjetaNotFoundByNumero;
+import org.example.vivesbankproject.rest.tarjeta.exceptions.TarjetaUserPasswordNotValid;
+import org.example.vivesbankproject.rest.tarjeta.mappers.TarjetaMapper;
+import org.example.vivesbankproject.rest.tarjeta.models.Tarjeta;
+import org.example.vivesbankproject.rest.tarjeta.models.TipoTarjeta;
+import org.example.vivesbankproject.rest.tarjeta.repositories.TarjetaRepository;
+import org.example.vivesbankproject.rest.users.exceptions.UserNotFoundByUsername;
+import org.example.vivesbankproject.rest.users.models.User;
+import org.example.vivesbankproject.rest.users.repositories.UserRepository;
+import org.example.vivesbankproject.config.websockets.WebSocketConfig;
+import org.example.vivesbankproject.config.websockets.WebSocketHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,12 +34,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.mockito.ArgumentCaptor;
-import java.time.LocalDate;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)

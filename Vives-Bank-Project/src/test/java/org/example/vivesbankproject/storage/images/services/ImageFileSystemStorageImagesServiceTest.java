@@ -1,7 +1,8 @@
 package org.example.vivesbankproject.storage.images.services;
 
-import org.example.vivesbankproject.storage.exceptions.StorageBadRequest;
-import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
+import org.example.vivesbankproject.rest.storage.exceptions.StorageBadRequest;
+import org.example.vivesbankproject.rest.storage.exceptions.StorageNotFound;
+import org.example.vivesbankproject.rest.storage.images.services.ImageFileSystemStorageImagesService;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,8 +1,8 @@
 package org.example.vivesbankproject.movimientos.repositories;
 
-import org.bson.types.ObjectId;
-import org.example.vivesbankproject.movimientos.models.Domiciliacion;
-import org.example.vivesbankproject.movimientos.models.Periodicidad;
+import org.example.vivesbankproject.rest.movimientos.models.Domiciliacion;
+import org.example.vivesbankproject.rest.movimientos.models.Periodicidad;
+import org.example.vivesbankproject.rest.movimientos.repositories.DomiciliacionRepository;
 import org.example.vivesbankproject.utils.generators.IdGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,7 +11,6 @@ import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;

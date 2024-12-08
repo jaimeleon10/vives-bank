@@ -1,11 +1,11 @@
 package org.example.vivesbankproject.movimientos.repositories;
 
-import org.example.vivesbankproject.cliente.models.Cliente;
-import org.example.vivesbankproject.movimientos.models.Movimiento;
-import org.example.vivesbankproject.movimientos.models.Domiciliacion;
-import org.example.vivesbankproject.movimientos.models.IngresoDeNomina;
-import org.example.vivesbankproject.movimientos.models.PagoConTarjeta;
-import org.example.vivesbankproject.movimientos.models.Transferencia;
+import org.example.vivesbankproject.rest.movimientos.models.Movimiento;
+import org.example.vivesbankproject.rest.movimientos.models.Domiciliacion;
+import org.example.vivesbankproject.rest.movimientos.models.IngresoDeNomina;
+import org.example.vivesbankproject.rest.movimientos.models.PagoConTarjeta;
+import org.example.vivesbankproject.rest.movimientos.models.Transferencia;
+import org.example.vivesbankproject.rest.movimientos.repositories.MovimientosRepository;
 import org.example.vivesbankproject.utils.generators.IdGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

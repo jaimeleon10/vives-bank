@@ -1,8 +1,9 @@
 package org.example.vivesbankproject.storage.jsonClientesAdmin.controller;
 
-import org.example.vivesbankproject.storage.exceptions.StorageInternal;
-import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
-import org.example.vivesbankproject.storage.jsonClientesAdmin.services.JsonClientesAdminStorageService;
+import org.example.vivesbankproject.rest.storage.exceptions.StorageInternal;
+import org.example.vivesbankproject.rest.storage.exceptions.StorageNotFound;
+import org.example.vivesbankproject.rest.storage.jsonClientesAdmin.controller.JsonClientesAdminController;
+import org.example.vivesbankproject.rest.storage.jsonClientesAdmin.services.JsonClientesAdminStorageService;
 import org.junit.jupiter.api.*;
 import org.mockito.InjectMocks;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,12 +1,14 @@
 package org.example.vivesbankproject.users.repositories;
 
+import org.example.vivesbankproject.rest.users.models.Role;
+import org.example.vivesbankproject.rest.users.models.User;
 import jakarta.transaction.Transactional;
-import org.example.vivesbankproject.users.models.Role;
-import org.example.vivesbankproject.users.models.User;
 import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
+import org.example.vivesbankproject.rest.users.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

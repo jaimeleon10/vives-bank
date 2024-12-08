@@ -1,14 +1,11 @@
 package org.example.vivesbankproject.users.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.vivesbankproject.cuenta.dto.cuenta.CuentaRequest;
-import org.example.vivesbankproject.users.dto.UserRequest;
-import org.example.vivesbankproject.users.dto.UserResponse;
-import org.example.vivesbankproject.users.models.Role;
-import org.example.vivesbankproject.users.services.UserService;
-import org.example.vivesbankproject.utils.pagination.PageResponse;
+import org.example.vivesbankproject.rest.users.dto.UserRequest;
+import org.example.vivesbankproject.rest.users.dto.UserResponse;
+import org.example.vivesbankproject.rest.users.models.Role;
+import org.example.vivesbankproject.rest.users.services.UserService;
 import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.mockito.Mockito;

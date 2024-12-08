@@ -1,6 +1,7 @@
 package org.example.vivesbankproject.cuenta.mappers;
-import org.example.vivesbankproject.cuenta.dto.tipoCuenta.TipoCuentaRequest;
-import org.example.vivesbankproject.cuenta.models.TipoCuenta;
+import org.example.vivesbankproject.rest.cuenta.dto.tipoCuenta.TipoCuentaRequest;
+import org.example.vivesbankproject.rest.cuenta.mappers.TipoCuentaMapper;
+import org.example.vivesbankproject.rest.cuenta.models.TipoCuenta;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

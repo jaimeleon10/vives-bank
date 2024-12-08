@@ -1,11 +1,12 @@
 package org.example.vivesbankproject.tarjeta.mappers;
 
-import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestSave;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaRequestUpdate;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaResponse;
-import org.example.vivesbankproject.tarjeta.dto.TarjetaResponsePrivado;
-import org.example.vivesbankproject.tarjeta.models.Tarjeta;
-import org.example.vivesbankproject.tarjeta.models.TipoTarjeta;
+import org.example.vivesbankproject.rest.tarjeta.dto.TarjetaRequestSave;
+import org.example.vivesbankproject.rest.tarjeta.dto.TarjetaRequestUpdate;
+import org.example.vivesbankproject.rest.tarjeta.dto.TarjetaResponse;
+import org.example.vivesbankproject.rest.tarjeta.dto.TarjetaResponsePrivado;
+import org.example.vivesbankproject.rest.tarjeta.mappers.TarjetaMapper;
+import org.example.vivesbankproject.rest.tarjeta.models.Tarjeta;
+import org.example.vivesbankproject.rest.tarjeta.models.TipoTarjeta;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
