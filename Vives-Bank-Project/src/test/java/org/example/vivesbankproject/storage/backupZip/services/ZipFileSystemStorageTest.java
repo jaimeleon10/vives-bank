@@ -1,18 +1,11 @@
 package org.example.vivesbankproject.storage.backupZip.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.vivesbankproject.cliente.dto.ClienteJsonAdmin;
-import org.example.vivesbankproject.cliente.models.Cliente;
-import org.example.vivesbankproject.cliente.models.Direccion;
 import org.example.vivesbankproject.cliente.repositories.ClienteRepository;
-import org.example.vivesbankproject.cuenta.models.Cuenta;
 import org.example.vivesbankproject.cuenta.repositories.CuentaRepository;
-import org.example.vivesbankproject.movimientos.models.Movimiento;
 import org.example.vivesbankproject.movimientos.repositories.MovimientosRepository;
 import org.example.vivesbankproject.storage.exceptions.StorageNotFound;
-import org.example.vivesbankproject.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.tarjeta.repositories.TarjetaRepository;
-import org.example.vivesbankproject.users.models.User;
+import org.example.vivesbankproject.users.mappers.UserMapper;
 import org.example.vivesbankproject.users.repositories.UserRepository;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
@@ -23,19 +16,14 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.Resource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
 class ZipFileSystemStorageTest {
@@ -60,9 +48,12 @@ class ZipFileSystemStorageTest {
     @MockBean
     private MovimientosRepository movimientosRepository;
 
+    @MockBean
+    private UserMapper userMapper;
+
     @BeforeEach
     void setUp() throws IOException {
-        zipFileSystemStorage = new ZipFileSystemStorage(TEST_ROOT_LOCATION, clienteRepository, movimientosRepository, userRepository, tarjetaRepository, cuentaRepository);
+        zipFileSystemStorage = new ZipFileSystemStorage(TEST_ROOT_LOCATION, clienteRepository, movimientosRepository, userRepository, tarjetaRepository, cuentaRepository, userMapper);
 
         Path testPath = Paths.get(TEST_ROOT_LOCATION);
         if (Files.exists(testPath)) {
