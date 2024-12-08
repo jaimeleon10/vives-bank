@@ -2,6 +2,7 @@ package org.example.vivesbankproject.rest.movimientos.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.rest.cliente.service.ClienteService;
@@ -28,7 +29,15 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-
+/**
+ * DomiciliacionScheduler
+ *
+ * <p>Servicio para procesar domiciliaciones periódicas, validar saldos, enviar notificaciones
+ * a clientes a través de WebSocket y actualizar la base de datos con la información correspondiente.</p>
+ *
+ * @author Jaime León, Natalia González, German Fernandez, Alba García, Mario de Domingo, Alvaro Herrero
+ * @version 1.0-SNAPSHOT
+ */
 @Service
 @Slf4j
 @EnableScheduling
@@ -43,10 +52,24 @@ public class DomiciliacionScheduler {
     private final ObjectMapper mapper;
     private final NotificationMapper notificationMapper;
     private final ClienteService clienteService;
-    // Para los test
+    /**
+     * WebSocket handler para enviar notificaciones a los clientes.
+     */
     @Setter
     private WebSocketHandler webSocketService;
-
+    /**
+     * Constructor para la inicialización de dependencias necesarias para el servicio.
+     *
+     * @param domiciliacionRepository El repositorio de domiciliaciones.
+     * @param movimientosRepository  El repositorio de movimientos.
+     * @param cuentaService         El servicio de cuentas.
+     * @param userService           El servicio de usuarios.
+     * @param webSocketConfig       La configuración para WebSocket.
+     * @param notificationMapper    El mapper para convertir objetos de notificación.
+     * @param cuentaMapper          El mapper para convertir las cuentas.
+     * @param clienteService       El servicio para obtener clientes.
+     * @param movimientosMapper    El mapper para manejar movimientos.
+     */
     @Autowired
     public DomiciliacionScheduler(DomiciliacionRepository domiciliacionRepository, MovimientosRepository movimientosRepository, CuentaService cuentaService, UserService userService, WebSocketConfig webSocketConfig, NotificationMapper notificationMapper, CuentaMapper cuentaMapper, ClienteService clienteService, MovimientoMapper movimientosMapper) {
         this.domiciliacionRepository = domiciliacionRepository;
@@ -61,8 +84,14 @@ public class DomiciliacionScheduler {
         mapper = new ObjectMapper();
         this.notificationMapper = notificationMapper;
     }
-
-    @Scheduled(cron = "0 * * * * ?") // Ejecución diaria a medianoche
+    /**
+     * Programa de ejecución periódica cada minuto para procesar domiciliaciones activas.
+     */
+    @Scheduled(cron = "0 * * * * ?")
+    @Operation(
+            summary = "Procesar domiciliaciones periódicas",
+            description = "Ejecuta domiciliaciones activas verificando su periodicidad y saldo disponible."
+    )
     public void procesarDomiciliaciones() {
         log.info("Procesando domiciliaciones periódicas");
 
@@ -90,7 +119,13 @@ public class DomiciliacionScheduler {
             }
         }
     }
-
+    /**
+     * Verifica la necesidad de ejecutar una domiciliación según la periodicidad configurada.
+     *
+     * @param domiciliacion El objeto de domiciliación.
+     * @param ahora         Fecha y hora actual para comparar.
+     * @return true si debe ejecutarse; false de lo contrario.
+     */
     private boolean requiereEjecucion(Domiciliacion domiciliacion, LocalDateTime ahora) {
         switch (domiciliacion.getPeriodicidad()) {
             case DIARIA:
@@ -106,7 +141,12 @@ public class DomiciliacionScheduler {
         }
     }
 
-
+    /**
+     * Lógica para ejecutar una domiciliación específica.
+     *
+     * @param domiciliacion Domiciliación a ejecutar.
+     */
+    @Operation(summary = "Ejecutar domiciliación lógica", description = "Procesa una domiciliación verificando saldo y registrando los movimientos.")
     private void ejecutarDomiciliacion(Domiciliacion domiciliacion) {
         var cuentaOrigen = cuentaService.getByIban(domiciliacion.getIbanOrigen());
 
@@ -133,7 +173,16 @@ public class DomiciliacionScheduler {
         onChangeDomiciliacionEjecutada(Notification.Tipo.EXECUTE, domiciliacion);
 
     }
-
+    /**
+     * Envía una notificación utilizando WebSocket cuando una domiciliación es ejecutada.
+     *
+     * @param tipo Tipo de notificación a enviar.
+     * @param data Información sobre la domiciliación ejecutada.
+     */
+    @Operation(
+            summary = "Enviar notificación al cliente WS",
+            description = "Envía una notificación al cliente correspondiente utilizando WebSocket tras ejecutar una domiciliación."
+    )
     void onChangeDomiciliacionEjecutada(Notification.Tipo tipo, Domiciliacion data) {
         log.info("Servicio de Movimientos onChange con tipo: {} y datos: {}", tipo, data);
 
@@ -163,7 +212,16 @@ public class DomiciliacionScheduler {
             log.error("Error al convertir la notificación a JSON", e);
         }
     }
-
+    /**
+     * Envía un mensaje al cliente vía WebSocket utilizando el nombre de usuario.
+     *
+     * @param userName Nombre de usuario al que se enviará el mensaje.
+     * @param json     Contenido de la notificación en formato JSON.
+     */
+    @Operation(
+            summary = "Enviar mensaje WS al usuario",
+            description = "Envía un mensaje vía WebSocket a un usuario específico con la información proporcionada."
+    )
     private void sendMessageUser(String userName, String json){
         log.info("Enviando mensaje al cliente ws del usuario");
         Thread senderThread = new Thread(() -> {
