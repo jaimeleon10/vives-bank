@@ -12,7 +12,7 @@ COPY src src
 
 RUN ./gradlew clean build -x test
 
-FROM eclipse-temurin:21-jre-alpine AS run
+FROM openjdk:21 AS run
 
 # Directorio de trabajo
 WORKDIR /app
