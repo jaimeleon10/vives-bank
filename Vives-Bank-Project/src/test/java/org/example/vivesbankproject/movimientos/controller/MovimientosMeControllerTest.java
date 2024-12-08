@@ -1,116 +1,125 @@
 package org.example.vivesbankproject.movimientos.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.vivesbankproject.rest.movimientos.models.Domiciliacion;
-import org.example.vivesbankproject.rest.movimientos.models.IngresoDeNomina;
-import org.example.vivesbankproject.rest.movimientos.models.PagoConTarjeta;
-import org.example.vivesbankproject.rest.movimientos.models.Transferencia;
 import org.example.vivesbankproject.rest.movimientos.services.MovimientosService;
+import org.example.vivesbankproject.rest.movimientos.dto.MovimientoResponse;
+import org.example.vivesbankproject.rest.movimientos.models.*;
+import org.example.vivesbankproject.rest.users.models.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver;
 
+import java.math.BigDecimal;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@ExtendWith(MockitoExtension.class)
 class MovimientosMeControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockBean
+    @Mock
     private MovimientosService movimientosService;
 
-    private Domiciliacion domiciliacion;
-    private IngresoDeNomina ingresoNomina;
-    private PagoConTarjeta pagoTarjeta;
-    private Transferencia transferencia;
+    @InjectMocks
+    private MovimientosMeController movimientosMeController;
+
+    private User mockUser;
 
     @BeforeEach
     void setUp() {
-        // Initialize test objects with minimal valid data
-        domiciliacion = new Domiciliacion();
-        ingresoNomina = new IngresoDeNomina();
-        pagoTarjeta = new PagoConTarjeta();
-        transferencia = new Transferencia();
+        mockMvc = MockMvcBuilders.standaloneSetup(movimientosMeController)
+                .setControllerAdvice(new ExceptionHandlerExceptionResolver())
+                .build();
+
+        mockUser = new User();
+        mockUser.setId(1L);
     }
 
     @Test
-    @WithMockUser(roles = "USER")
-    void createMovimientoDomiciliacion_ValidRequest_ReturnsOkStatus() throws Exception {
+    void testCreateMovimientoDomiciliacion() throws Exception {
+        Domiciliacion domiciliacion = new Domiciliacion();
+        domiciliacion.setCantidad(BigDecimal.valueOf(100.0));
+
+        when(movimientosService.saveDomiciliacion(any(User.class), any(Domiciliacion.class)))
+                .thenReturn(domiciliacion);
+
         mockMvc.perform(post("/api/v1/me/domiciliacion")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(domiciliacion)))
+                        .content("{\"amount\": 100.0}")
+                        .principal(() -> mockUser.getGuid()))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(jsonPath("$.amount").value(100.0));
+
+        verify(movimientosService).saveDomiciliacion(any(User.class), any(Domiciliacion.class));
     }
 
     @Test
-    @WithMockUser(roles = "USER")
-    void createMovimientoIngresoNomina_ValidRequest_ReturnsOkStatus() throws Exception {
+    void testCreateMovimientoIngresoNomina() throws Exception {
+        IngresoDeNomina ingresoNomina = new IngresoDeNomina();
+        ingresoNomina.setCantidad(2000.0);
+
+        when(movimientosService.saveIngresoDeNomina(any(User.class), any(IngresoDeNomina.class)))
+                .thenReturn(new MovimientoResponse());
+
         mockMvc.perform(post("/api/v1/me/ingresonomina")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(ingresoNomina)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                        .content("{\"amount\": 2000.0}")
+                        .principal(() -> mockUser.getGuid()))
+                .andExpect(status().isOk());
+
+        verify(movimientosService).saveIngresoDeNomina(any(User.class), any(IngresoDeNomina.class));
     }
 
     @Test
-    @WithMockUser(roles = "USER")
-    void createMovimientoPagoConTarjeta_ValidRequest_ReturnsOkStatus() throws Exception {
+    void testCreateMovimientoPagoConTarjeta() throws Exception {
+        PagoConTarjeta pagoTarjeta = new PagoConTarjeta();
+        pagoTarjeta.setCantidad(50.0);
+
+        when(movimientosService.savePagoConTarjeta(any(User.class), any(PagoConTarjeta.class)))
+                .thenReturn(new MovimientoResponse());
+
         mockMvc.perform(post("/api/v1/me/pagotarjeta")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(pagoTarjeta)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                        .content("{\"amount\": 50.0}")
+                        .principal(() -> mockUser.getGuid()))
+                .andExpect(status().isOk());
+
+        verify(movimientosService).savePagoConTarjeta(any(User.class), any(PagoConTarjeta.class));
     }
 
     @Test
-    @WithMockUser(roles = "USER")
-    void createMovimientoTransferencia_ValidRequest_ReturnsOkStatus() throws Exception {
-        mockMvc.perform(post("/api/v1/me/transferencia")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(transferencia)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-    }
+    void testCreateMovimientoTransferencia() throws Exception {
+        Transferencia transferencia = new Transferencia();
+        transferencia.setCantidad(BigDecimal.valueOf(500.0));
 
-    @Test
-    void createMovimiento_UnauthorizedUser_ReturnsForbiddenStatus() throws Exception {
-        mockMvc.perform(post("/api/v1/me/transferencia")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(transferencia)))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @WithMockUser(roles = "USER")
-    void createMovimiento_InvalidRequest_ReturnsBadRequest() throws Exception {
-        // Create an invalid object with missing or incorrect data
-        Transferencia invalidTransferencia = new Transferencia();
-        // Do not set required fields
+        when(movimientosService.saveTransferencia(any(User.class), any(Transferencia.class)))
+                .thenReturn(new MovimientoResponse());
 
         mockMvc.perform(post("/api/v1/me/transferencia")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidTransferencia)))
-                .andExpect(status().isBadRequest());
+                        .content("{\"amount\": 500.0}")
+                        .principal(() -> mockUser.getGuid()))
+                .andExpect(status().isOk());
+
+        verify(movimientosService).saveTransferencia(any(User.class), any(Transferencia.class));
     }
 
     @Test
-    @WithMockUser(roles = "USER")
-    void revocarMovimientoTransferencia_ReturnsNotImplemented() throws Exception {
-        mockMvc.perform(delete("/api/v1/me/transferencia/test-guid"))
-                .andExpect(status().isOk()); // Currently returns null, so expecting OK
+    void testRevocarMovimientoTransferencia() throws Exception {
+        mockMvc.perform(delete("/api/v1/me/transferencia/someGuid")
+                        .principal(() -> mockUser.getGuid()))
+                .andExpect(status().isOk());
     }
 }

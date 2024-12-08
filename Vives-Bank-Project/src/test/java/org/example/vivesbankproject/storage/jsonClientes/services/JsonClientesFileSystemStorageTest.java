@@ -13,6 +13,10 @@ import org.example.vivesbankproject.rest.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.rest.storage.exceptions.StorageNotFound;
 import org.example.vivesbankproject.rest.storage.jsonClientes.services.JsonClientesFileSystemStorage;
 import org.example.vivesbankproject.rest.tarjeta.models.Tarjeta;
+import org.example.vivesbankproject.rest.cuenta.mappers.CuentaMapper;
+import org.example.vivesbankproject.rest.storage.exceptions.StorageInternal;
+import org.example.vivesbankproject.rest.tarjeta.mappers.TarjetaMapper;
+import org.example.vivesbankproject.rest.users.mappers.UserMapper;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,9 +52,24 @@ class JsonClientesFileSystemStorageTest {
     @MockBean
     private ClienteRepository clienteRepository;
 
+    @MockBean
+    private final TarjetaMapper tarjetaMapper;
+
+    @MockBean
+    private final CuentaMapper cuentaMapper;
+
+    @MockBean
+    private final UserMapper userMapper;
+
+    JsonClientesFileSystemStorageTest(TarjetaMapper tarjetaMapper, CuentaMapper cuentaMapper, UserMapper userMapper) {
+        this.tarjetaMapper = tarjetaMapper;
+        this.cuentaMapper = cuentaMapper;
+        this.userMapper = userMapper;
+    }
+
     @BeforeEach
     void setUp() throws IOException {
-        storageService = new JsonClientesFileSystemStorage(TEST_ROOT_LOCATION, clienteRepository);
+        storageService = new JsonClientesFileSystemStorage(TEST_ROOT_LOCATION, clienteRepository, tarjetaMapper, cuentaMapper, userMapper);
 
         Path testPath = Paths.get(TEST_ROOT_LOCATION);
         if (Files.exists(testPath)) {

@@ -13,23 +13,23 @@ import java.time.format.DateTimeFormatter;
 @Configuration
 @Slf4j
 public class JsonClientesAdminStorageConfig {
-    private final JsonClientesStorageService jsonClientesStorageService;
+    private final JsonClientesAdminFileSystemStorage jsonClientesAdminFileSystemStorage;
 
     @Value("${upload.delete}")
     private String deleteAll;
 
     @Autowired
-    public JsonClientesAdminStorageConfig(JsonClientesStorageService jsonClientesStorageService) {
-        this.jsonClientesStorageService = jsonClientesStorageService;
+    public JsonClientesAdminStorageConfig(JsonClientesAdminFileSystemStorage jsonClientesAdminFileSystemStorage) {
+        this.jsonClientesAdminFileSystemStorage = jsonClientesAdminFileSystemStorage;
     }
 
     @PostConstruct
     public void init() {
         if (deleteAll.equals("true")) {
             log.info("Borrando ficheros de almacenamiento...");
-            jsonClientesStorageService.delete("admin_clientes_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".json");
+            jsonClientesAdminFileSystemStorage.delete("admin_clientes_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".json");
         }
 
-        jsonClientesStorageService.init();
+        jsonClientesAdminFileSystemStorage.init();
     }
 }

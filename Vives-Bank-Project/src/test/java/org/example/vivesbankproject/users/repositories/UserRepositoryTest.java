@@ -2,6 +2,7 @@ package org.example.vivesbankproject.users.repositories;
 
 import org.example.vivesbankproject.rest.users.models.Role;
 import org.example.vivesbankproject.rest.users.models.User;
+import jakarta.transaction.Transactional;
 import java.util.Optional;
 import java.util.Set;
 
@@ -19,6 +20,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @DataJpaTest
 @ExtendWith(SpringExtension.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Transactional
 class UserRepositoryTest {
 
     @Autowired
@@ -36,11 +38,13 @@ class UserRepositoryTest {
                 .build();
 
         userRepository.save(user);
+        userRepository.flush();
     }
 
     @Test
     void findByGuid() {
         Optional<User> foundUser = userRepository.findByGuid("hola");
+
         assertThat(foundUser).isPresent();
         assertThat(foundUser.get().getGuid()).isEqualTo("hola");
     }
@@ -48,12 +52,14 @@ class UserRepositoryTest {
     @Test
     void findByGuidNotFound() {
         Optional<User> foundUser = userRepository.findByGuid("nonexistent");
+
         assertThat(foundUser).isNotPresent();
     }
 
     @Test
     void findByUsername() {
         Optional<User> foundUser = userRepository.findByUsername("testuser");
+
         assertThat(foundUser).isPresent();
         assertThat(foundUser.get().getUsername()).isEqualTo("testuser");
     }
@@ -61,6 +67,7 @@ class UserRepositoryTest {
     @Test
     void findByUsernameNotFound() {
         Optional<User> foundUser = userRepository.findByUsername("nonexistentuser");
+
         assertThat(foundUser).isNotPresent();
     }
 }

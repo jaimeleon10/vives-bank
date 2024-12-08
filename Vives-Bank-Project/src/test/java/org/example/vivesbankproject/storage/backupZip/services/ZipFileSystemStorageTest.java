@@ -8,6 +8,7 @@ import org.example.vivesbankproject.rest.storage.backupZip.services.ZipFileSyste
 import org.example.vivesbankproject.rest.storage.exceptions.StorageNotFound;
 import org.example.vivesbankproject.rest.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.rest.users.repositories.UserRepository;
+import org.example.vivesbankproject.rest.users.mappers.UserMapper;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,9 +50,12 @@ class ZipFileSystemStorageTest {
     @MockBean
     private MovimientosRepository movimientosRepository;
 
+    @MockBean
+    private UserMapper userMapper;
+
     @BeforeEach
     void setUp() throws IOException {
-        zipFileSystemStorage = new ZipFileSystemStorage(TEST_ROOT_LOCATION, clienteRepository, movimientosRepository, userRepository, tarjetaRepository, cuentaRepository);
+        zipFileSystemStorage = new ZipFileSystemStorage(TEST_ROOT_LOCATION, clienteRepository, movimientosRepository, userRepository, tarjetaRepository, cuentaRepository, userMapper);
 
         Path testPath = Paths.get(TEST_ROOT_LOCATION);
         if (Files.exists(testPath)) {
