@@ -2,9 +2,10 @@ package org.example.vivesbankproject.tarjeta.controller;
 
 import com.jayway.jsonpath.JsonPath;
 import jakarta.validation.ConstraintViolationException;
+import org.example.vivesbankproject.config.websockets.WebSocketConfig;
 import org.example.vivesbankproject.rest.tarjeta.controller.TarjetaRestController;
 import org.example.vivesbankproject.rest.tarjeta.dto.*;
-import org.example.vivesbankproject.config.websockets.WebSocketConfig;
+import org.example.vivesbankproject.rest.tarjeta.repositories.TarjetaRepository;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -68,9 +69,11 @@ class TarjetaRestControllerTest {
     private TarjetaRequestSave tarjetaRequestSave;
     private TarjetaRequestUpdate tarjetaRequestUpdate;
     private MockHttpServletRequest request;
+    private TarjetaRepository tarjetaRepository;
 
     @BeforeEach
     void setUp() {
+        tarjetaRepository.deleteAll();
         MockitoAnnotations.openMocks(this);
         tarjetaRestController = new TarjetaRestController(tarjetaService, paginationLinksUtils);
         request = new MockHttpServletRequest();
