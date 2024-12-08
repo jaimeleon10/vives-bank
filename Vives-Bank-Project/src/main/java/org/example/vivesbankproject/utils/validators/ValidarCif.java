@@ -29,7 +29,6 @@ public class ValidarCif {
      *     <li>Entidades con letra de control.</li>
      *     <li>Casos generales con condiciones mixtas de dígitos y letras.</li>
      * </ul>
-     * </p>
      *
      * @param cif El CIF a validar.
      * @return {@code true} si el CIF es válido, de lo contrario {@code false}.

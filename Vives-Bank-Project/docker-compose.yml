@@ -52,16 +52,107 @@ services:
       - redis
     volumes:
       - bank-data:/app/
+      # copiar documentacion
+      - documentation_doc:/app/doc
+      - documentation_jacoco:/app/jacoco
+      - documentation_tests:/app/tests
+      # copiar configuracion
+      - apache_doc_conf:/app/despliegueServers/apacheDoc
+      - nginx_coverage_conf:/app/despliegueServers/nginxCoverage
+      - nginx_test_conf:/app/despliegueServers/nginxTest
+      # proxy config
+      - proxy_conf:/app/despliegueServers/proxy/config
+      - proxy_certs:/app/despliegueServers/proxy/sslcerts
+      # index
+      - presentacion_data:/app/despliegueServers/presentacion/index
+      - presentacion_conf:/app/despliegueServers/presentacion/config
     ports:
       - ${API_PORT}:3000
     networks:
       - banco-network
+
+  apache_doc:
+    image: ubuntu/apache2:latest
+    container_name: apache_doc
+    volumes:
+      - documentation_doc:/var/www/html/
+      - apache_doc_conf:/etc/apache2/sites-available/
+    restart: always
+    depends_on:
+      - vives-bank
+    networks:
+      - banco-network
+
+  nginx_coverage:
+      image: ubuntu/nginx:latest
+      container_name: nginx_coverage
+      volumes:
+        - documentation_jacoco:/var/www/html/
+        - nginx_coverage_conf:/etc/nginx/sites-available/
+      restart: always
+      depends_on:
+        - vives-bank
+      networks:
+        - banco-network
+
+  nginx_test:
+      image: ubuntu/nginx:latest
+      container_name: nginx_test
+      volumes:
+        - documentation_tests:/var/www/html/
+        - nginx_test_conf:/etc/nginx/sites-available/
+      restart: always
+      depends_on:
+        - vives-bank
+      networks:
+        - banco-network
+
+  reverse_proxy:
+      image: ubuntu/nginx:latest
+      container_name: reverse_proxy
+      volumes:
+        - proxy_conf:/etc/nginx/
+        - proxy_certs:/etc/nginx/certs/
+      ports:
+        - "80:80"
+        - "443:443"
+      restart: always
+      depends_on:
+        - nginx_presentacion
+        - apache_doc
+        - nginx_coverage
+        - nginx_test
+      networks:
+        - banco-network
+
+  nginx_presentacion:
+    image: ubuntu/nginx:latest
+    container_name: nginx_presentacion
+    volumes:
+      - presentacion_data:/var/www/html/presentacion
+      - presentacion_conf:/etc/nginx/sites-available/
+    restart: always
+    depends_on:
+      - vives-bank
+    networks:
+      - banco-network
+
 
 
 
 volumes:
   redis-data:
   bank-data:
+  documentation_doc:
+  documentation_jacoco:
+  documentation_tests:
+  apache_doc_conf:
+  nginx_coverage_conf:
+  nginx_test_conf:
+  proxy_conf:
+  proxy_certs:
+  presentacion_data:
+  presentacion_conf:
 
 networks:
   banco-network:

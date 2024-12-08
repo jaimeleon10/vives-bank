@@ -275,7 +275,6 @@ public class ClienteServiceImpl implements ClienteService {
      *
      * @param id Identificador único del cliente que se desea borrar de forma lógica en la base de datos (soft delete).
      * @throws ClienteNotFound Si el cliente con el identificador proporcionado no existe en la base de datos.
-     * @throws Exception En caso de error interno inesperado.
      */
 
     @Override
