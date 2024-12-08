@@ -34,7 +34,6 @@ class TarjetaRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        tarjetaRepository.deleteAll();
         tarjetaMock = Tarjeta.builder()
                 .guid("isTest")
                 .numeroTarjeta("1234567890123456")

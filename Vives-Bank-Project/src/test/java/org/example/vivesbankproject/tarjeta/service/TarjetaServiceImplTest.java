@@ -1,6 +1,7 @@
 package org.example.vivesbankproject.tarjeta.service;
 
 
+import org.example.vivesbankproject.rest.cuenta.models.Cuenta;
 import org.example.vivesbankproject.rest.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.rest.tarjeta.dto.*;
 import org.example.vivesbankproject.rest.tarjeta.service.TarjetaServiceImpl;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -72,7 +74,6 @@ class TarjetaServiceImplTest {
 
     @BeforeEach
     void setUp() {
-
         WebSocketHandler mockWebSocketHandler = mock(WebSocketHandler.class);
         when(webSocketConfig.webSocketTarjetasHandler()).thenReturn(mockWebSocketHandler);
 
@@ -122,6 +123,7 @@ class TarjetaServiceImplTest {
                 .username("")
                 .userPass("password")
                 .build();
+
     }
 
     @Test
