@@ -13,14 +13,9 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class Transferencia {
 
-
-   // @Pattern(regexp = "^ES\\d{22}$", message = "El IBAN español debe comenzar con 'ES' seguido de 22 dígitos")
-   // @Size(min = 24, max = 24, message = "El IBAN español debe tener exactamente 24 caracteres")
     @NotBlank
     private String iban_Origen; // iban de la persona que envía la transferencia
 
-    //@Pattern(regexp = "^ES\\d{22}$",message = "El IBAN español debe comenzar con 'ES' seguido de 22 dígitos")
-    //@Size(min = 24, max = 24,message = "El IBAN español debe tener exactamente 24 caracteres")
     @NotBlank
     private String iban_Destino; //iban de la persona o entidad que recibe la transferencia
 

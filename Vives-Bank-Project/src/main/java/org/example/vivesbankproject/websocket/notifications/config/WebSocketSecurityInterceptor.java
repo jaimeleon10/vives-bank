@@ -44,16 +44,16 @@ public class WebSocketSecurityInterceptor implements HandshakeInterceptor {
     @Operation(summary = "Antes de establecer la conexión", description = "Verifica la autenticación de los usuarios antes de permitir una conexión WebSocket")
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
 
-        // Recuperar el contexto de seguridad y verificar la autenticación actual
+        // Obtener la autenticación del contexto de seguridad actual
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication != null && authentication.isAuthenticated()) {
-            // Almacenar el nombre de usuario en los atributos de la sesión
+        if (authentication != null) {
+            // Almacenar el nombre de usuario en los atributos de la sesión de WebSocket
             attributes.put("username", authentication.getName());
-            return true; // Permitir la conexión
+            return true; // Permitir la conexión WebSocket
         }
 
-        // Rechazar la conexión si el usuario no está autenticado
+        // Si no hay autenticación, rechazar la conexión
         return false;
     }
 
