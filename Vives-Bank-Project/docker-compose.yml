@@ -1,9 +1,11 @@
 services:
-  postgres-db-dev:
+  postgres-db:
     container_name: banco-db-postgres
     image: postgres:12-alpine
     restart: always
     env_file: .env
+    ports:
+      - ${POSTGRES_PORT}:5432
     environment:
       POSTGRES_USER: ${DATABASE_USER_POSTGRES}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD_POSTGRES}
@@ -12,17 +14,58 @@ services:
       - banco-network
 
 
-  mongo-db-dev:
+  mongo-db:
     container_name: banco-db-mongo
     image: mongo:4.4
     restart: always
+    env_file:
+      - .env
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${DATABASE_USER_MONGO}
       MONGO_INITDB_ROOT_PASSWORD: ${DATABASE_PASSWORD_MONGO}
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+    ports:
+      - ${MONGO_PORT}:27017
+    volumes:
+      - ./mongo-prod/initMongo.js:/docker-entrypoint-initdb.d/initMongo.js
     networks:
       - banco-network
 
+  redis:
+    container_name: banco-redis
+    image: redis:7.4.1
+    restart: always
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - banco-network
+
+  vives-bank:
+    container_name: vives-bank
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - postgres-db
+      - mongo-db
+      - redis
+    volumes:
+      - bank-data:/app/
+    ports:
+      - ${API_PORT}:3000
+    networks:
+      - banco-network
+
+
+
+volumes:
+  redis-data:
+  bank-data:
 
 networks:
   banco-network:
