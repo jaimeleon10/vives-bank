@@ -347,18 +347,32 @@ public class TarjetaServiceImpl implements TarjetaService {
             User user = userRepository.findByGuid(userId).orElseThrow(() -> new UserNotFoundById(userId));
             String userName = user.getUsername();
 
-            log.info("Enviando mensaje al cliente ws del usuario");
-            Thread senderThread = new Thread(() -> {
-                try {
-                    webSocketService.sendMessageToUser(userName,json);
-                } catch (Exception e) {
-                    log.error("Error al enviar el mensaje a través del servicio WebSocket", e);
-                }
-            });
-            senderThread.start();
+            sendMessageUser(userName, json);
+
         } catch (JsonProcessingException e) {
             log.error("Error al convertir la notificación a JSON", e);
         }
     }
 
+    /**
+     * Hace la llamada al método para enviar mensaje al usuario concreto
+     * @param userName  Usuario al que se enviará el mensaje
+     * @param json      Mensaje a enviar
+     * @see WebSocketHandler
+     *
+     * @author Jaime León, Natalia González,
+     *         German Fernandez, Alba García, Mario de Domingo, Alvaro Herrero
+     * @version 1.0-SNAPSHOT
+     */
+    private void sendMessageUser(String userName, String json){
+        log.info("Enviando mensaje al cliente ws del usuario");
+        Thread senderThread = new Thread(() -> {
+            try {
+                webSocketService.sendMessageToUser(userName,json);
+            } catch (Exception e) {
+                log.error("Error al enviar el mensaje a través del servicio WebSocket", e);
+            }
+        });
+        senderThread.start();
+    }
 }

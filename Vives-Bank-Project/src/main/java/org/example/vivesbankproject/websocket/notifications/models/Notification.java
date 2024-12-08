@@ -42,6 +42,10 @@ public record Notification<T>(
 
         /** Operación de eliminación */
         @Schema(description = "Operación de eliminación")
-        DELETE
+        DELETE,
+
+        /** Operación de ejecución */
+        @Schema(description = "Operación de ejecución")
+        EXECUTE
     }
 }

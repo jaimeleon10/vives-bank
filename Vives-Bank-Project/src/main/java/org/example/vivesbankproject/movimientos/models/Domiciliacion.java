@@ -30,10 +30,7 @@ public class Domiciliacion {
 
     private String clienteGuid;
 
-    @Pattern(
-            regexp = "^ES\\d{20}$",
-            message = "El IBAN español debe comenzar con 'ES' seguido de 22 dígitos"
-    )
+    @NotBlank
     private String ibanOrigen;
 
     @NotBlank
