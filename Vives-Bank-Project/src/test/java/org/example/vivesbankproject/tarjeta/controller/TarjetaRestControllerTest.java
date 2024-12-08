@@ -64,12 +64,14 @@ class TarjetaRestControllerTest {
     @MockBean
     private PaginationLinksUtils paginationLinksUtils;
 
+    @MockBean
+    private TarjetaRepository tarjetaRepository;
+
     private TarjetaResponse tarjetaResponse;
     private TarjetaRestController tarjetaRestController;
     private TarjetaRequestSave tarjetaRequestSave;
     private TarjetaRequestUpdate tarjetaRequestUpdate;
     private MockHttpServletRequest request;
-    private TarjetaRepository tarjetaRepository;
 
     @BeforeEach
     void setUp() {
