@@ -20,6 +20,18 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
+/**
+ * Configuración de seguridad para la aplicación.
+ *
+ * <p>Esta clase configura la seguridad de la aplicación utilizando Spring Security,
+ * incluyendo el manejo de usuarios, filtros de autenticación JWT y control de acceso a recursos.</p>
+ *
+ * <p>Se integra con el sistema de autenticación y autoriza el acceso a las rutas dependiendo
+ * de las reglas definidas.</p>
+ *
+ * @author Jaime León, Natalia González, German Fernandez, Alba García, Mario de Domingo, Alvaro Herrero
+ * @version 1.0-SNAPSHOT
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -30,12 +42,25 @@ public class SecurityConfig {
     @Value("${api.version}")
     private String apiVersion;
 
+    /**
+     * Constructor para inyectar dependencias necesarias.
+     *
+     * @param userService Servicio de gestión de usuarios.
+     * @param jwtAuthenticationFilter Filtro de autenticación JWT.
+     */
     @Autowired
     public SecurityConfig(UserDetailsService userService, JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.userService = userService;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
+    /**
+     * Configura la cadena de filtros de seguridad para manejar las solicitudes HTTP.
+     *
+     * @param http Configurador de seguridad HTTP.
+     * @return Cadena de filtros configurada.
+     * @throws Exception Si ocurre un error durante la configuración.
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -70,11 +95,21 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Configura el codificador de contraseñas utilizando BCrypt.
+     *
+     * @return Instancia de PasswordEncoder.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Proveedor de autenticación que utiliza los detalles del usuario y el codificador de contraseñas.
+     *
+     * @return Instancia de AuthenticationProvider configurada.
+     */
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -83,11 +118,16 @@ public class SecurityConfig {
         return authProvider;
     }
 
+    /**
+     * Administrador de autenticación utilizado en la configuración de seguridad.
+     *
+     * @param config Configuración de autenticación.
+     * @return Instancia de AuthenticationManager configurada.
+     * @throws Exception Si ocurre un error al obtener el administrador.
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
             throws Exception {
         return config.getAuthenticationManager();
     }
-
-
 }
