@@ -1,5 +1,8 @@
 package org.example.vivesbankproject.rest.storage.images.services;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.rest.storage.exceptions.StorageBadRequest;
 import org.example.vivesbankproject.rest.storage.exceptions.StorageInternal;
@@ -22,19 +25,38 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.stream.Stream;
-
+/**
+ * Servicio de almacenamiento de imágenes en el sistema de archivos.
+ * Implementa la lógica para almacenar, recuperar, eliminar y gestionar imágenes en el almacenamiento local.
+ *
+ * @author Jaime León, Natalia González, Germán Fernández, Alba García, Mario de Domingo, Alvaro Herrero
+ * @version 1.0-SNAPSHOT
+ */
 @Service
 @Slf4j
 public class ImageFileSystemStorageImagesService implements StorageImagesService {
 
     private final Path rootLocation;
-
+    /**
+     * Constructor que inicializa la ruta raíz de almacenamiento utilizando la configuración definida en properties.
+     *
+     * @param path Ruta configurada para el almacenamiento de archivos.
+     */
 
     public ImageFileSystemStorageImagesService(@Value("${upload.root-location}") String path) {
         this.rootLocation = Paths.get(path);
     }
 
     @Override
+    @Operation(
+            summary = "Almacena un archivo en el almacenamiento de imágenes",
+            description = "Almacena un archivo utilizando un nombre único generado.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "El archivo se almacena exitosamente", content = @Content(mediaType = "text/plain")),
+                    @ApiResponse(responseCode = "400", description = "Archivo vacío o formato incorrecto"),
+                    @ApiResponse(responseCode = "500", description = "Error interno al almacenar el archivo")
+            }
+    )
     public String store(MultipartFile file) {
         String filename = StringUtils.cleanPath(file.getOriginalFilename());
         String extension = StringUtils.getFilenameExtension(filename);
@@ -63,8 +85,14 @@ public class ImageFileSystemStorageImagesService implements StorageImagesService
         }
 
     }
-
     @Override
+    @Operation(
+            summary = "Carga todos los archivos almacenados",
+            description = "Devuelve un stream de todas las rutas relativas de los archivos almacenados.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Lista de archivos devueltos correctamente")
+            }
+    )
     public Stream<Path> loadAll() {
         log.info("Cargando todos los ficheros almacenados");
         try {
@@ -76,14 +104,28 @@ public class ImageFileSystemStorageImagesService implements StorageImagesService
         }
 
     }
-
     @Override
+    @Operation(
+            summary = "Carga un archivo específico",
+            description = "Obtiene la ruta completa para un archivo almacenado en el almacenamiento local.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Archivo cargado exitosamente"),
+                    @ApiResponse(responseCode = "404", description = "No se encuentra el archivo en el almacenamiento")
+            }
+    )
     public Path load(String filename) {
         log.info("Cargando fichero " + filename);
         return rootLocation.resolve(filename);
     }
-
     @Override
+    @Operation(
+            summary = "Carga un recurso como respuesta",
+            description = "Devuelve un recurso para un archivo almacenado que se puede descargar.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Recurso cargado correctamente"),
+                    @ApiResponse(responseCode = "404", description = "No se encuentra el recurso")
+            }
+    )
     public Resource loadAsResource(String filename) {
         log.info("Cargando fichero " + filename);
         try {
@@ -100,12 +142,27 @@ public class ImageFileSystemStorageImagesService implements StorageImagesService
     }
 
     @Override
+    @Operation(
+            summary = "Elimina todos los archivos del almacenamiento",
+            description = "Elimina todos los archivos almacenados en el almacenamiento local.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Archivos eliminados correctamente"),
+                    @ApiResponse(responseCode = "500", description = "Error interno al intentar eliminar los archivos")
+            }
+    )
     public void deleteAll() {
         log.info("Eliminando todos los ficheros almacenados");
         FileSystemUtils.deleteRecursively(rootLocation.toFile());
     }
-
     @Override
+    @Operation(
+            summary = "Inicializa el almacenamiento",
+            description = "Crea los directorios necesarios para el almacenamiento.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Almacenamiento inicializado correctamente"),
+                    @ApiResponse(responseCode = "500", description = "Error interno al intentar inicializar el almacenamiento")
+            }
+    )
     public void init() {
         log.info("Inicializando almacenamiento");
         try {
@@ -114,8 +171,15 @@ public class ImageFileSystemStorageImagesService implements StorageImagesService
             throw new StorageInternal("No se puede inicializar el almacenamiento " + e);
         }
     }
-
     @Override
+    @Operation(
+            summary = "Elimina un archivo específico del almacenamiento",
+            description = "Elimina un recurso específico del almacenamiento por nombre.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Archivo eliminado correctamente"),
+                    @ApiResponse(responseCode = "404", description = "No se encuentra el recurso para eliminar")
+            }
+    )
     public void delete(String filename) {
         String justFilename = StringUtils.getFilename(filename);
         try {
@@ -127,8 +191,14 @@ public class ImageFileSystemStorageImagesService implements StorageImagesService
         }
 
     }
-
     @Override
+    @Operation(
+            summary = "Obtiene la URL de acceso a un archivo",
+            description = "Genera una URL para acceder a un recurso almacenado.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "URL generada correctamente")
+            }
+    )
     public String getUrl(String filename) {
         log.info("Obteniendo URL del fichero " + filename);
         return MvcUriComponentsBuilder
