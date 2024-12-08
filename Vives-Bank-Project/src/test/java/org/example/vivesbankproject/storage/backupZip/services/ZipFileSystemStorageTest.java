@@ -1,6 +1,5 @@
 package org.example.vivesbankproject.storage.backupZip.services;
 
-import org.example.vivesbankproject.cliente.dto.ClienteJsonAdmin;
 import org.example.vivesbankproject.rest.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.rest.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.rest.movimientos.repositories.MovimientosRepository;
