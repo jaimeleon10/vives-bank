@@ -1,5 +1,10 @@
 package org.example.vivesbankproject.tarjeta.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
@@ -28,11 +33,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Controlador REST para la gestión de tarjetas bancarias.
+ * Proporciona endpoints para operaciones CRUD de tarjetas.
+ * Requiere rol de administrador para acceder a los métodos.
+ *
+ * @author Jaime León, Natalia González, German Fernandez, Alba García, Mario de Domingo, Alvaro Herrero
+ * @version 1.0-SNAPSHOT
+ */
 @Slf4j
 @RestController
 @RequestMapping("${api.version}/tarjetas")
 @Validated
 @PreAuthorize("hasRole('ADMIN')")
+@Tag(name = "Tarjetas", description = "Operaciones CRUD sobre tarjetas bancarias")
 public class TarjetaRestController {
 
     private final TarjetaService tarjetaService;
@@ -44,6 +58,37 @@ public class TarjetaRestController {
         this.paginationLinksUtils = paginationLinksUtils;
     }
 
+    /**
+     * Endpoint devuelve una lista paginada de tarjetas que cumplen con los filtros,
+     * ordenados por el campo especificado en el parámetro 'sortBy' en la
+     * dirección indicada en el parámetro 'direction'. Si no se proporciona,
+     * se ordena por el campo 'id' en orden ascendente.
+     *
+     * @param numero Filtro opcional por número de tarjeta.
+     * @param caducidad Filtro opcional por fecha de caducidad.
+     * @param tipoTarjeta Filtro opcional por tipo de tarjeta.
+     * @param minLimiteDiario Filtro opcional por límite diario mínimo.
+     * @param maxLimiteDiario Filtro opcional por límite diario máximo.
+     * @param minLimiteSemanal Filtro opcional por límite semanal mínimo.
+     * @param maxLimiteSemanal Filtro opcional por límite semanal máximo.
+     * @param minLimiteMensual Filtro opcional por límite mensual mínimo.
+     * @param maxLimiteMensual Filtro opcional por límite mensual máximo.
+     * @param page Página de la lista a obtener. Si no se proporciona, se devuelve la primera página.
+     * @param size Número de elementos a incluir en la lista por página. Si no se proporciona, se devuelve una lista de 10 elementos.
+     * @param sortBy Campo por el que se ordena la lista. Si no se proporciona, se ordena por el campo 'id'.
+     * @param direction Dirección en la que se ordena la lista. Si no se proporciona, se ordena en orden ascendente.
+     * @param request Solicitud HTTP que se está procesando.
+     * @return ResponseEntity que contiene la lista de tarjetas y los enlaces de paginación.
+     */
+    @Operation(
+            summary = "Listar tarjetas bancarias",
+            description = "Obtiene una lista paginada de tarjetas filtradas por los parámetros proporcionados.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Lista de tarjetas obtenida exitosamente"),
+                    @ApiResponse(responseCode = "400", description = "Parámetros de entrada inválidos", content = @Content(schema = @Schema(implementation = Map.class))),
+                    @ApiResponse(responseCode = "403", description = "Acceso denegado"),
+            }
+    )
     @GetMapping
     public ResponseEntity<PageResponse<TarjetaResponse>> getAll(
             @RequestParam(required = false) Optional<String> numero,
@@ -71,26 +116,105 @@ public class TarjetaRestController {
                 .body(PageResponse.of(pageResult, sortBy, direction));
     }
 
+    /**
+     * Obtiene una tarjeta por su identificador.
+     *
+     * @param id Identificador de la tarjeta
+     * @return Respuesta con los detalles de la tarjeta correspondiente
+     */
+    @Operation(
+            summary = "Obtener tarjeta por ID",
+            description = "Recupera una tarjeta utilizando su identificador único.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Tarjeta obtenida exitosamente"),
+                    @ApiResponse(responseCode = "404", description = "Tarjeta no encontrada")
+            }
+    )
     @GetMapping("{id}")
     public ResponseEntity<TarjetaResponse> getById(@PathVariable String id) {
         return ResponseEntity.ok(tarjetaService.getById(id));
     }
 
+    /**
+     * Obtiene los datos privados de una tarjeta por su id.
+     *
+     * <p>Requiere autenticación de usuario y la contraseña de la tarjeta.</p>
+     *
+     * @param id Identificador de la tarjeta
+     * @param tarjetaRequestPrivado Contraseña de la tarjeta
+     * @return Respuesta con los datos privados de la tarjeta
+     */
+    @Operation(
+            summary = "Obtener datos privados de una tarjeta",
+            description = "Recupera los datos privados de una tarjeta utilizando su identificadorático y la contraseña.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Datos privados obtenidos exitosamente"),
+                    @ApiResponse(responseCode = "403", description = "Acceso denegado"),
+                    @ApiResponse(responseCode = "404", description = "Tarjeta no encontrada")
+            }
+    )
     @GetMapping("{id}/private")
     public ResponseEntity<TarjetaResponsePrivado> getPrivateData(@PathVariable String id, @RequestBody TarjetaRequestPrivado tarjetaRequestPrivado) {
         return ResponseEntity.ok(tarjetaService.getPrivateData(id, tarjetaRequestPrivado));
     }
 
+    /**
+     * Guarda una nueva tarjeta en el sistema.
+     *
+     * @param tarjetaRequestSave Datos de la tarjeta a guardar
+     * @return Respuesta con los detalles de la tarjeta creada
+     */
+    @Operation(
+            summary = "Crear tarjeta",
+            description = "Crea una nueva tarjeta en el sistema.",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Tarjeta creada exitosamente"),
+                    @ApiResponse(responseCode = "400", description = "Parámetros de entrada inválidos", content = @Content(schema = @Schema(implementation = Map.class))),
+                    @ApiResponse(responseCode = "403", description = "Acceso denegado")
+            }
+    )
     @PostMapping
     public ResponseEntity<TarjetaResponse> save(@Valid @RequestBody TarjetaRequestSave tarjetaRequestSave) {
         return ResponseEntity.status(HttpStatus.CREATED).body(tarjetaService.save(tarjetaRequestSave));
     }
 
+    /**
+     * Actualiza una tarjeta existente.
+     *
+     * @param id Identificador de la tarjeta a actualizar
+     * @param tarjetaRequestUpdate Datos actualizados de la tarjeta
+     * @return Tarjeta actualizada
+     */
+    @Operation(
+            summary = "Actualizar tarjeta",
+            description = "Actualiza los datos de una tarjeta existente.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Tarjeta actualizada exitosamente"),
+                    @ApiResponse(responseCode = "400", description = "Parámetros de entrada inválidos", content = @Content(schema = @Schema(implementation = Map.class))),
+                    @ApiResponse(responseCode = "403", description = "Acceso denegado"),
+                    @ApiResponse(responseCode = "404", description = "Tarjeta no encontrada")
+            }
+    )
     @PutMapping("{id}")
     public ResponseEntity<TarjetaResponse> update(@PathVariable String id, @Valid @RequestBody TarjetaRequestUpdate tarjetaRequestUpdate) {
         return ResponseEntity.ok(tarjetaService.update(id, tarjetaRequestUpdate));
     }
-
+    
+    /**
+     * Elimina una tarjeta por su identificador.
+     *
+     * @param id Identificador de la tarjeta a eliminar
+     * @return Respuesta sin contenido
+     */
+    @Operation(
+            summary = "Eliminar tarjeta",
+            description = "Elimina una tarjeta utilizando su identificador único.",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Tarjeta eliminada exitosamente"),
+                    @ApiResponse(responseCode = "403", description = "Acceso denegado"),
+                    @ApiResponse(responseCode = "404", description = "Tarjeta no encontrada")
+            }
+    )
     @DeleteMapping("{id}")
     public ResponseEntity<TarjetaResponse> delete(@PathVariable String id) {
         log.info("Tarjeta borrada con id: {}", id);
@@ -98,6 +222,14 @@ public class TarjetaRestController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Maneja las excepciones de validación para solicitudes incorrectas.
+     * Captura errores de validación de argumentos y restricciones.
+     *
+     * @param ex Excepción de validación producida
+     * @return Mapa de errores de validación
+     */
+    @Operation(hidden = true)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
     public Map<String, String> handleValidationExceptions(Exception ex) {
