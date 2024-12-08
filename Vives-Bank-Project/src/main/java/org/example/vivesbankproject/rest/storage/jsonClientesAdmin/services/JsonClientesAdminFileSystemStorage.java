@@ -3,6 +3,8 @@ package org.example.vivesbankproject.rest.storage.jsonClientesAdmin.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.example.vivesbankproject.rest.cliente.dto.ClienteJsonZip;
 import org.example.vivesbankproject.rest.cliente.models.Cliente;
@@ -16,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
@@ -29,7 +32,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
+/**
+ * Servicio de almacenamiento de clientes utilizando el sistema de archivos.
+ * Implementa la lógica para guardar, recuperar y eliminar archivos JSON que contienen información de clientes.
+ *
+ * @author Jaime León, Natalia González, Germán Fernández, Alba García, Mario de Domingo, Alvaro Herrero
+ * @version 1.0-SNAPSHOT
+ */
 @Service
 @Slf4j
 public class JsonClientesAdminFileSystemStorage implements JsonClientesAdminStorageService {
@@ -42,8 +51,22 @@ public class JsonClientesAdminFileSystemStorage implements JsonClientesAdminStor
         this.rootLocation = Paths.get(path);
         this.clienteRepository = clienteRepository;
     }
-
+    /**
+     * Almacena todos los clientes en un archivo JSON en el sistema de archivos.
+     *
+     * @return Nombre del archivo JSON almacenado con la fecha actual en el nombre.
+     * @throws StorageInternal Si ocurre un error al almacenar los datos en el sistema de archivos.
+     */
     @Override
+    @Transactional
+    @Operation(
+            summary = "Almacenar información de clientes en formato JSON",
+            description = "Genera y almacena un archivo JSON con información de clientes en el sistema de almacenamiento local.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Se generó el archivo JSON exitosamente."),
+                    @ApiResponse(responseCode = "500", description = "Error interno durante la operación de almacenamiento.")
+            }
+    )
     public String storeAll() {
         String storedFilename = "admin_clientes_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".json";
         Path jsonFilePath = this.rootLocation.resolve(storedFilename);
@@ -132,8 +155,20 @@ public class JsonClientesAdminFileSystemStorage implements JsonClientesAdminStor
             throw new StorageInternal("Fallo al almacenar el archivo JSON de clientes: " + e);
         }
     }
-
+    /**
+     * Recupera la lista de todos los archivos disponibles en el almacenamiento.
+     *
+     * @return Lista de rutas relativas de los archivos JSON.
+     */
     @Override
+    @Operation(
+            summary = "Obtener la lista de archivos en almacenamiento",
+            description = "Devuelve una lista de nombres de todos los archivos JSON en la carpeta de almacenamiento.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Lista recuperada con éxito."),
+                    @ApiResponse(responseCode = "500", description = "Error interno al recuperar la lista de archivos.")
+            }
+    )
     public Stream<Path> loadAll() {
         log.info("Cargando todos los ficheros almacenados");
         try {
@@ -144,14 +179,41 @@ public class JsonClientesAdminFileSystemStorage implements JsonClientesAdminStor
             throw new StorageInternal("Fallo al leer ficheros almacenados " + e);
         }
     }
-
+    /**
+     * Carga el archivo especificado en la ruta de almacenamiento configurada.
+     *
+     * @param filename Nombre del archivo a cargar.
+     * @return Ruta al archivo en el almacenamiento local.
+     */
     @Override
+    @Operation(
+            summary = "Cargar un archivo desde el almacenamiento",
+            description = "Recupera la ruta de un archivo almacenado según el nombre proporcionado.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Archivo cargado con éxito."),
+                    @ApiResponse(responseCode = "500", description = "Error interno al cargar el archivo.")
+            }
+    )
     public Path load(String filename) {
         log.info("Cargando fichero {}", filename);
         return rootLocation.resolve(filename);
     }
-
+    /**
+     * Convierte la ruta de almacenamiento en un recurso para su recuperación.
+     *
+     * @param filename Nombre del archivo a cargar como recurso.
+     * @return Recurso para su entrega a través de una solicitud HTTP.
+     */
     @Override
+    @Operation(
+            summary = "Cargar un recurso desde el almacenamiento",
+            description = "Convierte una ruta de archivo en un recurso accesible para su entrega.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Recurso cargado exitosamente."),
+                    @ApiResponse(responseCode = "404", description = "Recurso no encontrado."),
+                    @ApiResponse(responseCode = "500", description = "Error interno al cargar el recurso.")
+            }
+    )
     public Resource loadAsResource(String filename) {
         log.info("Cargando fichero {}", filename);
         try {
@@ -166,8 +228,20 @@ public class JsonClientesAdminFileSystemStorage implements JsonClientesAdminStor
             throw new StorageNotFound("No se puede leer fichero: " + filename + " " + e);
         }
     }
-
+    /**
+     * Inicializa la carpeta raíz para almacenamiento si no existe.
+     *
+     * @throws StorageInternal Si no es posible crear la ruta de almacenamiento.
+     */
     @Override
+    @Operation(
+            summary = "Inicializar almacenamiento",
+            description = "Crea la carpeta raíz de almacenamiento si aún no existe.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Almacenamiento inicializado correctamente."),
+                    @ApiResponse(responseCode = "500", description = "Error interno al crear el almacenamiento.")
+            }
+    )
     public void init() {
         log.info("Inicializando almacenamiento");
         try {
@@ -176,8 +250,22 @@ public class JsonClientesAdminFileSystemStorage implements JsonClientesAdminStor
             throw new StorageInternal("No se puede inicializar el almacenamiento " + e);
         }
     }
-
+    /**
+     * Elimina un archivo del almacenamiento si existe.
+     *
+     * @param filename Nombre del archivo que se debe eliminar.
+     * @throws StorageInternal Si no es posible eliminar el archivo.
+     */
     @Override
+    @Operation(
+            summary = "Eliminar un archivo",
+            description = "Elimina un archivo de almacenamiento según su nombre.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Archivo eliminado correctamente."),
+                    @ApiResponse(responseCode = "404", description = "Archivo no encontrado."),
+                    @ApiResponse(responseCode = "500", description = "Error interno al intentar eliminar el archivo.")
+            }
+    )
     public void delete(String filename) {
         String justFilename = StringUtils.getFilename(filename);
         try {
