@@ -4,8 +4,6 @@ services:
     image: postgres:12-alpine
     restart: always
     env_file: .env
-    ports:
-      - ${POSTGRES_PORT}:5432
     environment:
       POSTGRES_USER: ${DATABASE_USER_POSTGRES}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD_POSTGRES}
@@ -24,8 +22,6 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${DATABASE_USER_MONGO}
       MONGO_INITDB_ROOT_PASSWORD: ${DATABASE_PASSWORD_MONGO}
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
-    ports:
-      - ${MONGO_PORT}:27017
     volumes:
       - ./mongo-prod/initMongo.js:/docker-entrypoint-initdb.d/initMongo.js
     networks:
@@ -35,10 +31,10 @@ services:
     container_name: banco-redis
     image: redis:7.4.1
     restart: always
+    env_file:
+      - .env
     volumes:
       - redis-data:/data
-    ports:
-      - "6379:6379"
     networks:
       - banco-network
 
