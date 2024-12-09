@@ -52,7 +52,7 @@ public class TarjetaGenerator {
      * @param cardNumber Número de tarjeta sin el dígito de control.
      * @return El dígito de control calculado según el algoritmo de Luhn.
      */
-    private int calculoLuhn(String cardNumber) {
+    int calculoLuhn(String cardNumber) {
         int suma = 0;
         boolean duplicar = false;
 

@@ -34,8 +34,8 @@ public class ValidarTarjeta {
     public boolean validateTarjeta(
             @Schema(description = "Número de la tarjeta de crédito", example = "4111111111111111") String tarjeta) {
 
-        // Comprueba si la cadena contiene solo números y tiene una longitud válida para tarjetas de crédito
-        if (!tarjeta.matches("\\d+") || tarjeta.length() != 16) {
+        // Comprueba si la tarjeta es nula o si no contiene solo números con una longitud válida
+        if (tarjeta == null || !tarjeta.matches("\\d+") || tarjeta.length() != 16) {
             return false;
         }
 
