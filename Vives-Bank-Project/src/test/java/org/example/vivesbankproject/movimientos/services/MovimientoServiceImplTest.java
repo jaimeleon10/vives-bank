@@ -8,24 +8,27 @@ import org.example.vivesbankproject.rest.cliente.service.ClienteService;
 import org.example.vivesbankproject.rest.cuenta.dto.cuenta.CuentaRequestUpdate;
 import org.example.vivesbankproject.rest.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.rest.cuenta.exceptions.cuenta.CuentaNotFound;
+import org.example.vivesbankproject.rest.cuenta.exceptions.cuenta.CuentaNotFoundByClienteGuid;
+import org.example.vivesbankproject.rest.cuenta.exceptions.cuenta.CuentaNotFoundByTarjetaId;
 import org.example.vivesbankproject.rest.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.rest.cuenta.models.Cuenta;
 import org.example.vivesbankproject.rest.cuenta.services.CuentaService;
 import org.example.vivesbankproject.rest.movimientos.dto.MovimientoRequest;
 import org.example.vivesbankproject.rest.movimientos.dto.MovimientoResponse;
 import org.example.vivesbankproject.rest.movimientos.exceptions.domiciliacion.DuplicatedDomiciliacionException;
+import org.example.vivesbankproject.rest.movimientos.exceptions.domiciliacion.SaldoInsuficienteException;
 import org.example.vivesbankproject.rest.movimientos.exceptions.movimientos.ClienteHasNoMovements;
 import org.example.vivesbankproject.rest.movimientos.exceptions.movimientos.MovimientoNotFound;
 import org.example.vivesbankproject.rest.movimientos.exceptions.movimientos.NegativeAmount;
 import org.example.vivesbankproject.rest.movimientos.exceptions.movimientos.UnknownIban;
 import org.example.vivesbankproject.rest.movimientos.mappers.MovimientoMapper;
-import org.example.vivesbankproject.rest.movimientos.models.Domiciliacion;
-import org.example.vivesbankproject.rest.movimientos.models.IngresoDeNomina;
-import org.example.vivesbankproject.rest.movimientos.models.Movimiento;
-import org.example.vivesbankproject.rest.movimientos.models.Periodicidad;
+import org.example.vivesbankproject.rest.movimientos.models.*;
 import org.example.vivesbankproject.rest.movimientos.repositories.DomiciliacionRepository;
 import org.example.vivesbankproject.rest.movimientos.repositories.MovimientosRepository;
 import org.example.vivesbankproject.rest.movimientos.services.MovimientosServiceImpl;
+import org.example.vivesbankproject.rest.tarjeta.dto.TarjetaResponse;
+import org.example.vivesbankproject.rest.tarjeta.exceptions.TarjetaNotFoundByNumero;
+import org.example.vivesbankproject.rest.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.rest.tarjeta.service.TarjetaService;
 import org.example.vivesbankproject.config.websockets.WebSocketConfig;
 import org.example.vivesbankproject.rest.users.dto.UserResponse;
@@ -47,6 +50,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -479,6 +483,296 @@ class MovimientoServiceImplTest {
 
         // Assert
         assertEquals(ClienteNotFoundByUser.class, result.getClass());
+
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testSaveIngresoDeNomina_CuentaNotFound() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        IngresoDeNomina ingresoDeNomina = new IngresoDeNomina();
+        ingresoDeNomina.setIban_Destino("ES60123412347246753334");
+        ingresoDeNomina.setIban_Origen("ES60123412347246753335");
+        ingresoDeNomina.setCifEmpresa("B12345678");
+        ingresoDeNomina.setCantidad(100.00);
+
+
+        when(clienteService.getUserAuthenticatedByGuid(user.getGuid())).thenReturn(clienteResponse);
+        when(cuentaService.getByIban(ingresoDeNomina.getIban_Destino())).thenReturn(null);
+
+
+        // Act
+        var result = assertThrows(CuentaNotFound.class, () -> movimientosService.saveIngresoDeNomina(user, ingresoDeNomina));
+
+        // Assert
+        assertEquals(CuentaNotFound.class, result.getClass());
+
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testSaveIngresoDeNomina_NegativeAmount() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        IngresoDeNomina ingresoDeNomina = new IngresoDeNomina();
+        ingresoDeNomina.setIban_Destino("ES60123412347246753334");
+        ingresoDeNomina.setIban_Origen("ES60123412347246753335");
+        ingresoDeNomina.setCifEmpresa("B12345678");
+        ingresoDeNomina.setCantidad(-100.00);
+
+
+
+        when(clienteService.getUserAuthenticatedByGuid(user.getGuid())).thenReturn(clienteResponse);
+        when(cuentaService.getByIban(ingresoDeNomina.getIban_Destino())).thenReturn(cuenta);
+
+
+        // Act
+        var result = assertThrows(NegativeAmount.class, () -> movimientosService.saveIngresoDeNomina(user, ingresoDeNomina));
+
+        // Assert
+        assertEquals(NegativeAmount.class, result.getClass());
+
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testSavePagoConTarjeta_Success() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        PagoConTarjeta pagoConTarjeta = PagoConTarjeta.builder()
+                .numeroTarjeta("1234567812345678")
+                .cantidad(100.0)
+                .build();
+
+
+        Tarjeta clienteTarjeta = new Tarjeta();
+        clienteTarjeta.setGuid("tarjeta-guid");
+        clienteTarjeta.setNumeroTarjeta("4149434231419594");
+
+        TarjetaResponse clienteTarjetaResponse = new TarjetaResponse();
+        clienteTarjetaResponse.setGuid("tarjeta-guid");
+        clienteTarjetaResponse.setNumeroTarjeta("4149434231419594");
+
+
+        cuenta.setTarjetaId(clienteTarjeta.getGuid());
+        cuenta.setClienteId(clienteResponse.getGuid());
+
+        movimiento.setPagoConTarjeta(pagoConTarjeta);
+        movimientoResponse.setPagoConTarjeta(pagoConTarjeta);
+
+        when(clienteService.getUserAuthenticatedByGuid(user.getGuid())).thenReturn(clienteResponse);
+        when(tarjetaService.getByNumeroTarjeta(pagoConTarjeta.getNumeroTarjeta())).thenReturn(clienteTarjetaResponse);
+        when(cuentaService.getAllCuentasByClienteGuid(clienteResponse.getGuid())).thenReturn(new ArrayList<>(List.of(cuenta)));
+        when(cuentaService.getByNumTarjeta(clienteTarjeta.getNumeroTarjeta())).thenReturn(cuenta);
+        when(clienteService.getById(cuenta.getClienteId())).thenReturn(clienteResponse);
+        when(userService.getById(clienteResponse.getUserId())).thenReturn(userResponse);
+        when(movimientosRepository.save(any(Movimiento.class))).thenReturn(movimiento);
+        when(movimientosMapper.toMovimientoResponse(any(Movimiento.class))).thenReturn(movimientoResponse);
+
+        // Act
+        MovimientoResponse response = movimientosService.savePagoConTarjeta(user, pagoConTarjeta);
+
+        // Assert
+        assertNotNull(response.getPagoConTarjeta());
+
+        verify(movimientosRepository).save(any(Movimiento.class));
+        verify(movimientosMapper).toMovimientoResponse(any(Movimiento.class));
+    }
+
+    @Test
+    void testSavePagoConTarjeta_ClientNotFound() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        PagoConTarjeta pagoConTarjeta = PagoConTarjeta.builder()
+                .numeroTarjeta("1234567812345678")
+                .cantidad(100.0)
+                .build();
+
+        when(clienteService.getUserAuthenticatedByGuid(user.getGuid())).thenReturn(null);
+
+        // Act
+        var response = assertThrows(ClienteNotFoundByUser.class, () -> movimientosService.savePagoConTarjeta(user, pagoConTarjeta));
+
+        // Assert
+        assertEquals(ClienteNotFoundByUser.class, response.getClass());
+
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testSavePagoConTarjeta_TarjetaNotFound() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        PagoConTarjeta pagoConTarjeta = PagoConTarjeta.builder()
+                .numeroTarjeta("1234567812345678")
+                .cantidad(100.0)
+                .build();
+
+        when(clienteService.getUserAuthenticatedByGuid(user.getGuid())).thenReturn(clienteResponse);
+        when(tarjetaService.getByNumeroTarjeta(pagoConTarjeta.getNumeroTarjeta())).thenReturn(null);
+
+
+        // Act
+        var response = assertThrows(TarjetaNotFoundByNumero.class, () -> movimientosService.savePagoConTarjeta(user, pagoConTarjeta));
+
+        // Assert
+        assertEquals(TarjetaNotFoundByNumero.class, response.getClass());
+
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testSavePagoConTarjeta_CuentaNotFoundByClienteGuid() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        PagoConTarjeta pagoConTarjeta = PagoConTarjeta.builder()
+                .numeroTarjeta("1234567812345678")
+                .cantidad(100.0)
+                .build();
+
+        TarjetaResponse clienteTarjetaResponse = new TarjetaResponse();
+        clienteTarjetaResponse.setGuid("tarjeta-guid");
+        clienteTarjetaResponse.setNumeroTarjeta("4149434231419594");
+
+        when(clienteService.getUserAuthenticatedByGuid(user.getGuid())).thenReturn(clienteResponse);
+        when(tarjetaService.getByNumeroTarjeta(pagoConTarjeta.getNumeroTarjeta())).thenReturn(clienteTarjetaResponse);
+        when(cuentaService.getAllCuentasByClienteGuid(clienteResponse.getGuid())).thenReturn(null);
+
+
+        // Act
+        var response = assertThrows(CuentaNotFoundByClienteGuid.class, () -> movimientosService.savePagoConTarjeta(user, pagoConTarjeta));
+
+        // Assert
+        assertEquals(CuentaNotFoundByClienteGuid.class, response.getClass());
+
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testSavePagoConTarjeta_CuentaNotFoundByTarjetaId() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        PagoConTarjeta pagoConTarjeta = PagoConTarjeta.builder()
+                .numeroTarjeta("1234567812345678")
+                .cantidad(100.0)
+                .build();
+
+        TarjetaResponse clienteTarjetaResponse = new TarjetaResponse();
+        clienteTarjetaResponse.setGuid("tarjeta-guid");
+        clienteTarjetaResponse.setNumeroTarjeta("4149434231419594");
+
+        cuenta.setTarjetaId("error");
+        cuenta.setClienteId(clienteResponse.getGuid());
+
+        when(clienteService.getUserAuthenticatedByGuid(user.getGuid())).thenReturn(clienteResponse);
+        when(tarjetaService.getByNumeroTarjeta(pagoConTarjeta.getNumeroTarjeta())).thenReturn(clienteTarjetaResponse);
+        when(cuentaService.getAllCuentasByClienteGuid(clienteResponse.getGuid())).thenReturn(new ArrayList<>(List.of(cuenta)));
+
+
+        // Act
+        var response = assertThrows(CuentaNotFoundByTarjetaId.class, () -> movimientosService.savePagoConTarjeta(user, pagoConTarjeta));
+
+        // Assert
+        assertEquals(CuentaNotFoundByTarjetaId.class, response.getClass());
+
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testSavePagoConTarjeta_NegativeAmount() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        PagoConTarjeta pagoConTarjeta = PagoConTarjeta.builder()
+                .numeroTarjeta("1234567812345678")
+                .cantidad(-100.0)
+                .build();
+
+        Tarjeta clienteTarjeta = new Tarjeta();
+        clienteTarjeta.setGuid("tarjeta-guid");
+        clienteTarjeta.setNumeroTarjeta("4149434231419594");
+
+        TarjetaResponse clienteTarjetaResponse = new TarjetaResponse();
+        clienteTarjetaResponse.setGuid("tarjeta-guid");
+        clienteTarjetaResponse.setNumeroTarjeta("4149434231419594");
+
+
+        cuenta.setTarjetaId(clienteTarjeta.getGuid());
+        cuenta.setClienteId(clienteResponse.getGuid());
+
+        when(clienteService.getUserAuthenticatedByGuid(user.getGuid())).thenReturn(clienteResponse);
+        when(tarjetaService.getByNumeroTarjeta(pagoConTarjeta.getNumeroTarjeta())).thenReturn(clienteTarjetaResponse);
+        when(cuentaService.getAllCuentasByClienteGuid(clienteResponse.getGuid())).thenReturn(new ArrayList<>(List.of(cuenta)));
+
+
+        // Act
+        var response = assertThrows(NegativeAmount.class, () -> movimientosService.savePagoConTarjeta(user, pagoConTarjeta));
+
+        // Assert
+        assertEquals(NegativeAmount.class, response.getClass());
+
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testSavePagoConTarjeta_SaldoInsuficienteException() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        PagoConTarjeta pagoConTarjeta = PagoConTarjeta.builder()
+                .numeroTarjeta("1234567812345678")
+                .cantidad(100.0)
+                .build();
+
+        Tarjeta clienteTarjeta = new Tarjeta();
+        clienteTarjeta.setGuid("tarjeta-guid");
+        clienteTarjeta.setNumeroTarjeta("4149434231419594");
+
+        TarjetaResponse clienteTarjetaResponse = new TarjetaResponse();
+        clienteTarjetaResponse.setGuid("tarjeta-guid");
+        clienteTarjetaResponse.setNumeroTarjeta("4149434231419594");
+
+
+        cuenta.setTarjetaId(clienteTarjeta.getGuid());
+        cuenta.setClienteId(clienteResponse.getGuid());
+        cuenta.setSaldo("0.0");
+
+        when(clienteService.getUserAuthenticatedByGuid(user.getGuid())).thenReturn(clienteResponse);
+        when(tarjetaService.getByNumeroTarjeta(pagoConTarjeta.getNumeroTarjeta())).thenReturn(clienteTarjetaResponse);
+        when(cuentaService.getAllCuentasByClienteGuid(clienteResponse.getGuid())).thenReturn(new ArrayList<>(List.of(cuenta)));
+
+
+        // Act
+        var response = assertThrows(SaldoInsuficienteException.class, () -> movimientosService.savePagoConTarjeta(user, pagoConTarjeta));
+
+        // Assert
+        assertEquals(SaldoInsuficienteException.class, response.getClass());
 
         verify(movimientosRepository, times(0)).save(any(Movimiento.class));
     }
