@@ -661,7 +661,6 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .userId("123456789")
                 .build();
 
         ClienteResponse clienteResponse = ClienteResponse.builder()
@@ -737,7 +736,6 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .userId("123456789")
                 .build();
 
         MvcResult result = mockMvc.perform(
@@ -767,7 +765,6 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .userId("123456789")
                 .build();
 
         MvcResult result = mockMvc.perform(
@@ -797,7 +794,6 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .userId("123456789")
                 .build();
 
         MvcResult result = mockMvc.perform(
@@ -827,7 +823,6 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .userId("123456789")
                 .build();
 
         MvcResult result = mockMvc.perform(
@@ -859,7 +854,6 @@ class ClienteRestControllerTest {
                 .telefono("13214")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .userId("123456789")
                 .build();
         MvcResult result = mockMvc.perform(
                         put("/v1/clientes/{id}", "123")
@@ -890,7 +884,6 @@ class ClienteRestControllerTest {
                 .telefono("")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .userId("123456789")
                 .build();
 
         MvcResult result = mockMvc.perform(
@@ -923,7 +916,6 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .fotoPerfil(" ")
                 .fotoDni("fotodni.jpg")
-                .userId("123456789")
                 .build();
 
         MvcResult result = mockMvc.perform(
@@ -953,7 +945,6 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni(" ")
-                .userId("123456789")
                 .build();
         MvcResult result = mockMvc.perform(
                         put("/v1/clientes/{id}", "123")
@@ -982,7 +973,6 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .userId("")
                 .build();
 
         MvcResult result = mockMvc.perform(
@@ -1013,7 +1003,6 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .userId("user-guid")
                 .build();
 
         MvcResult result = mockMvc.perform(
@@ -1043,7 +1032,6 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .userId("user-guid")
                 .build();
 
         MvcResult result = mockMvc.perform(
@@ -1074,7 +1062,6 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .userId("user-guid")
                 .build();
 
         MvcResult result = mockMvc.perform(
@@ -1105,7 +1092,6 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .userId("user-guid")
                 .build();
 
         MvcResult result = mockMvc.perform(
@@ -1135,7 +1121,6 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .userId("user-guid")
                 .build();
 
         MvcResult result = mockMvc.perform(
@@ -1165,7 +1150,6 @@ class ClienteRestControllerTest {
                 .telefono("123456789")
                 .fotoPerfil("fotoprfil.jpg")
                 .fotoDni("fotodni.jpg")
-                .userId("user-guid")
                 .build();
 
         MvcResult result = mockMvc.perform(
