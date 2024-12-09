@@ -351,7 +351,7 @@ public class ClienteServiceImpl implements ClienteService {
             }
         }
         if (!Objects.equals(clienteRequestUpdate.getEmail(), clienteAutenticado.getEmail())) {
-            if (clienteRepository.findByEmail(clienteRequestUpdate.getNombre()).isPresent()) {
+            if (clienteRepository.findByEmail(clienteRequestUpdate.getEmail()).isPresent()) {
                 throw new ClienteExistsByEmail(clienteRequestUpdate.getEmail());
             }
         }
