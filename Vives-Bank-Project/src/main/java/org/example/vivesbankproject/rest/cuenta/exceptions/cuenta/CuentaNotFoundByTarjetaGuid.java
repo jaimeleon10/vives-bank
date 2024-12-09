@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * @version 1.0-SNAPSHOT
  */
 @ResponseStatus(HttpStatus.NOT_FOUND)
-public class CuentaNotFoundByTarjeta extends CuentaException {
+public class CuentaNotFoundByTarjetaGuid extends CuentaException {
 
     /**
      * Constructor para crear una instancia de {@code CuentaNotFoundByTarjeta} con un mensaje que indica
@@ -22,7 +22,7 @@ public class CuentaNotFoundByTarjeta extends CuentaException {
      *
      * @param id El ID de la tarjeta asociada a la cuenta que no se encontró
      */
-    public CuentaNotFoundByTarjeta(Long id) {
+    public CuentaNotFoundByTarjetaGuid(Long id) {
         super("Cuenta con ID de tarjeta " + id + " no encontrada");
     }
 }

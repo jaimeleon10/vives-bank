@@ -207,8 +207,6 @@ public class ClienteServiceImpl implements ClienteService {
      * @param clienteRequestUpdate Información con los nuevos datos para actualizar el cliente.
      * @return ClienteResponse Devuelve la información actualizada del cliente.
      * @throws ClienteNotFound Si el cliente con el identificador proporcionado no existe.
-     * @throws UserNotFoundById Si el usuario no es encontrado en la base de datos.
-     * @throws ClienteUserAlreadyAssigned Si el usuario ya está asignado a otro cliente.
      * @throws ClienteExistsByTelefono Si el número de teléfono ya existe en otro registro.
      * @throws ClienteExistsByEmail Si el correo electrónico ya existe en otro registro.
      */
@@ -229,19 +227,6 @@ public class ClienteServiceImpl implements ClienteService {
         var clienteExistente = clienteRepository.findByGuid(id).orElseThrow(
                 () -> new ClienteNotFound(id)
         );
-
-        // Buscamos si existe el usuario por el parámetro id adjuntado en el cliente request
-        var usuarioExistente = clienteExistente.getUser();
-        if (clienteRequestUpdate.getUserId() != null) {
-             usuarioExistente = userRepository.findByGuid(clienteRequestUpdate.getUserId()).orElseThrow(
-                    () -> new UserNotFoundById(clienteRequestUpdate.getUserId())
-            );
-        }
-
-        // Buscamos si existe algún cliente con el usuario adjunto ya asignado
-        if (clienteRepository.existsByUserGuid(clienteRequestUpdate.getUserId())) {
-            throw new ClienteUserAlreadyAssigned(clienteRequestUpdate.getUserId());
-        }
 
         // Validamos si el nuevo email y telefono introducido existe en caso de que sea distinto del existente
         if (!Objects.equals(clienteRequestUpdate.getTelefono(), clienteExistente.getTelefono())) {
@@ -264,10 +249,10 @@ public class ClienteServiceImpl implements ClienteService {
                 .build();
 
         // Guardamos el cliente mapeado a update
-        var clienteSave = clienteRepository.save(clienteMapper.toClienteUpdate(clienteRequestUpdate, clienteExistente, usuarioExistente, direccion));
+        var clienteSave = clienteRepository.save(clienteMapper.toClienteUpdate(clienteRequestUpdate, clienteExistente, clienteExistente.getUser(), direccion));
 
         // Devolvemos el cliente response con los datos necesarios
-        return clienteMapper.toClienteResponse(clienteSave, usuarioExistente.getGuid());
+        return clienteMapper.toClienteResponse(clienteSave, clienteExistente.getUser().getGuid());
     }
 
     /**
