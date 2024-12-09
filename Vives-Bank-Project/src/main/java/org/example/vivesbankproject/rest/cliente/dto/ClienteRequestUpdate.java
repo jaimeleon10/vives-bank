@@ -112,12 +112,4 @@ public class ClienteRequestUpdate {
     @Schema(description = "URL de la foto del DNI del cliente", example = "https://example.com/foto-dni.jpg")
     @NotBlank(message = "La foto del DNI no puede estar vacia")
     private String fotoDni;
-
-    /**
-     * Identificador de usuario asociado con el cliente para realizar la actualización.
-     * @param userId El identificador único del usuario.
-     */
-    @Schema(description = "El identificador del usuario asociado al cliente", example = "user123")
-    @NotBlank(message = "El id de usuario no puede estar vacio")
-    private String userId;
 }

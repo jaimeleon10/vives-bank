@@ -9,7 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.rest.cuenta.exceptions.cuenta.CuentaNotFoundByTarjeta;
+import org.example.vivesbankproject.rest.cuenta.exceptions.cuenta.CuentaNotFoundByTarjetaGuid;
 import org.example.vivesbankproject.rest.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.rest.tarjeta.dto.*;
 import org.example.vivesbankproject.rest.tarjeta.exceptions.TarjetaNotFound;
@@ -56,23 +56,14 @@ public class TarjetaServiceImpl implements TarjetaService {
     private final TarjetaMapper tarjetaMapper;
     private final UserRepository userRepository;
 
-    private final WebSocketConfig webSocketConfig;
-    private final ObjectMapper mapper;
-    private final CuentaRepository cuentaRepository;
-
     @Setter
     private WebSocketHandler webSocketService;
 
     @Autowired
-    public TarjetaServiceImpl(TarjetaRepository tarjetaRepository, TarjetaMapper tarjetaMapper, UserRepository userRepository, WebSocketConfig webSocketConfig, CuentaRepository cuentaRepository) {
+    public TarjetaServiceImpl(TarjetaRepository tarjetaRepository, TarjetaMapper tarjetaMapper, UserRepository userRepository) {
         this.tarjetaRepository = tarjetaRepository;
         this.tarjetaMapper = tarjetaMapper;
         this.userRepository = userRepository;
-
-        this.webSocketConfig = webSocketConfig;
-        webSocketService = webSocketConfig.webSocketTarjetasHandler();
-        mapper = new ObjectMapper();
-        this.cuentaRepository = cuentaRepository;
     }
 
 
@@ -229,7 +220,6 @@ public class TarjetaServiceImpl implements TarjetaService {
             @ApiResponse(responseCode = "401", description = "Credenciales de usuario inválidas")
     })
     public TarjetaResponsePrivado getPrivateData(String id, TarjetaRequestPrivado tarjetaRequestPrivado) {
-        // Cambiar cuando añadamos autenticación
         log.info("Obteniendo datos privados de la tarjeta con id: {}", id);
         var user = userRepository.findByUsername(tarjetaRequestPrivado.getUsername());
         if (user.isEmpty()) {
@@ -261,7 +251,6 @@ public class TarjetaServiceImpl implements TarjetaService {
     public TarjetaResponse save(TarjetaRequestSave tarjetaRequestSave) {
         log.info("Guardando tarjeta: {}", tarjetaRequestSave);
         var tarjeta = tarjetaRepository.save(tarjetaMapper.toTarjeta(tarjetaRequestSave));
-        onChange(Notification.Tipo.CREATE, tarjeta);
         return tarjetaMapper.toTarjetaResponse(tarjeta);
     }
 
@@ -286,7 +275,6 @@ public class TarjetaServiceImpl implements TarjetaService {
                 () -> new TarjetaNotFound(id)
         );
         var tarjetaUpdated = tarjetaRepository.save(tarjetaMapper.toTarjetaUpdate(tarjetaRequestUpdate, tarjeta));
-        onChange(Notification.Tipo.UPDATE, tarjetaUpdated);
         return tarjetaMapper.toTarjetaResponse(tarjetaUpdated);
     }
 
@@ -310,66 +298,5 @@ public class TarjetaServiceImpl implements TarjetaService {
         var tarjeta = tarjetaRepository.findByGuid(id).orElseThrow(() -> new TarjetaNotFound(id));
         tarjeta.setIsDeleted(true);
         tarjetaRepository.save(tarjeta);
-        onChange(Notification.Tipo.DELETE, tarjeta);
-    }
-
-    /**
-     * Método para notificar cambios en las tarjetas a través de WebSocket.
-     * Envía notificaciones de creación, actualización o eliminación de tarjetas.
-     *
-     * @param tipo Tipo de notificación (CREATE, UPDATE, DELETE)
-     * @param data Datos de la tarjeta modificada
-     */
-    void onChange(Notification.Tipo tipo, Tarjeta data) {
-        log.debug("Servicio de Tarjetas onChange con tipo: " + tipo + " y datos: " + data);
-
-        if (webSocketService == null) {
-            log.warn("No se ha podido enviar la notificación a los clientes ws, no se ha encontrado el servicio");
-            webSocketService = this.webSocketConfig.webSocketTarjetasHandler();
-        }
-
-        try {
-            Notification<TarjetaResponse> notificacion = new Notification<>(
-                    "TARJETAS",
-                    tipo,
-                    tarjetaMapper.toTarjetaResponse(data),
-                    LocalDateTime.now().toString()
-            );
-
-            String json = mapper.writeValueAsString(notificacion);
-
-            // Recuperar el usuario del cliente de la tarjeta
-            var cuenta = cuentaRepository.findByTarjetaId(data.getId()).orElseThrow(() -> new CuentaNotFoundByTarjeta(data.getId()));
-            String userId = cuenta.getCliente().getUser().getGuid();
-            User user = userRepository.findByGuid(userId).orElseThrow(() -> new UserNotFoundById(userId));
-            String userName = user.getUsername();
-
-            sendMessageUser(userName, json);
-
-        } catch (JsonProcessingException e) {
-            log.error("Error al convertir la notificación a JSON", e);
-        }
-    }
-
-    /**
-     * Hace la llamada al método para enviar mensaje al usuario concreto
-     * @param userName  Usuario al que se enviará el mensaje
-     * @param json      Mensaje a enviar
-     * @see WebSocketHandler
-     *
-     * @author Jaime León, Natalia González,
-     *         German Fernandez, Alba García, Mario de Domingo, Alvaro Herrero
-     * @version 1.0-SNAPSHOT
-     */
-    private void sendMessageUser(String userName, String json){
-        log.info("Enviando mensaje al cliente ws del usuario");
-        Thread senderThread = new Thread(() -> {
-            try {
-                webSocketService.sendMessageToUser(userName,json);
-            } catch (Exception e) {
-                log.error("Error al enviar el mensaje a través del servicio WebSocket", e);
-            }
-        });
-        senderThread.start();
     }
 }
