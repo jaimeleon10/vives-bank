@@ -14,7 +14,6 @@ import org.example.vivesbankproject.rest.storage.exceptions.StorageNotFound;
 import org.example.vivesbankproject.rest.storage.jsonClientes.services.JsonClientesFileSystemStorage;
 import org.example.vivesbankproject.rest.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.rest.cuenta.mappers.CuentaMapper;
-import org.example.vivesbankproject.rest.storage.exceptions.StorageInternal;
 import org.example.vivesbankproject.rest.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.rest.users.mappers.UserMapper;
 import org.jetbrains.annotations.NotNull;
@@ -22,9 +21,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.Resource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -42,30 +41,24 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
 class JsonClientesFileSystemStorageTest {
 
     private static final String TEST_ROOT_LOCATION = "data/test";
 
     private JsonClientesFileSystemStorage storageService;
 
-    @MockBean
+    @Mock
     private ClienteRepository clienteRepository;
 
-    @MockBean
-    private final TarjetaMapper tarjetaMapper;
+    @Mock
+    private TarjetaMapper tarjetaMapper;
 
-    @MockBean
-    private final CuentaMapper cuentaMapper;
+    @Mock
+    private CuentaMapper cuentaMapper;
 
-    @MockBean
-    private final UserMapper userMapper;
-
-    JsonClientesFileSystemStorageTest(TarjetaMapper tarjetaMapper, CuentaMapper cuentaMapper, UserMapper userMapper) {
-        this.tarjetaMapper = tarjetaMapper;
-        this.cuentaMapper = cuentaMapper;
-        this.userMapper = userMapper;
-    }
+    @Mock
+    private UserMapper userMapper;
 
     @BeforeEach
     void setUp() throws IOException {

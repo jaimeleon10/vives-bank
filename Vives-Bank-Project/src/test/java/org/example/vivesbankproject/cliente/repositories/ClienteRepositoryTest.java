@@ -110,7 +110,7 @@ public class ClienteRepositoryTest {
     @Test
     void FindByUserGuid() {
         User user = crearUsuario("testUserGuid");
-        Cliente cliente = crearCliente(user, "guid-12345", "12345678A", "userguid@test.com", "123456789");
+        Cliente cliente = crearCliente(user, "guid-12345", "12345679A", "userguid@test.com", "123456789");
         cliente = clienteRepository.save(cliente);
 
         Optional<Cliente> result = clienteRepository.findByUserGuid(user.getGuid());
