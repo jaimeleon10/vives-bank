@@ -18,6 +18,8 @@ import org.example.vivesbankproject.rest.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.rest.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.rest.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.config.websockets.WebSocketConfig;
+import org.example.vivesbankproject.rest.users.models.User;
+import org.example.vivesbankproject.rest.users.repositories.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,6 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,6 +46,9 @@ class CuentaServiceImplTest {
 
     @Mock
     private CuentaRepository cuentaRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     @Mock
     private CuentaMapper cuentaMapper;
@@ -131,7 +137,9 @@ class CuentaServiceImplTest {
         cuentaRequest.setClienteId("cliente1");
 
         TipoCuenta tipoCuenta = new TipoCuenta();
+        User user = new User();
         Cliente cliente = new Cliente();
+        cliente.setUser(user);
         Tarjeta tarjeta = new Tarjeta();
 
         Cuenta cuenta = new Cuenta();
@@ -143,6 +151,7 @@ class CuentaServiceImplTest {
         when(tipoCuentaRepository.findByGuid(cuentaRequest.getTipoCuentaId())).thenReturn(Optional.of(tipoCuenta));
         when(tarjetaRepository.findByGuid(cuentaRequest.getTarjetaId())).thenReturn(Optional.of(tarjeta));
         when(clienteRepository.findByGuid(cuentaRequest.getClienteId())).thenReturn(Optional.of(cliente));
+        when(userRepository.findByGuid(user.getGuid())).thenReturn(Optional.of(user));
         when(cuentaMapper.toCuenta(tipoCuenta, tarjeta, cliente)).thenReturn(cuenta);
         when(cuentaRepository.save(cuenta)).thenReturn(cuenta);
         when(cuentaMapper.toCuentaResponse(any(), any(), any(), any())).thenReturn(new CuentaResponse());
@@ -158,11 +167,14 @@ class CuentaServiceImplTest {
     void update() {
         String cuentaId = "123";
 
+        User user = new User();
+
         TipoCuenta tipoCuenta = new TipoCuenta();
         tipoCuenta.setGuid("tipoCuenta-guid");
 
         Cliente cliente = new Cliente();
         cliente.setGuid("cliente-guid");
+        cliente.setUser(user);
 
         Tarjeta tarjeta = new Tarjeta();
         tarjeta.setGuid("tarjeta-guid");
@@ -185,24 +197,20 @@ class CuentaServiceImplTest {
         cuentaActualizada.setTipoCuenta(tipoCuenta);
         cuentaActualizada.setCliente(cliente);
         cuentaActualizada.setTarjeta(tarjeta);
+        cuentaActualizada.setCreatedAt(cuenta.getCreatedAt());
+        cuentaActualizada.setUpdatedAt(cuenta.getUpdatedAt());
 
         CuentaResponse cuentaResponse = new CuentaResponse();
         cuentaResponse.setGuid(cuentaId);
 
-        lenient().when(cuentaRepository.findByGuid(cuentaId)).thenReturn(Optional.of(cuenta));
-        lenient().when(tipoCuentaRepository.findByGuid(cuentaRequestUpdate.getTipoCuentaId())).thenReturn(Optional.of(tipoCuenta));
-        lenient().when(tarjetaRepository.findByGuid(cuentaRequestUpdate.getTarjetaId())).thenReturn(Optional.of(tarjeta));
-        lenient().when(clienteRepository.findByGuid(cuentaRequestUpdate.getClienteId())).thenReturn(Optional.of(cliente));
-
+        when(cuentaRepository.findByGuid(cuentaId)).thenReturn(Optional.of(cuenta));
+        when(tipoCuentaRepository.findByGuid(cuentaRequestUpdate.getTipoCuentaId())).thenReturn(Optional.of(tipoCuenta));
+        when(tarjetaRepository.findByGuid(cuentaRequestUpdate.getTarjetaId())).thenReturn(Optional.of(tarjeta));
+        when(clienteRepository.findByGuid(cuentaRequestUpdate.getClienteId())).thenReturn(Optional.of(cliente));
+        when(userRepository.findByGuid(user.getGuid())).thenReturn(Optional.of(user));
         when(cuentaMapper.toCuentaUpdate(cuentaRequestUpdate, cuenta, tipoCuenta, tarjeta, cliente)).thenReturn(cuentaActualizada);
         when(cuentaRepository.save(cuentaActualizada)).thenReturn(cuentaActualizada);
-
-        doReturn(cuentaResponse).when(cuentaMapper).toCuentaResponse(
-                eq(cuentaActualizada),
-                anyString(),
-                anyString(),
-                eq(cliente.getGuid())
-        );
+        when(cuentaMapper.toCuentaResponse(cuenta, cuenta.getTipoCuenta().getGuid(), cuenta.getTarjeta().getGuid(), cuenta.getCliente().getGuid())).thenReturn(cuentaResponse);
 
         CuentaResponse result = cuentaService.update(cuentaId, cuentaRequestUpdate);
 
@@ -211,12 +219,7 @@ class CuentaServiceImplTest {
 
         verify(cuentaRepository).findByGuid(cuentaId);
         verify(cuentaRepository).save(cuentaActualizada);
-        verify(cuentaMapper).toCuentaResponse(
-                eq(cuentaActualizada),
-                anyString(),
-                anyString(),
-                eq(cliente.getGuid())
-        );
+        verify(cuentaMapper, times(2)).toCuentaResponse(cuenta, cuenta.getTipoCuenta().getGuid(), cuenta.getTarjeta().getGuid(), cuenta.getCliente().getGuid());
         verify(tipoCuentaRepository).findByGuid(cuentaRequestUpdate.getTipoCuentaId());
         verify(tarjetaRepository).findByGuid(cuentaRequestUpdate.getTarjetaId());
         verify(clienteRepository).findByGuid(cuentaRequestUpdate.getClienteId());
@@ -237,10 +240,25 @@ class CuentaServiceImplTest {
     @Test
     void deleteById() {
         String cuentaId = "123";
+
+        TipoCuenta tipoCuenta = new TipoCuenta();
+        User user = new User();
+        Cliente cliente = new Cliente();
+        cliente.setUser(user);
+        Tarjeta tarjeta = new Tarjeta();
+
         Cuenta cuenta = new Cuenta();
         cuenta.setGuid(cuentaId);
+        cuenta.setTipoCuenta(tipoCuenta);
+        cuenta.setCliente(cliente);
+        cuenta.setTarjeta(tarjeta);
+
+        CuentaResponse cuentaResponse = new CuentaResponse();
+        cuentaResponse.setGuid(cuentaId);
 
         when(cuentaRepository.findByGuid(cuentaId)).thenReturn(Optional.of(cuenta));
+        when(cuentaMapper.toCuentaResponse(cuenta, tipoCuenta.getGuid(), tarjeta.getGuid(), cliente.getGuid())).thenReturn(cuentaResponse);
+        when(userRepository.findByGuid(user.getGuid())).thenReturn(Optional.of(user));
 
         cuentaService.deleteById(cuentaId);
 
