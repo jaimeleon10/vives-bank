@@ -7,6 +7,7 @@ import org.example.vivesbankproject.rest.cuenta.dto.cuenta.CuentaRequest;
 import org.example.vivesbankproject.rest.cuenta.dto.cuenta.CuentaRequestUpdate;
 import org.example.vivesbankproject.rest.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.rest.cuenta.exceptions.cuenta.CuentaNotFound;
+import org.example.vivesbankproject.rest.cuenta.exceptions.cuenta.CuentaNotFoundByIban;
 import org.example.vivesbankproject.rest.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.rest.cuenta.mappers.TipoCuentaMapper;
 import org.example.vivesbankproject.rest.cuenta.models.Cuenta;
@@ -127,6 +128,56 @@ class CuentaServiceImplTest {
 
         assertThrows(CuentaNotFound.class, () -> cuentaService.getById(cuentaId));
         verify(cuentaRepository).findByGuid(cuentaId);
+    }
+
+    @Test
+    void getByIban() {
+        String iban = "ES1234567890123456789012";
+        Cuenta cuenta = new Cuenta();
+        cuenta.setIban(iban);
+
+        TipoCuenta tipoCuenta = new TipoCuenta();
+        tipoCuenta.setGuid("tipoCuenta-guid");
+        cuenta.setTipoCuenta(tipoCuenta);
+
+        Tarjeta tarjeta = new Tarjeta();
+        tarjeta.setGuid("tarjeta-guid");
+        cuenta.setTarjeta(tarjeta);
+
+        Cliente cliente = new Cliente();
+        cliente.setGuid("cliente-guid");
+        cuenta.setCliente(cliente);
+
+        CuentaResponse cuentaResponse = new CuentaResponse();
+
+        when(cuentaRepository.findByIban(iban)).thenReturn(Optional.of(cuenta));
+        when(cuentaMapper.toCuentaResponse(
+                cuenta,
+                tipoCuenta.getGuid(),
+                tarjeta.getGuid(),
+                cliente.getGuid()
+        )).thenReturn(cuentaResponse);
+
+        CuentaResponse result = cuentaService.getByIban(iban);
+
+        assertNotNull(result);
+        verify(cuentaRepository).findByIban(iban);
+        verify(cuentaMapper).toCuentaResponse(
+                cuenta,
+                tipoCuenta.getGuid(),
+                tarjeta.getGuid(),
+                cliente.getGuid()
+        );
+    }
+
+    @Test
+    void getByIbanNotFound() {
+        String iban = "ES9999999999999999999999";
+        when(cuentaRepository.findByIban(iban)).thenReturn(Optional.empty());
+
+        assertThrows(CuentaNotFoundByIban.class, () -> cuentaService.getByIban(iban));
+        verify(cuentaRepository).findByIban(iban);
+        verifyNoInteractions(cuentaMapper);
     }
 
     @Test
