@@ -30,7 +30,6 @@ class UserRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        userRepository.deleteAll();
         user = User.builder()
                 .guid("hola")
                 .username("testuser")
