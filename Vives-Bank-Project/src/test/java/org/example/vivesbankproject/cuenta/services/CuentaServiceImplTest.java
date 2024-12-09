@@ -8,6 +8,7 @@ import org.example.vivesbankproject.rest.cuenta.dto.cuenta.CuentaRequestUpdate;
 import org.example.vivesbankproject.rest.cuenta.dto.cuenta.CuentaResponse;
 import org.example.vivesbankproject.rest.cuenta.exceptions.cuenta.CuentaNotFound;
 import org.example.vivesbankproject.rest.cuenta.exceptions.cuenta.CuentaNotFoundByIban;
+import org.example.vivesbankproject.rest.cuenta.exceptions.cuenta.CuentaNotFoundByNumTarjeta;
 import org.example.vivesbankproject.rest.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.rest.cuenta.mappers.TipoCuentaMapper;
 import org.example.vivesbankproject.rest.cuenta.models.Cuenta;
@@ -15,6 +16,7 @@ import org.example.vivesbankproject.rest.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.rest.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.rest.cuenta.repositories.TipoCuentaRepository;
 import org.example.vivesbankproject.rest.cuenta.services.CuentaServiceImpl;
+import org.example.vivesbankproject.rest.tarjeta.exceptions.TarjetaNotFoundByNumero;
 import org.example.vivesbankproject.rest.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.rest.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.rest.tarjeta.repositories.TarjetaRepository;
@@ -29,7 +31,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -177,7 +178,79 @@ class CuentaServiceImplTest {
 
         assertThrows(CuentaNotFoundByIban.class, () -> cuentaService.getByIban(iban));
         verify(cuentaRepository).findByIban(iban);
-        verifyNoInteractions(cuentaMapper);
+    }
+
+    @Test
+    void getByNumTarjeta() {
+        String numTarjeta = "1234567812345678";
+
+        Tarjeta tarjeta = new Tarjeta();
+        tarjeta.setId(1L);
+        tarjeta.setNumeroTarjeta(numTarjeta);
+
+        Cuenta cuenta = new Cuenta();
+        cuenta.setId(1L);
+
+        TipoCuenta tipoCuenta = new TipoCuenta();
+        tipoCuenta.setGuid("tipoCuenta-guid");
+        cuenta.setTipoCuenta(tipoCuenta);
+
+        Tarjeta tarjetaCuenta = new Tarjeta();
+        tarjetaCuenta.setGuid("tarjeta-guid");
+        cuenta.setTarjeta(tarjetaCuenta);
+
+        Cliente cliente = new Cliente();
+        cliente.setGuid("cliente-guid");
+        cuenta.setCliente(cliente);
+
+        CuentaResponse cuentaResponse = new CuentaResponse();
+
+        when(tarjetaRepository.findByNumeroTarjeta(numTarjeta)).thenReturn(Optional.of(tarjeta));
+        when(cuentaRepository.findByTarjetaId(tarjeta.getId())).thenReturn(Optional.of(cuenta));
+        when(cuentaMapper.toCuentaResponse(
+                cuenta,
+                tipoCuenta.getGuid(),
+                tarjetaCuenta.getGuid(),
+                cliente.getGuid()
+        )).thenReturn(cuentaResponse);
+
+        CuentaResponse result = cuentaService.getByNumTarjeta(numTarjeta);
+
+        assertNotNull(result);
+        verify(tarjetaRepository).findByNumeroTarjeta(numTarjeta);
+        verify(cuentaRepository).findByTarjetaId(tarjeta.getId());
+        verify(cuentaMapper).toCuentaResponse(
+                cuenta,
+                tipoCuenta.getGuid(),
+                tarjetaCuenta.getGuid(),
+                cliente.getGuid()
+        );
+    }
+
+    @Test
+    void testGetByNumTarjeta_TarjetaNotFound() {
+        String numTarjeta = "8765432187654321";
+
+        when(tarjetaRepository.findByNumeroTarjeta(numTarjeta)).thenReturn(Optional.empty());
+
+        assertThrows(TarjetaNotFoundByNumero.class, () -> cuentaService.getByNumTarjeta(numTarjeta));
+        verify(tarjetaRepository).findByNumeroTarjeta(numTarjeta);
+    }
+
+    @Test
+    void testGetByNumTarjeta_CuentaNotFound() {
+        String numTarjeta = "1234567812345678";
+
+        Tarjeta tarjeta = new Tarjeta();
+        tarjeta.setId(1L);
+        tarjeta.setNumeroTarjeta(numTarjeta);
+
+        when(tarjetaRepository.findByNumeroTarjeta(numTarjeta)).thenReturn(Optional.of(tarjeta));
+        when(cuentaRepository.findByTarjetaId(tarjeta.getId())).thenReturn(Optional.empty());
+
+        assertThrows(CuentaNotFoundByNumTarjeta.class, () -> cuentaService.getByNumTarjeta(numTarjeta));
+        verify(tarjetaRepository).findByNumeroTarjeta(numTarjeta);
+        verify(cuentaRepository).findByTarjetaId(tarjeta.getId());
     }
 
     @Test
