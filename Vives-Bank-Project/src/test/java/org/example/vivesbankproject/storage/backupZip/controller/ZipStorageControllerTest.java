@@ -98,7 +98,7 @@ class ZipStorageControllerTest {
 
         doNothing().when(storageService).loadFromZip(any(File.class));
 
-        mockMvc.perform(post("/storage/zip/import/" + filename))
+        mockMvc.perform(get("/storage/zip/import/" + filename))
                 .andExpect(status().isNoContent());
 
         verify(storageService, times(1)).loadFromZip(any(File.class));
@@ -110,7 +110,7 @@ class ZipStorageControllerTest {
 
         doThrow(new StorageNotFound("Archivo no encontrado")).when(storageService).loadFromZip(any(File.class));
 
-        mockMvc.perform(post("/storage/zip/import/" + filename))
+        mockMvc.perform(get("/storage/zip/import/" + filename))
                 .andExpect(status().isNotFound());
 
         verify(storageService, times(1)).loadFromZip(any(File.class));
@@ -122,7 +122,7 @@ class ZipStorageControllerTest {
 
         doThrow(new RuntimeException("Error desconocido")).when(storageService).loadFromZip(any(File.class));
 
-        mockMvc.perform(post("/storage/zip/import/" + filename))
+        mockMvc.perform(get("/storage/zip/import/" + filename))
                 .andExpect(status().isInternalServerError());
 
         verify(storageService, times(1)).loadFromZip(any(File.class));

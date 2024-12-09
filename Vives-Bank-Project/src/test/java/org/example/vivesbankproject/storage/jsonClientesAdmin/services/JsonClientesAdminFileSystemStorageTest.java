@@ -1,7 +1,9 @@
 package org.example.vivesbankproject.storage.jsonClientesAdmin.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.example.vivesbankproject.rest.cliente.dto.ClienteJsonZip;
 import org.example.vivesbankproject.rest.cliente.models.Cliente;
 import org.example.vivesbankproject.rest.cliente.models.Direccion;
 import org.example.vivesbankproject.rest.cliente.repositories.ClienteRepository;
@@ -26,6 +28,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -90,75 +94,46 @@ class JsonClientesAdminFileSystemStorageTest {
     }
 
     @Test
-    void storeAll() throws IOException {
-        User user = User.builder()
-                .id(1L)
-                .guid("jDRkPTbLFE1")
-                .username("johndoe")
-                .password("password")
-                .roles(Set.of(Role.ADMIN))
-                .build();
-
+    void storeAll() throws Exception {
         Cliente cliente = new Cliente();
-        cliente.setGuid("123");
+        cliente.setId(1L);
+        cliente.setGuid("guid123");
         cliente.setDni("12345678A");
         cliente.setNombre("John");
         cliente.setApellidos("Doe");
         cliente.setDireccion(new Direccion());
         cliente.setEmail("john.doe@example.com");
-        cliente.setUser(user);
         cliente.setTelefono("123456789");
-        cliente.setFotoPerfil(null);
-        cliente.setFotoDni(null);
-        cliente.setCuentas(new HashSet<>());
 
-        Cuenta cuenta = new Cuenta();
-        cuenta.setGuid("abc123");
-        cuenta.setIban("ES1234567890123456789012");
-        cuenta.setSaldo(BigDecimal.valueOf(1000.0));
-        cuenta.setTipoCuenta(new TipoCuenta());
+        when(clienteRepository.findAll()).thenReturn(Collections.singletonList(cliente));
 
-        Tarjeta tarjeta = new Tarjeta();
-        tarjeta.setGuid("tarjeta123");
-        tarjeta.setNumeroTarjeta("1234-5678-9012-3456");
-        tarjeta.setLimiteDiario(BigDecimal.valueOf(500));
-        tarjeta.setLimiteSemanal(BigDecimal.valueOf(1500));
-        tarjeta.setLimiteMensual(BigDecimal.valueOf(3000));
-        tarjeta.setTipoTarjeta(TipoTarjeta.DEBITO);
+        String expectedFilename = "admin_clientes_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".json";
+        Path expectedFilePath = Path.of(TEST_ROOT_LOCATION).resolve(expectedFilename);
 
-        cuenta.setTarjeta(tarjeta);
-        cliente.getCuentas().add(cuenta);
+        if (Files.exists(expectedFilePath)) {
+            Files.delete(expectedFilePath);
+        }
+        assertFalse(Files.exists(expectedFilePath), "El archivo debería no existir antes de la ejecución.");
 
-        List<Cliente> clientes = Collections.singletonList(cliente);
+        String result = storageService.storeAll();
 
-        when(clienteRepository.findAll()).thenReturn(clientes);
+        assertEquals(expectedFilename, result, "El nombre del archivo generado no es el esperado.");
+        assertTrue(Files.exists(expectedFilePath), "El archivo JSON debería haberse creado.");
 
-        String storedFilename = storageService.storeAll();
+        verify(clienteRepository, times(1)).findAll();
 
-        String filePath = TEST_ROOT_LOCATION + "/" + storedFilename;
-        Path path = Paths.get(filePath);
-        assertTrue(Files.exists(path), "El archivo no fue creado.");
-
-        byte[] fileContent = Files.readAllBytes(path);
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-        String jsonData = new String(fileContent);
-        List<Cliente> clienteList = Arrays.asList(objectMapper.readValue(jsonData, Cliente[].class));
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
 
-        assertEquals(1, clienteList.size());
-        Cliente clienteFromFile = clienteList.get(0);
-        assertEquals("123", clienteFromFile.getGuid());
-        assertEquals("12345678A", clienteFromFile.getDni());
-        assertEquals("John", clienteFromFile.getNombre());
-        assertEquals("Doe", clienteFromFile.getApellidos());
-        assertEquals(new Direccion(), clienteFromFile.getDireccion());
-        assertEquals("john.doe@example.com", clienteFromFile.getEmail());
-        assertEquals(user, clienteFromFile.getUser());
-        assertEquals("123456789", clienteFromFile.getTelefono());
-        assertNotNull(clienteFromFile.getCuentas());
-        assertFalse(clienteFromFile.getCuentas().isEmpty());
+        String jsonData = Files.readString(expectedFilePath);
+        assertNotNull(jsonData, "El contenido del archivo no debería ser nulo.");
+        assertFalse(jsonData.isEmpty(), "El contenido del archivo no debería estar vacío.");
 
-        Files.deleteIfExists(path);
+        ClienteJsonZip[] clientes = objectMapper.readValue(jsonData, ClienteJsonZip[].class);
+        assertEquals(1, clientes.length, "Debería haber un cliente en el archivo JSON.");
+        assertEquals("guid123", clientes[0].getGuid(), "El GUID del cliente no es el esperado.");
     }
 
     @Test
