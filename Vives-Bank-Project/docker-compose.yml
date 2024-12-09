@@ -1,0 +1,159 @@
+services:
+  postgres-db:
+    container_name: banco-db-postgres
+    image: postgres:12-alpine
+    restart: always
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${DATABASE_USER_POSTGRES}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD_POSTGRES}
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+    networks:
+      - banco-network
+
+
+  mongo-db:
+    container_name: banco-db-mongo
+    image: mongo:4.4
+    restart: always
+    env_file:
+      - .env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DATABASE_USER_MONGO}
+      MONGO_INITDB_ROOT_PASSWORD: ${DATABASE_PASSWORD_MONGO}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+    volumes:
+      - ./mongo-prod/initMongo.js:/docker-entrypoint-initdb.d/initMongo.js
+    networks:
+      - banco-network
+
+  redis:
+    container_name: banco-redis
+    image: redis:7.4.1
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - redis-data:/data
+    networks:
+      - banco-network
+
+  vives-bank:
+    container_name: vives-bank
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - postgres-db
+      - mongo-db
+      - redis
+    volumes:
+      - bank-data:/app/
+      # copiar documentacion
+      - documentation_doc:/app/doc
+      - documentation_jacoco:/app/jacoco
+      - documentation_tests:/app/tests
+      # copiar configuracion
+      - apache_doc_conf:/app/despliegueServers/apacheDoc
+      - nginx_coverage_conf:/app/despliegueServers/nginxCoverage
+      - nginx_test_conf:/app/despliegueServers/nginxTest
+      # proxy config
+      - proxy_conf:/app/despliegueServers/proxy/config
+      - proxy_certs:/app/despliegueServers/proxy/sslcerts
+      # index
+      - presentacion_data:/app/despliegueServers/presentacion/index
+      - presentacion_conf:/app/despliegueServers/presentacion/config
+    ports:
+      - ${API_PORT}:3000
+    networks:
+      - banco-network
+
+  apache_doc:
+    image: ubuntu/apache2:latest
+    container_name: apache_doc
+    volumes:
+      - documentation_doc:/var/www/html/
+      - apache_doc_conf:/etc/apache2/sites-available/
+    restart: always
+    depends_on:
+      - vives-bank
+    networks:
+      - banco-network
+
+  nginx_coverage:
+      image: ubuntu/nginx:latest
+      container_name: nginx_coverage
+      volumes:
+        - documentation_jacoco:/var/www/html/
+        - nginx_coverage_conf:/etc/nginx/sites-available/
+      restart: always
+      depends_on:
+        - vives-bank
+      networks:
+        - banco-network
+
+  nginx_test:
+      image: ubuntu/nginx:latest
+      container_name: nginx_test
+      volumes:
+        - documentation_tests:/var/www/html/
+        - nginx_test_conf:/etc/nginx/sites-available/
+      restart: always
+      depends_on:
+        - vives-bank
+      networks:
+        - banco-network
+
+  reverse_proxy:
+      image: ubuntu/nginx:latest
+      container_name: reverse_proxy
+      volumes:
+        - proxy_conf:/etc/nginx/
+        - proxy_certs:/etc/nginx/certs/
+      ports:
+        - "80:80"
+        - "443:443"
+      restart: always
+      depends_on:
+        - nginx_presentacion
+        - apache_doc
+        - nginx_coverage
+        - nginx_test
+      networks:
+        - banco-network
+
+  nginx_presentacion:
+    image: ubuntu/nginx:latest
+    container_name: nginx_presentacion
+    volumes:
+      - presentacion_data:/var/www/html/presentacion
+      - presentacion_conf:/etc/nginx/sites-available/
+    restart: always
+    depends_on:
+      - vives-bank
+    networks:
+      - banco-network
+
+
+
+
+volumes:
+  redis-data:
+  bank-data:
+  documentation_doc:
+  documentation_jacoco:
+  documentation_tests:
+  apache_doc_conf:
+  nginx_coverage_conf:
+  nginx_test_conf:
+  proxy_conf:
+  proxy_certs:
+  presentacion_data:
+  presentacion_conf:
+
+networks:
+  banco-network:
+    driver: bridge
