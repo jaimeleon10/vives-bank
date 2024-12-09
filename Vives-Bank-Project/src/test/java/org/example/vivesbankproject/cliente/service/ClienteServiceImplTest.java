@@ -1,13 +1,12 @@
 package org.example.vivesbankproject.cliente.service;
 
 import org.example.vivesbankproject.rest.cliente.dto.ClienteRequestSave;
+import org.example.vivesbankproject.rest.cliente.dto.ClienteRequestUpdate;
 import org.example.vivesbankproject.rest.cliente.dto.ClienteResponse;
-import org.example.vivesbankproject.rest.cliente.exceptions.ClienteNotFound;
-import org.example.vivesbankproject.rest.cliente.exceptions.ClienteNotFoundByDni;
-import org.example.vivesbankproject.rest.cliente.exceptions.ClienteNotFoundByUser;
-import org.example.vivesbankproject.rest.cliente.exceptions.ClienteUserAlreadyAssigned;
+import org.example.vivesbankproject.rest.cliente.exceptions.*;
 import org.example.vivesbankproject.rest.cliente.mappers.ClienteMapper;
 import org.example.vivesbankproject.rest.cliente.models.Cliente;
+import org.example.vivesbankproject.rest.cliente.models.Direccion;
 import org.example.vivesbankproject.rest.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.rest.cliente.service.ClienteServiceImpl;
 import org.example.vivesbankproject.rest.storage.images.services.StorageImagesService;
@@ -297,5 +296,99 @@ class ClienteServiceImplTest {
         when(clienteRepository.findByUserGuid(user.getGuid())).thenReturn(Optional.empty());
 
         assertThrows(ClienteNotFoundByUser.class, () -> clienteService.getUserAuthenticatedByGuid(user.getGuid()));
+    }
+
+    @Test
+    void shouldUpdateUserSuccessfully() {
+        String guid = "12345";
+        User user = new User();
+        user.setGuid("1");
+
+        ClienteRequestUpdate request = new ClienteRequestUpdate();
+        request.setTelefono("987654321");
+        request.setEmail("newuser@example.com");
+
+        Cliente clienteAutenticado = new Cliente();
+        clienteAutenticado.setTelefono("123456789");
+        clienteAutenticado.setUser(user);
+        clienteAutenticado.setEmail("user@example.com");
+
+        Direccion direccion = Direccion.builder()
+                .calle(request.getCalle())
+                .numero(request.getNumero())
+                .codigoPostal(request.getCodigoPostal())
+                .piso(request.getPiso())
+                .letra(request.getLetra())
+                .build();
+
+        Cliente clienteActualizado = new Cliente();
+        clienteActualizado.setTelefono("987654321");
+        clienteActualizado.setUser(user);
+        clienteActualizado.setEmail("newuser@example.com");
+
+        ClienteResponse clienteResponse = new ClienteResponse();
+        clienteResponse.setTelefono("987654321");
+        clienteResponse.setUserId(user.getGuid());
+        clienteResponse.setEmail("newuser@example.com");
+
+        when(clienteRepository.findByUserGuid(guid)).thenReturn(Optional.of(clienteAutenticado));
+        when(clienteRepository.findByTelefono(request.getTelefono())).thenReturn(Optional.empty());
+        when(clienteRepository.findByEmail(request.getEmail())).thenReturn(Optional.empty());
+        when(clienteMapper.toClienteUpdate(request, clienteAutenticado, clienteAutenticado.getUser(), direccion)).thenReturn(clienteActualizado);
+        when(clienteRepository.save(clienteActualizado)).thenReturn(clienteActualizado);
+        when(clienteMapper.toClienteResponse(clienteActualizado, clienteActualizado.getUser().getGuid())).thenReturn(clienteResponse);
+
+        ClienteResponse response = clienteService.updateUserAuthenticated(guid, request);
+
+        verify(clienteRepository, times(1)).findByUserGuid(guid);
+        verify(clienteRepository, times(1)).findByTelefono(request.getTelefono());
+        verify(clienteRepository, times(1)).findByEmail(request.getEmail());
+        verify(clienteRepository, times(1)).save(clienteActualizado);
+        verify(clienteMapper, times(1)).toClienteUpdate(request, clienteAutenticado, clienteAutenticado.getUser(), direccion);
+        verify(clienteMapper, times(1)).toClienteResponse(clienteActualizado, clienteActualizado.getUser().getGuid());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUserNotFound() {
+        String guid = "12345";
+        ClienteRequestUpdate request = new ClienteRequestUpdate();
+
+        when(clienteRepository.findByUserGuid(guid)).thenReturn(Optional.empty());
+
+        assertThrows(ClienteNotFound.class, () -> clienteService.updateUserAuthenticated(guid, request));
+
+        verify(clienteRepository, times(1)).findByUserGuid(guid);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenTelefonoExists() {
+        String guid = "12345";
+        ClienteRequestUpdate request = new ClienteRequestUpdate();
+        request.setTelefono("11");
+        Cliente clienteAutenticado = new Cliente();
+
+        when(clienteRepository.findByUserGuid(guid)).thenReturn(Optional.of(clienteAutenticado));
+        when(clienteRepository.findByTelefono(request.getTelefono())).thenThrow(new ClienteExistsByTelefono(request.getTelefono()));
+
+        assertThrows(ClienteExistsByTelefono.class, () -> clienteService.updateUserAuthenticated(guid, request));
+
+        verify(clienteRepository, times(1)).findByUserGuid(guid);
+        verify(clienteRepository, times(1)).findByTelefono(request.getTelefono());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenEmailExists() {
+        String guid = "12345";
+        ClienteRequestUpdate request = new ClienteRequestUpdate();
+        request.setEmail("email@example.com");
+        Cliente clienteAutenticado = new Cliente();
+
+        when(clienteRepository.findByUserGuid(guid)).thenReturn(Optional.of(clienteAutenticado));
+        when(clienteRepository.findByEmail(request.getEmail())).thenThrow(new ClienteExistsByEmail(request.getEmail()));
+
+        assertThrows(ClienteExistsByEmail.class, () -> clienteService.updateUserAuthenticated(guid, request));
+
+        verify(clienteRepository, times(1)).findByUserGuid(guid);
+        verify(clienteRepository, times(1)).findByEmail(request.getEmail());
     }
 }

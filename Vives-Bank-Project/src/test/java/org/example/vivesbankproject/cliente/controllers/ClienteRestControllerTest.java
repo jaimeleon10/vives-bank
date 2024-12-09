@@ -960,36 +960,6 @@ class ClienteRestControllerTest {
     }
 
     @Test
-    void emptyUserIdUpdate() throws Exception {
-        ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
-                .nombre("Juan")
-                .apellidos("Perez")
-                .calle("Calle Falsa")
-                .numero("123")
-                .codigoPostal("28080")
-                .piso("3")
-                .letra("A")
-                .email("juan.perez@example.com")
-                .telefono("123456789")
-                .fotoPerfil("fotoprfil.jpg")
-                .fotoDni("fotodni.jpg")
-                .build();
-
-        MvcResult result = mockMvc.perform(
-                        put("/v1/clientes/{id}", "123")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(clienteRequestUpdate)))
-                .andExpect(status().isBadRequest())
-                .andReturn();
-
-        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
-
-        Map<String, String> errorResponse = objectMapper.readValue(result.getResponse().getContentAsString(), Map.class);
-
-        assertEquals("El id de usuario no puede estar vacio", errorResponse.get("userId"));
-    }
-
-    @Test
     void emptyCalleUpdate() throws Exception {
         ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
                 .calle("")

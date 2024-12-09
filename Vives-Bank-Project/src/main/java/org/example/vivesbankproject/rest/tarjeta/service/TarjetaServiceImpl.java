@@ -1,7 +1,5 @@
 package org.example.vivesbankproject.rest.tarjeta.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -9,8 +7,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.example.vivesbankproject.rest.cuenta.exceptions.cuenta.CuentaNotFoundByTarjetaGuid;
-import org.example.vivesbankproject.rest.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.rest.tarjeta.dto.*;
 import org.example.vivesbankproject.rest.tarjeta.exceptions.TarjetaNotFound;
 import org.example.vivesbankproject.rest.tarjeta.exceptions.TarjetaNotFoundByNumero;
@@ -19,13 +15,9 @@ import org.example.vivesbankproject.rest.tarjeta.mappers.TarjetaMapper;
 import org.example.vivesbankproject.rest.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.rest.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.rest.tarjeta.repositories.TarjetaRepository;
-import org.example.vivesbankproject.rest.users.exceptions.UserNotFoundById;
 import org.example.vivesbankproject.rest.users.exceptions.UserNotFoundByUsername;
-import org.example.vivesbankproject.rest.users.models.User;
 import org.example.vivesbankproject.rest.users.repositories.UserRepository;
-import org.example.vivesbankproject.config.websockets.WebSocketConfig;
 import org.example.vivesbankproject.config.websockets.WebSocketHandler;
-import org.example.vivesbankproject.websocket.notifications.models.Notification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -37,7 +29,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
