@@ -5,6 +5,7 @@ import org.example.vivesbankproject.frankfurter.exceptions.FrankFurterConnection
 import org.example.vivesbankproject.frankfurter.exceptions.FrankFurterUnexpectedException;
 import org.example.vivesbankproject.frankfurter.exceptions.FrankfurterEmptyResponseException;
 import org.example.vivesbankproject.frankfurter.model.FrankFurterResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -13,11 +14,24 @@ import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.CompletableFuture;
 
 public class DivisasApiServiceImplTest {
+
+    private Retrofit mockRetrofit;
+    private DivisasApiService mockApiClient;
+    private DivisasApiServiceImpl service;
+
+    @BeforeEach
+    public void setUp() {
+        mockRetrofit = mock(Retrofit.class);
+        mockApiClient = mock(DivisasApiService.class);
+        when(mockRetrofit.create(DivisasApiService.class)).thenReturn(mockApiClient);
+        service = new DivisasApiServiceImpl(mockRetrofit);
+    }
 
     @Test
     public void testGetLatestRatesAsyncSuccess() throws ExecutionException, InterruptedException, IOException {
@@ -128,5 +142,75 @@ public class DivisasApiServiceImplTest {
         // Verificar que la excepción inesperada se lance
         ExecutionException exception = assertThrows(ExecutionException.class, future::get);
         assertTrue(exception.getCause() instanceof FrankFurterUnexpectedException);
+
+    }
+
+    @Test
+    public void testGetLatestRatesAsyncWithZeroAmount() throws ExecutionException, InterruptedException, IOException {
+        // Arrange
+        String baseCurrency = "USD";
+        String targetCurrencies = "EUR,GBP";
+        String amount = "0";
+
+        FrankFurterResponse mockResponse = createMockResponse(baseCurrency, targetCurrencies);
+        Call<FrankFurterResponse> call = mockSuccessfulCall(mockResponse);
+
+        when(mockApiClient.getLatestRates(baseCurrency, targetCurrencies)).thenReturn(call);
+
+        // Act
+        CompletableFuture<FrankFurterResponse> future = service.getLatestRatesAsync(baseCurrency, targetCurrencies, amount);
+        FrankFurterResponse result = future.get();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(amount, result.getAmount());
+        assertEquals(0.0, result.getExchangeRates().get("EUR"));
+        assertEquals(0.0, result.getExchangeRates().get("GBP"));
+    }
+
+    @Test
+    public void testGetLatestRatesAsyncWithNegativeAmount() {
+        // Arrange
+        String baseCurrency = "USD";
+        String targetCurrencies = "EUR,GBP";
+        String amount = "-100";
+
+        // Act & Assert
+        assertThrows(ExecutionException.class, () -> {
+            CompletableFuture<FrankFurterResponse> future = service.getLatestRatesAsync(baseCurrency, targetCurrencies, amount);
+            future.get();
+        });
+    }
+
+
+    private FrankFurterResponse createMockResponse(String base, String symbols) {
+        FrankFurterResponse response = new FrankFurterResponse();
+        Map<String, Double> rates = new HashMap<>();
+        rates.put("EUR", 0.85);
+        rates.put("GBP", 0.75);
+        response.setExchangeRates(rates);
+        return response;
+    }
+
+    private Call<FrankFurterResponse> mockSuccessfulCall(FrankFurterResponse response) throws IOException {
+        Call<FrankFurterResponse> call = mock(Call.class);
+        Response<FrankFurterResponse> retrofitResponse = Response.success(response);
+        when(call.execute()).thenReturn(retrofitResponse);
+        return call;
+    }
+
+    private Call<FrankFurterResponse> mockEmptyCall() throws IOException {
+        Call<FrankFurterResponse> call = mock(Call.class);
+        Response<FrankFurterResponse> retrofitResponse = Response.success(null);
+        when(call.execute()).thenReturn(retrofitResponse);
+        return call;
+    }
+
+    private Call<FrankFurterResponse> mockErrorCall(int errorCode) throws IOException {
+        Call<FrankFurterResponse> call = mock(Call.class);
+        ResponseBody errorBody = ResponseBody.create(null, "");
+        Response<FrankFurterResponse> retrofitResponse = Response.error(errorCode, errorBody);
+        when(call.execute()).thenReturn(retrofitResponse);
+        return call;
     }
 }
