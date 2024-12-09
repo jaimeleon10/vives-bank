@@ -1,8 +1,5 @@
 package org.example.vivesbankproject.tarjeta.service;
 
-
-import org.example.vivesbankproject.rest.cuenta.models.Cuenta;
-import org.example.vivesbankproject.rest.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.rest.tarjeta.dto.*;
 import org.example.vivesbankproject.rest.tarjeta.service.TarjetaServiceImpl;
 import org.example.vivesbankproject.rest.tarjeta.exceptions.TarjetaNotFound;
@@ -15,14 +12,11 @@ import org.example.vivesbankproject.rest.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.rest.users.exceptions.UserNotFoundByUsername;
 import org.example.vivesbankproject.rest.users.models.User;
 import org.example.vivesbankproject.rest.users.repositories.UserRepository;
-import org.example.vivesbankproject.config.websockets.WebSocketConfig;
-import org.example.vivesbankproject.config.websockets.WebSocketHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -47,16 +41,10 @@ import static org.mockito.ArgumentMatchers.any;
 class TarjetaServiceImplTest {
 
     @Mock
-    private WebSocketConfig webSocketConfig;
-
-    @Mock
     private TarjetaRepository tarjetaRepository;
 
     @Mock
     private UserRepository userRepository;
-
-    @Mock
-    private CuentaRepository cuentaRepository;
 
     @Mock
     private TarjetaMapper tarjetaMapper;
@@ -74,15 +62,10 @@ class TarjetaServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        WebSocketHandler mockWebSocketHandler = mock(WebSocketHandler.class);
-        when(webSocketConfig.webSocketTarjetasHandler()).thenReturn(mockWebSocketHandler);
-
         tarjetaService = new TarjetaServiceImpl(
                 tarjetaRepository,
                 tarjetaMapper,
-                userRepository,
-                webSocketConfig,
-                cuentaRepository
+                userRepository
         );
 
         tarjeta = Tarjeta.builder()
