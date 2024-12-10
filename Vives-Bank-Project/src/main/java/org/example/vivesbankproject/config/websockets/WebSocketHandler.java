@@ -178,22 +178,4 @@ public class WebSocketHandler extends TextWebSocketHandler implements SubProtoco
         return List.of("subprotocol.demo.websocket");
     }
 
-    private String getUsername() {
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || authentication.getPrincipal() == null) {
-            log.warn("No authentication found");
-            return null;
-        }
-
-        Object principal = authentication.getPrincipal();
-        log.info("getUsername: " + principal.toString());
-        if (principal instanceof UserDetails) {
-            return ((UserDetails) principal).getUsername();
-        } else {
-            return principal.toString();
-        }
-
-    }
 }
