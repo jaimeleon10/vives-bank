@@ -4,6 +4,8 @@ import org.example.vivesbankproject.rest.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.rest.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.rest.movimientos.repositories.MovimientosRepository;
 import org.example.vivesbankproject.rest.storage.backupZip.services.ZipFileSystemStorage;
+import org.example.vivesbankproject.rest.storage.backupZip.services.ZipStorageService;
+import org.example.vivesbankproject.rest.storage.exceptions.StorageInternal;
 import org.example.vivesbankproject.rest.storage.exceptions.StorageNotFound;
 import org.example.vivesbankproject.rest.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.rest.users.repositories.UserRepository;
@@ -23,8 +25,12 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Comparator;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(SpringExtension.class)
 class ZipFileSystemStorageTest {
@@ -131,7 +137,66 @@ class ZipFileSystemStorageTest {
     }
 
     @Test
-    void export() {
+    void export() throws IOException {
+        Path dataDir = Paths.get("dataAdmin");
+        Files.createDirectories(dataDir);
+
+        Path testFile = dataDir.resolve("testFile.txt");
+        Files.write(testFile, "Contenido de prueba".getBytes());
+
+        String result = zipFileSystemStorage.export();
+
+        Path zipPath = Path.of(TEST_ROOT_LOCATION).resolve("clientes.zip");
+        assertTrue(Files.exists(zipPath), "El archivo ZIP debería haberse creado");
+
+        try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipPath))) {
+            ZipEntry entry = zis.getNextEntry();
+            assertNotNull(entry, "El archivo ZIP debería contener al menos un archivo");
+            assertEquals("testFile.txt", entry.getName(), "El archivo ZIP debería contener el archivo testFile.txt");
+        }
+
+        Files.delete(testFile);
+        Files.delete(zipPath);
+    }
+
+    @Test
+    void exportDeleteZip() throws IOException {
+        Path zipPath = Path.of(TEST_ROOT_LOCATION).resolve("clientes.zip");
+        Files.createFile(zipPath);
+
+        Path dataDir = Paths.get("dataAdmin");
+        Files.createDirectories(dataDir);
+
+        Path testFile = dataDir.resolve("testFile.txt");
+        Files.write(testFile, "Contenido de prueba".getBytes());
+
+        String result = zipFileSystemStorage.export();
+
+        assertTrue(Files.exists(zipPath), "El archivo ZIP debería haberse creado nuevamente");
+
+        try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipPath))) {
+            ZipEntry entry = zis.getNextEntry();
+            assertNotNull(entry, "El archivo ZIP debería contener al menos un archivo");
+            assertEquals("testFile.txt", entry.getName(), "El archivo ZIP debería contener el archivo testFile.txt");
+        }
+
+        Files.delete(testFile);
+        Files.delete(zipPath);
+    }
+
+    @Test
+    void exportDataAdminNotExist() {
+        Path dataDir = Paths.get("dataAdmin");
+        try {
+            Files.deleteIfExists(dataDir);
+        } catch (IOException e) {
+        }
+
+        StorageNotFound exception = assertThrows(StorageNotFound.class, () -> {
+            zipFileSystemStorage.export();
+        });
+
+        assertTrue(exception.getMessage().contains("La carpeta 'dataAdmin' no existe"), "Debería lanzar excepción cuando 'dataAdmin' no existe");
     }
 
     @Test
