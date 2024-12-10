@@ -1,20 +1,26 @@
 package org.example.vivesbankproject.storage.jsonMovimientos.controller;
 
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import org.example.vivesbankproject.rest.storage.backupZip.services.ZipStorageService;
 import org.example.vivesbankproject.rest.storage.exceptions.StorageInternal;
 import org.example.vivesbankproject.rest.storage.exceptions.StorageNotFound;
 import org.example.vivesbankproject.rest.storage.jsonMovimientos.controller.JsonMovimientosController;
 import org.example.vivesbankproject.rest.storage.jsonMovimientos.services.JsonMovimientosFileSystemStorage;
 import org.junit.jupiter.api.*;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,6 +28,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.bson.assertions.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -34,6 +42,11 @@ class JsonMovimientosControllerTest {
 
     private static final Path TEST_DIRECTORY = Paths.get("data", "test");
 
+    @Mock
+    private Resource mockResource;
+    @Mock
+    private HttpServletRequest request;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -42,6 +55,11 @@ class JsonMovimientosControllerTest {
 
     @InjectMocks
     private JsonMovimientosController jsonMovimientosController;
+
+    @Autowired
+    private JsonMovimientosControllerTest(JsonMovimientosFileSystemStorage jsonMovimientosFileSystemStorage){
+        this.jsonMovimientosFileSystemStorage = jsonMovimientosFileSystemStorage;
+    }
 
     @BeforeAll
     static void setUp() throws IOException {
@@ -144,6 +162,24 @@ class JsonMovimientosControllerTest {
 
         mockMvc.perform(get("/storage/jsonMovimientos/{filename}", filename))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void serveFileContenidoNull() throws Exception {
+        String testFilename = "test.json";
+        when(jsonMovimientosFileSystemStorage.loadAsResource(testFilename)).thenReturn(mockResource);
+
+        when(mockResource.getFile()).thenReturn(new File("dummy-path"));
+
+        when(request.getServletContext()).thenReturn(mock(ServletContext.class));
+        when(request.getServletContext().getMimeType(anyString())).thenReturn(null);
+
+        ResponseEntity<Resource> response = jsonMovimientosController.serveFile(testFilename, request);
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("application/octet-stream", response.getHeaders().getContentType().toString());
+        assertEquals(mockResource, response.getBody());
     }
 
     @Test
