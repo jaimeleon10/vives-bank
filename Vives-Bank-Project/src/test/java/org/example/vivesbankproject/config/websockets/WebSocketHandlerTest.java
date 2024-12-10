@@ -24,105 +24,105 @@ class WebSocketHandlerTest {
     }
 
     @Test
-    void testAfterConnectionEstablished() throws Exception {
-        when(sessionMock.getAttributes()).thenReturn(Map.of("username", "testUser"));
+    void afterConnectionEstablished() throws Exception {
+
+        when(sessionMock.getAttributes()).thenReturn(Map.of("username", "usuarioTest"));
         when(sessionMock.isOpen()).thenReturn(true);
 
         webSocketHandler.afterConnectionEstablished(sessionMock);
 
         verify(sessionMock, times(1)).sendMessage(new TextMessage("Updates Web socket: " + ENTITY_NAME + " - Vives Bank"));
+
     }
 
     @Test
-    void testAfterConnectionClosedRemovesUserFromSessions() throws Exception {
-        // Arrange
-        String username = "testUser";
+    void afterConnectionClosedRemovesUserFromSessions() throws Exception {
+
+        String username = "usuarioTest";
         Map<String, Object> attributes = Map.of("username", username);
         when(sessionMock.getAttributes()).thenReturn(attributes);
 
-        // Simula el establecimiento de la conexión
         webSocketHandler.afterConnectionEstablished(sessionMock);
 
-        // Limpia las interacciones previas para enfocarnos en lo que pasa después
         clearInvocations(sessionMock);
 
-        // Act: Cierra la conexión
         webSocketHandler.afterConnectionClosed(sessionMock, CloseStatus.NORMAL);
 
-        // Assert
-        // Verificar que el usuario fue eliminado del mapa (no hay llamada adicional para el usuario)
         assertDoesNotThrow(() -> webSocketHandler.sendMessageToUser(username, "Test Message"));
-        verify(sessionMock, never()).sendMessage(any(TextMessage.class)); // No debe enviar mensajes tras cerrar la conexión
+        verify(sessionMock, never()).sendMessage(any(TextMessage.class));
+
     }
 
-
     @Test
-    void AfterConnectionClosedDoesNotThrow() throws Exception {
-        // Arrange
-        String username = "testUser";
+    void afterConnectionClosedDoesNotThrow() throws Exception {
+
+        String username = "usuarioTest";
         Map<String, Object> attributes = Map.of("username", username);
         when(sessionMock.getAttributes()).thenReturn(attributes);
         when(sessionMock.isOpen()).thenReturn(true);
 
-        // Simula que el usuario se conecta
         webSocketHandler.afterConnectionEstablished(sessionMock);
 
-        // Clear interactions para ignorar el mensaje enviado en afterConnectionEstablished
         clearInvocations(sessionMock);
 
-        // Act
-        // Intenta cerrar la conexión
         assertDoesNotThrow(() -> webSocketHandler.afterConnectionClosed(sessionMock, CloseStatus.NORMAL));
 
-        // Assert
-        // Verificar que no se envían mensajes adicionales al cerrar
         verify(sessionMock, never()).sendMessage(any(TextMessage.class));
+
     }
+
     @Test
-    void testSendMessageToAllSessions() throws Exception {
+    void sendMessageToAllSessions() throws Exception {
+
         when(sessionMock.isOpen()).thenReturn(true);
         webSocketHandler.afterConnectionEstablished(sessionMock);
 
-        webSocketHandler.sendMessage("Broadcast Message");
+        webSocketHandler.sendMessage("Mensaje genérico");
 
-        verify(sessionMock, times(1)).sendMessage(new TextMessage("Broadcast Message"));
+        verify(sessionMock, times(1)).sendMessage(new TextMessage("Mensaje genérico"));
     }
 
     @Test
-    void testSendMessageToSpecificUser() throws Exception {
-        String username = "testUser";
+    void sendMessageToSpecificUser() throws Exception {
+
+        String username = "usuarioTest";
         when(sessionMock.getAttributes()).thenReturn(Map.of("username", username));
         when(sessionMock.isOpen()).thenReturn(true);
         webSocketHandler.afterConnectionEstablished(sessionMock);
 
-        webSocketHandler.sendMessageToUser(username, "Personal Message");
+        webSocketHandler.sendMessageToUser(username, "Mensaje a usuario especifico");
 
-        verify(sessionMock, times(1)).sendMessage(new TextMessage("Personal Message"));
+        verify(sessionMock, times(1)).sendMessage(new TextMessage("Mensaje a usuario especifico"));
+
     }
 
     @Test
-    void testSendPeriodicMessages() throws Exception {
+    void sendPeriodicMessages() throws Exception {
+
         when(sessionMock.isOpen()).thenReturn(true);
         webSocketHandler.afterConnectionEstablished(sessionMock);
 
         webSocketHandler.sendPeriodicMessages();
 
         verify(sessionMock, atLeastOnce()).sendMessage(any(TextMessage.class));
+
     }
 
     @Test
-    void testHandleTransportError() throws Exception {
+    void handleTransportError() throws Exception {
         webSocketHandler.handleTransportError(sessionMock, new RuntimeException("Test Error"));
 
-        // Assert
-        // No specific behavior expected; ensure no exceptions thrown
+        // El método no hace nada. solo asegurarse de que no lanza excepciones
     }
 
     @Test
-    void testGetSubProtocols() {
+    void getSubProtocols() {
+
         var subProtocols = webSocketHandler.getSubProtocols();
 
         assertNotNull(subProtocols);
         assertTrue(subProtocols.contains("subprotocol.demo.websocket"));
+
     }
+
 }
