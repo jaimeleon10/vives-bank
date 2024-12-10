@@ -6,19 +6,23 @@ import org.example.vivesbankproject.rest.storage.exceptions.StorageInternal;
 import org.example.vivesbankproject.rest.storage.exceptions.StorageNotFound;
 import org.example.vivesbankproject.rest.storage.jsonClientes.controller.JsonClientesController;
 import org.example.vivesbankproject.rest.storage.jsonClientes.services.JsonClientesStorageService;
+import org.example.vivesbankproject.rest.storage.jsonMovimientos.services.JsonMovimientosFileSystemStorage;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,6 +32,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.bson.assertions.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -42,6 +48,11 @@ class JsonClientesControllerTest {
 
     private static final Path TEST_DIRECTORY = Paths.get("data", "test");
 
+    @Mock
+    private Resource mockResource;
+    @Mock
+    private HttpServletRequest request;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -50,6 +61,11 @@ class JsonClientesControllerTest {
 
     @InjectMocks
     private JsonClientesController jsonClientesController;
+
+    @Autowired
+    private JsonClientesControllerTest(JsonClientesStorageService jsonClientesStorageService){
+        this.jsonClientesStorageService = jsonClientesStorageService;
+    }
 
     @BeforeAll
     static void setUp() throws IOException {
@@ -139,6 +155,43 @@ class JsonClientesControllerTest {
 
         mockMvc.perform(get("/storage/jsonClientes/{filename}", filename))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void serveFileContenidoNull() throws Exception {
+        String testFilename = "test.json";
+        when(jsonClientesStorageService.loadAsResource(testFilename)).thenReturn(mockResource);
+
+        when(mockResource.getFile()).thenReturn(new File("dummy-path"));
+
+        when(request.getServletContext()).thenReturn(mock(ServletContext.class));
+        when(request.getServletContext().getMimeType(anyString())).thenReturn(null);
+
+        ResponseEntity<Resource> response = jsonClientesController.serveFile(testFilename, request);
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("application/octet-stream", response.getHeaders().getContentType().toString());
+        assertEquals(mockResource, response.getBody());
+    }
+
+    @Test
+    void serveFileIOException() throws Exception {
+        String testFilename = "test.json";
+        Resource mockResource = mock(Resource.class);
+        when(jsonClientesStorageService.loadAsResource(testFilename)).thenReturn(mockResource);
+
+        when(mockResource.getFile()).thenThrow(new IOException("Test IOException"));
+
+        ServletContext servletContext = mock(ServletContext.class);
+        when(request.getServletContext()).thenReturn(servletContext);
+
+        ResponseEntity<Resource> response = jsonClientesController.serveFile(testFilename, request);
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("application/octet-stream", response.getHeaders().getContentType().toString());
+        assertEquals(mockResource, response.getBody());
     }
 
     @Test
