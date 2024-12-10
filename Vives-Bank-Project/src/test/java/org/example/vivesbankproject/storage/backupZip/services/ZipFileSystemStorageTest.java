@@ -1,13 +1,16 @@
 package org.example.vivesbankproject.storage.backupZip.services;
 
+import org.example.vivesbankproject.rest.cliente.models.Cliente;
 import org.example.vivesbankproject.rest.cliente.repositories.ClienteRepository;
+import org.example.vivesbankproject.rest.cuenta.models.Cuenta;
 import org.example.vivesbankproject.rest.cuenta.repositories.CuentaRepository;
+import org.example.vivesbankproject.rest.movimientos.models.Movimiento;
 import org.example.vivesbankproject.rest.movimientos.repositories.MovimientosRepository;
 import org.example.vivesbankproject.rest.storage.backupZip.services.ZipFileSystemStorage;
-import org.example.vivesbankproject.rest.storage.backupZip.services.ZipStorageService;
 import org.example.vivesbankproject.rest.storage.exceptions.StorageInternal;
 import org.example.vivesbankproject.rest.storage.exceptions.StorageNotFound;
 import org.example.vivesbankproject.rest.tarjeta.repositories.TarjetaRepository;
+import org.example.vivesbankproject.rest.users.models.User;
 import org.example.vivesbankproject.rest.users.repositories.UserRepository;
 import org.example.vivesbankproject.rest.users.mappers.UserMapper;
 import org.jetbrains.annotations.NotNull;
@@ -20,17 +23,19 @@ import org.springframework.core.io.Resource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
 class ZipFileSystemStorageTest {
@@ -200,8 +205,14 @@ class ZipFileSystemStorageTest {
     }
 
     @Test
-    void loadFromZip() {
+    void loadFromZipFileNotExist() {
+        File file = new File("archivo.zip");
 
+        StorageNotFound exception = assertThrows(StorageNotFound.class, () -> {
+            zipFileSystemStorage.loadFromZip(file);
+        });
+
+        assertTrue(exception.getMessage().contains("El archivo ZIP no existe"));
     }
 
     @Test
