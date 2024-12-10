@@ -669,7 +669,7 @@ class ClienteServiceImplTest {
         List<TipoTarjeta> tiposTarjetas = Arrays.asList(TipoTarjeta.values());
 
         ClienteProducto result = clienteService.getCatalogue();
-        
+
         assertNotNull(result);
         assertTrue(result.getTiposCuentas().isEmpty());
         assertEquals(tiposTarjetas, result.getTiposTarjetas());

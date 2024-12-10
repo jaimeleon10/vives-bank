@@ -1,15 +1,20 @@
 package org.example.vivesbankproject.cliente.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.vivesbankproject.rest.cliente.dto.ClienteProducto;
 import org.example.vivesbankproject.rest.cliente.dto.ClienteRequestSave;
 import org.example.vivesbankproject.rest.cliente.dto.ClienteRequestUpdate;
 import org.example.vivesbankproject.rest.cliente.dto.ClienteResponse;
+import org.example.vivesbankproject.rest.cliente.exceptions.ClienteNotFoundByDni;
 import org.example.vivesbankproject.rest.cliente.service.ClienteService;
+import org.example.vivesbankproject.rest.cuenta.dto.tipoCuenta.TipoCuentaResponseCatalogo;
+import org.example.vivesbankproject.rest.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -148,6 +153,42 @@ class ClienteRestControllerTest {
                 .andExpect(jsonPath("$.createdAt").value("2024-11-26T15:23:45.123"))
                 .andExpect(jsonPath("$.updatedAt").value("2024-11-27T15:23:45.123"))
                 .andExpect(jsonPath("$.isDeleted").value(false));
+    }
+
+    @Test
+    void GetByDni() throws Exception {
+        String dni = "12345678A";
+        ClienteResponse clienteResponse = ClienteResponse.builder()
+                .nombre("Juan Pérez")
+                .dni(dni)
+                .email("juan.perez@email.com")
+                .telefono("123456789")
+                .build();
+
+        when(clienteService.getByDni(dni)).thenReturn(clienteResponse);
+
+        mockMvc.perform(get("/v1/clientes/dni/{dni}", dni)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.dni").value(dni))
+                .andExpect(jsonPath("$.nombre").value("Juan Pérez"))
+                .andExpect(jsonPath("$.email").value("juan.perez@email.com"))
+                .andExpect(jsonPath("$.telefono").value("123456789"));
+
+        verify(clienteService).getByDni(dni);
+    }
+
+    @Test
+    void GetByDniNotFound() throws Exception {
+        String dni = "99999999X";
+
+        when(clienteService.getByDni(dni)).thenThrow(new ClienteNotFoundByDni(dni));
+
+        mockMvc.perform(get("/v1/clientes/dni/{dni}", dni)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        verify(clienteService).getByDni(dni);
     }
 
 
@@ -1197,5 +1238,62 @@ class ClienteRestControllerTest {
                 () -> assertTrue(responseContent.contains("\"telefono\":\"El telefono no puede estar vacio\"")
                         || responseContent.contains("\"telefono\":\"El telefono debe tener 9 numeros\""))
         );
+    }
+
+    @Test
+    void GetCatalogo() throws Exception {
+
+        List<TipoCuentaResponseCatalogo> tiposCuentasResponse = List.of(
+                TipoCuentaResponseCatalogo.builder()
+                        .nombre("Cuenta Corriente")
+                        .interes("1.5")
+                        .build(),
+                TipoCuentaResponseCatalogo.builder()
+                        .nombre("Cuenta de Ahorros")
+                        .interes("2.0")
+                        .build()
+        );
+
+        List<TipoTarjeta> tiposTarjetas = List.of(TipoTarjeta.DEBITO, TipoTarjeta.CREDITO);
+
+        ClienteProducto clienteProducto = ClienteProducto.builder()
+                .tiposCuentas(tiposCuentasResponse)
+                .tiposTarjetas(tiposTarjetas)
+                .build();
+
+        when(clienteService.getCatalogue()).thenReturn(clienteProducto);
+
+        mockMvc.perform(get("/v1/clientes/catalogo")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tiposCuentas").isArray())
+                .andExpect(jsonPath("$.tiposCuentas[0].nombre").value("Cuenta Corriente"))
+                .andExpect(jsonPath("$.tiposCuentas[0].interes").value("1.5"))
+                .andExpect(jsonPath("$.tiposCuentas[1].nombre").value("Cuenta de Ahorros"))
+                .andExpect(jsonPath("$.tiposCuentas[1].interes").value("2.0"))
+                .andExpect(jsonPath("$.tiposTarjetas").isArray())
+                .andExpect(jsonPath("$.tiposTarjetas[0]").value("DEBITO"))
+                .andExpect(jsonPath("$.tiposTarjetas[1]").value("CREDITO"));
+
+        verify(clienteService).getCatalogue();
+    }
+
+    @Test
+    void GetCatalogoEmpty() throws Exception {
+
+        ClienteProducto clienteProducto = ClienteProducto.builder()
+                .tiposCuentas(Collections.emptyList())
+                .tiposTarjetas(Collections.emptyList())
+                .build();
+
+        when(clienteService.getCatalogue()).thenReturn(clienteProducto);
+
+        mockMvc.perform(get("/v1/clientes/catalogo")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tiposCuentas").isEmpty())
+                .andExpect(jsonPath("$.tiposTarjetas").isEmpty());
+
+        verify(clienteService).getCatalogue();
     }
 }
