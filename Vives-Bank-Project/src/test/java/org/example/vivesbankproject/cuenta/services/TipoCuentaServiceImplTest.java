@@ -2,6 +2,7 @@ package org.example.vivesbankproject.cuenta.services;
 
 import org.example.vivesbankproject.rest.cuenta.dto.tipoCuenta.TipoCuentaRequest;
 import org.example.vivesbankproject.rest.cuenta.dto.tipoCuenta.TipoCuentaResponse;
+import org.example.vivesbankproject.rest.cuenta.exceptions.tipoCuenta.TipoCuentaExists;
 import org.example.vivesbankproject.rest.cuenta.exceptions.tipoCuenta.TipoCuentaNotFound;
 import org.example.vivesbankproject.rest.cuenta.mappers.TipoCuentaMapper;
 import org.example.vivesbankproject.rest.cuenta.models.TipoCuenta;
@@ -15,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -153,5 +155,122 @@ public class TipoCuentaServiceImplTest {
         when(tipoCuentaRepository.findByGuid(tipoCuentaId)).thenReturn(Optional.empty());
 
         assertThrows(TipoCuentaNotFound.class, () -> tipoCuentaService.deleteById(tipoCuentaId));
+    }
+
+    @Test
+    void save_tipoCuentaExistente() {
+        TipoCuentaRequest tipoCuentaRequest = new TipoCuentaRequest();
+        tipoCuentaRequest.setNombre("Existing Account");
+
+        when(tipoCuentaRepository.findByNombre(tipoCuentaRequest.getNombre()))
+                .thenReturn(Optional.of(new TipoCuenta()));
+
+        assertThrows(TipoCuentaExists.class, () -> {
+            tipoCuentaService.save(tipoCuentaRequest);
+        });
+
+        verify(tipoCuentaRepository, never()).save(any());
+    }
+
+    @Test
+    void getAll_conFiltrado() {
+        Optional<String> nombre = Optional.of("Test");
+        Optional<BigDecimal> interesMax = Optional.of(BigDecimal.valueOf(5.0));
+        Optional<BigDecimal> interesMin = Optional.of(BigDecimal.valueOf(1.0));
+        Pageable pageable = PageRequest.of(0, 10);
+
+        TipoCuenta tipoCuenta = new TipoCuenta();
+        Page<TipoCuenta> page = new PageImpl<>(java.util.List.of(tipoCuenta));
+
+        when(tipoCuentaRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(page);
+
+        when(tipoCuentaMapper.toTipoCuentaResponse(any(TipoCuenta.class)))
+                .thenReturn(new TipoCuentaResponse());
+
+        Page<TipoCuentaResponse> result = tipoCuentaService.getAll(
+                nombre, interesMax, interesMin, pageable
+        );
+
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        verify(tipoCuentaRepository).findAll(any(Specification.class), eq(pageable));
+    }
+
+    @Test
+    void save_masCampos() {
+        TipoCuentaRequest tipoCuentaRequest = new TipoCuentaRequest();
+        tipoCuentaRequest.setNombre("New Account");
+        tipoCuentaRequest.setInteres(BigDecimal.valueOf(3.5));
+
+        TipoCuenta tipoCuenta = new TipoCuenta();
+        tipoCuenta.setNombre(tipoCuentaRequest.getNombre());
+        tipoCuenta.setInteres(tipoCuentaRequest.getInteres());
+
+        TipoCuentaResponse expectedResponse = new TipoCuentaResponse();
+
+        when(tipoCuentaRepository.findByNombre(tipoCuentaRequest.getNombre()))
+                .thenReturn(Optional.empty());
+
+        when(tipoCuentaMapper.toTipoCuenta(tipoCuentaRequest)).thenReturn(tipoCuenta);
+        when(tipoCuentaRepository.save(tipoCuenta)).thenReturn(tipoCuenta);
+        when(tipoCuentaMapper.toTipoCuentaResponse(tipoCuenta)).thenReturn(expectedResponse);
+
+        TipoCuentaResponse result = tipoCuentaService.save(tipoCuentaRequest);
+
+        assertNotNull(result);
+        verify(tipoCuentaRepository).save(tipoCuenta);
+    }
+
+    @Test
+    void deleteById_verificandoLogica() {
+        String tipoCuentaId = "123";
+        TipoCuenta tipoCuenta = new TipoCuenta();
+        tipoCuenta.setGuid(tipoCuentaId);
+        tipoCuenta.setIsDeleted(false);
+
+        TipoCuentaResponse expectedResponse = new TipoCuentaResponse();
+
+        when(tipoCuentaRepository.findByGuid(tipoCuentaId))
+                .thenReturn(Optional.of(tipoCuenta));
+
+        when(tipoCuentaRepository.save(tipoCuenta)).thenReturn(tipoCuenta);
+
+        when(tipoCuentaMapper.toTipoCuentaResponse(tipoCuenta)).thenReturn(expectedResponse);
+
+        TipoCuentaResponse result = tipoCuentaService.deleteById(tipoCuentaId);
+
+        assertTrue(tipoCuenta.getIsDeleted());
+        assertNotNull(result);
+        verify(tipoCuentaRepository).save(tipoCuenta);
+    }
+
+    @Test
+    void update_minimosCampos() {
+        String tipoCuentaId = "123";
+        TipoCuentaRequest tipoCuentaRequest = new TipoCuentaRequest();
+        tipoCuentaRequest.setNombre("Updated Account");
+
+        TipoCuenta existingTipoCuenta = new TipoCuenta();
+        existingTipoCuenta.setGuid(tipoCuentaId);
+
+        TipoCuenta updatedTipoCuenta = new TipoCuenta();
+        updatedTipoCuenta.setGuid(tipoCuentaId);
+        updatedTipoCuenta.setNombre(tipoCuentaRequest.getNombre());
+
+        TipoCuentaResponse expectedResponse = new TipoCuentaResponse();
+
+        when(tipoCuentaRepository.findByGuid(tipoCuentaId))
+                .thenReturn(Optional.of(existingTipoCuenta));
+
+        when(tipoCuentaMapper.toTipoCuentaUpdate(tipoCuentaRequest, existingTipoCuenta))
+                .thenReturn(updatedTipoCuenta);
+        when(tipoCuentaRepository.save(updatedTipoCuenta)).thenReturn(updatedTipoCuenta);
+        when(tipoCuentaMapper.toTipoCuentaResponse(updatedTipoCuenta)).thenReturn(expectedResponse);
+
+        TipoCuentaResponse result = tipoCuentaService.update(tipoCuentaId, tipoCuentaRequest);
+
+        assertNotNull(result);
+        verify(tipoCuentaRepository).save(updatedTipoCuenta);
     }
 }
