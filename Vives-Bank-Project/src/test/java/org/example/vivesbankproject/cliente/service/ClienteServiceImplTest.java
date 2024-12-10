@@ -1,5 +1,6 @@
 package org.example.vivesbankproject.cliente.service;
 
+import org.example.vivesbankproject.rest.cliente.dto.ClienteProducto;
 import org.example.vivesbankproject.rest.cliente.dto.ClienteRequestSave;
 import org.example.vivesbankproject.rest.cliente.dto.ClienteRequestUpdate;
 import org.example.vivesbankproject.rest.cliente.dto.ClienteResponse;
@@ -9,8 +10,13 @@ import org.example.vivesbankproject.rest.cliente.models.Cliente;
 import org.example.vivesbankproject.rest.cliente.models.Direccion;
 import org.example.vivesbankproject.rest.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.rest.cliente.service.ClienteServiceImpl;
+import org.example.vivesbankproject.rest.cuenta.dto.tipoCuenta.TipoCuentaResponseCatalogo;
+import org.example.vivesbankproject.rest.cuenta.mappers.TipoCuentaMapper;
+import org.example.vivesbankproject.rest.cuenta.models.TipoCuenta;
 import org.example.vivesbankproject.rest.cuenta.repositories.CuentaRepository;
+import org.example.vivesbankproject.rest.cuenta.repositories.TipoCuentaRepository;
 import org.example.vivesbankproject.rest.storage.images.services.StorageImagesService;
+import org.example.vivesbankproject.rest.tarjeta.models.TipoTarjeta;
 import org.example.vivesbankproject.rest.tarjeta.repositories.TarjetaRepository;
 import org.example.vivesbankproject.rest.users.exceptions.UserNotFoundById;
 import org.example.vivesbankproject.rest.users.models.User;
@@ -30,9 +36,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Collections;
-import java.util.Optional;
-import java.util.Set;
+import java.math.BigDecimal;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -48,6 +53,8 @@ class ClienteServiceImplTest {
     @Mock private UserRepository userRepository;
     @Mock private CuentaRepository cuentaRepository;
     @Mock private RedisTemplate<String, String> redisTemplate;
+    @Mock private TipoCuentaRepository tipoCuentaRepository;
+    @Mock private TipoCuentaMapper tipoCuentaMapper;
     @InjectMocks private ClienteServiceImpl clienteService;
 
     private Cliente cliente;
@@ -99,7 +106,7 @@ class ClienteServiceImplTest {
     }
 
     @Test
-    void GetAllCliente() {
+    void GetAll() {
         Pageable pageable = PageRequest.of(0, 10);
 
         when(clienteRepository.findAll(any(Specification.class), eq(pageable)))
@@ -151,6 +158,25 @@ class ClienteServiceImplTest {
     }
 
     @Test
+    void getUserByGuid() {
+        when(clienteRepository.findByUserGuid(user.getGuid())).thenReturn(Optional.of(cliente));
+        when(clienteMapper.toClienteResponse(eq(cliente), eq(user.getGuid()))).thenReturn(expectedResponse);
+
+        ClienteResponse result = clienteService.getUserAuthenticatedByGuid(user.getGuid());
+
+        assertNotNull(result);
+        assertEquals(expectedResponse, result);
+
+        verify(clienteRepository).findByUserGuid(user.getGuid());
+    }
+    @Test
+    void getUserByGuidNotFound() {
+        when(clienteRepository.findByUserGuid(user.getGuid())).thenReturn(Optional.empty());
+
+        assertThrows(ClienteNotFoundByUser.class, () -> clienteService.getUserAuthenticatedByGuid(user.getGuid()));
+    }
+
+    @Test
     void getByDni() {
         when(clienteRepository.findByDni(cliente.getDni()))
                 .thenReturn(Optional.of(cliente));
@@ -176,15 +202,10 @@ class ClienteServiceImplTest {
         );
     }
 
-    @Test
-    void getUserByGuidNotFound() {
-        when(clienteRepository.findByUserGuid(user.getGuid())).thenReturn(Optional.empty());
 
-        assertThrows(ClienteNotFoundByUser.class, () -> clienteService.getUserAuthenticatedByGuid(user.getGuid()));
-    }
 
     @Test
-    void testSaveSuccess() {
+    void Save() {
         ClienteRequestSave requestSave = new ClienteRequestSave();
         requestSave.setUserId(user.getGuid());
 
@@ -225,17 +246,158 @@ class ClienteServiceImplTest {
     }
 
     @Test
-    void getUserByGuid() {
-        when(clienteRepository.findByUserGuid(user.getGuid())).thenReturn(Optional.of(cliente));
-        when(clienteMapper.toClienteResponse(eq(cliente), eq(user.getGuid()))).thenReturn(expectedResponse);
+    void Update() {
 
-        ClienteResponse result = clienteService.getUserAuthenticatedByGuid(user.getGuid());
+        String clienteId = "12345";
+        ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
+                .nombre("Juan")
+                .apellidos("Pérez García")
+                .calle("Calle Falsa")
+                .numero("10")
+                .codigoPostal("28001")
+                .piso("2")
+                .letra("B")
+                .email("newemail@example.com")
+                .telefono("123456789")
+                .fotoPerfil("https://example.com/foto-perfil.jpg")
+                .fotoDni("https://example.com/foto-dni.jpg")
+                .build();
+
+        Cliente clienteExistente = new Cliente();
+        clienteExistente.setTelefono("987654321");
+        clienteExistente.setEmail("oldemail@example.com");
+
+        User mockUser = new User();
+        mockUser.setGuid("user-guid");
+        clienteExistente.setUser(mockUser);
+
+        Cliente clienteSave = new Cliente();
+        ClienteResponse clienteResponse = new ClienteResponse();
+
+        when(clienteRepository.findByGuid(clienteId)).thenReturn(Optional.of(clienteExistente));
+        when(clienteRepository.findByTelefono(clienteRequestUpdate.getTelefono())).thenReturn(Optional.empty());
+        when(clienteRepository.findByEmail(clienteRequestUpdate.getEmail())).thenReturn(Optional.empty());
+        when(clienteMapper.toClienteUpdate(any(), any(), any(), any())).thenReturn(clienteSave);
+        when(clienteRepository.save(any())).thenReturn(clienteSave);
+        when(clienteMapper.toClienteResponse(any(), any())).thenReturn(clienteResponse);
+
+        ClienteResponse result = clienteService.update(clienteId, clienteRequestUpdate);
 
         assertNotNull(result);
-        assertEquals(expectedResponse, result);
-
-        verify(clienteRepository).findByUserGuid(user.getGuid());
+        verify(clienteRepository).findByGuid(clienteId);
+        verify(clienteRepository).save(any(Cliente.class));
+        verify(clienteMapper).toClienteResponse(any(Cliente.class), any());
     }
+
+    @Test
+    void UpdateNotFound() {
+
+        String clienteId = "12345";
+        ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
+                .nombre("Juan")
+                .apellidos("Pérez García")
+                .calle("Calle Falsa")
+                .numero("10")
+                .codigoPostal("28001")
+                .piso("2")
+                .letra("B")
+                .email("newemail@example.com")
+                .telefono("123456789")
+                .fotoPerfil("https://example.com/foto-perfil.jpg")
+                .fotoDni("https://example.com/foto-dni.jpg")
+                .build();
+
+        when(clienteRepository.findByGuid(clienteId)).thenReturn(Optional.empty());
+
+        ClienteNotFound exception = assertThrows(
+                ClienteNotFound.class,
+                () -> clienteService.update(clienteId, clienteRequestUpdate)
+        );
+
+        assertEquals("Cliente con id '" + clienteId + "' no encontrado", exception.getMessage());
+        verify(clienteRepository).findByGuid(clienteId);
+        verifyNoMoreInteractions(clienteRepository);
+    }
+
+    @Test
+    void updateDniFoto() {
+        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.of(cliente));
+        when(storageImagesService.store(any(MultipartFile.class))).thenReturn("foto_dni_2.jpg");
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+        when(clienteMapper.toClienteResponse(any(Cliente.class), any(String.class))).thenReturn(expectedResponse);
+
+        ClienteResponse response = clienteService.updateDniFoto(cliente.getGuid(), mockFile);
+
+        assertNotNull(response);
+
+        verify(clienteRepository).findByGuid(cliente.getGuid());
+        verify(storageImagesService).delete("foto_dni_1.jpg");
+        verify(storageImagesService).store(mockFile);
+        verify(clienteRepository).save(cliente);
+        verify(clienteMapper).toClienteResponse(cliente, user.getGuid());
+    }
+
+    @Test
+    void updateDniFotoClienteNotFound() {
+        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.empty());
+
+        assertThrows(ClienteNotFound.class, () -> clienteService.updateDniFoto(cliente.getGuid(), mockFile));
+
+        verify(storageImagesService, never()).delete(any());
+        verify(storageImagesService, never()).store(any());
+        verify(clienteRepository, never()).save(any());
+    }
+
+    @Test
+    void updateProfileFoto() {
+        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.of(cliente));
+        when(storageImagesService.store(any(MultipartFile.class))).thenReturn("foto_perfil_2.jpg");
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+        when(clienteMapper.toClienteResponse(any(Cliente.class), any(String.class))).thenReturn(expectedResponse);
+
+        ClienteResponse response = clienteService.updateProfileFoto(cliente.getGuid(), mockFile);
+
+        assertNotNull(response);
+
+        verify(clienteRepository).findByGuid(cliente.getGuid());
+        verify(storageImagesService).delete("foto_perfil_1.jpg");
+        verify(storageImagesService).store(mockFile);
+        verify(clienteRepository).save(cliente);
+        verify(clienteMapper).toClienteResponse(cliente, user.getGuid());
+    }
+
+    @Test
+    void updateProfileFotoClientNotFound() {
+        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.empty());
+
+        assertThrows(ClienteNotFound.class, () -> clienteService.updateProfileFoto(cliente.getGuid(), mockFile));
+
+        verify(storageImagesService, never()).delete(any());
+        verify(storageImagesService, never()).store(any());
+        verify(clienteRepository, never()).save(any());
+    }
+
+    @Test
+    void updateDniFotoFotoNoExistente() {
+        cliente.setFotoDni(null);
+
+        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.of(cliente));
+        when(storageImagesService.store(any(MultipartFile.class))).thenReturn("foto_dni_2.jpg");
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+        when(clienteMapper.toClienteResponse(any(Cliente.class), any(String.class))).thenReturn(expectedResponse);
+
+        ClienteResponse response = clienteService.updateDniFoto(cliente.getGuid(), mockFile);
+
+        assertNotNull(response);
+
+        verify(clienteRepository).findByGuid(cliente.getGuid());
+        verify(storageImagesService, never()).delete(any());
+        verify(storageImagesService).store(mockFile);
+        verify(clienteRepository).save(cliente);
+    }
+
+
+
 
     @Test
     void shouldUpdateUserSuccessfully() {
@@ -331,82 +493,6 @@ class ClienteServiceImplTest {
         verify(clienteRepository, times(1)).findByEmail(request.getEmail());
     }
 
-    @Test
-    void updateDniFoto() {
-        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.of(cliente));
-        when(storageImagesService.store(any(MultipartFile.class))).thenReturn("foto_dni_2.jpg");
-        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
-        when(clienteMapper.toClienteResponse(any(Cliente.class), any(String.class))).thenReturn(expectedResponse);
-
-        ClienteResponse response = clienteService.updateDniFoto(cliente.getGuid(), mockFile);
-
-        assertNotNull(response);
-
-        verify(clienteRepository).findByGuid(cliente.getGuid());
-        verify(storageImagesService).delete("foto_dni_1.jpg");
-        verify(storageImagesService).store(mockFile);
-        verify(clienteRepository).save(cliente);
-        verify(clienteMapper).toClienteResponse(cliente, user.getGuid());
-    }
-
-    @Test
-    void updateDniFotoClienteNotFound() {
-        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.empty());
-
-        assertThrows(ClienteNotFound.class, () -> clienteService.updateDniFoto(cliente.getGuid(), mockFile));
-
-        verify(storageImagesService, never()).delete(any());
-        verify(storageImagesService, never()).store(any());
-        verify(clienteRepository, never()).save(any());
-    }
-
-    @Test
-    void updateProfileFoto() {
-        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.of(cliente));
-        when(storageImagesService.store(any(MultipartFile.class))).thenReturn("foto_perfil_2.jpg");
-        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
-        when(clienteMapper.toClienteResponse(any(Cliente.class), any(String.class))).thenReturn(expectedResponse);
-
-        ClienteResponse response = clienteService.updateProfileFoto(cliente.getGuid(), mockFile);
-
-        assertNotNull(response);
-
-        verify(clienteRepository).findByGuid(cliente.getGuid());
-        verify(storageImagesService).delete("foto_perfil_1.jpg");
-        verify(storageImagesService).store(mockFile);
-        verify(clienteRepository).save(cliente);
-        verify(clienteMapper).toClienteResponse(cliente, user.getGuid());
-    }
-
-    @Test
-    void updateProfileFotoClientNotFound() {
-        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.empty());
-
-        assertThrows(ClienteNotFound.class, () -> clienteService.updateProfileFoto(cliente.getGuid(), mockFile));
-
-        verify(storageImagesService, never()).delete(any());
-        verify(storageImagesService, never()).store(any());
-        verify(clienteRepository, never()).save(any());
-    }
-
-    @Test
-    void updateDniFotoFotoNoExistente() {
-        cliente.setFotoDni(null);
-
-        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.of(cliente));
-        when(storageImagesService.store(any(MultipartFile.class))).thenReturn("foto_dni_2.jpg");
-        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
-        when(clienteMapper.toClienteResponse(any(Cliente.class), any(String.class))).thenReturn(expectedResponse);
-
-        ClienteResponse response = clienteService.updateDniFoto(cliente.getGuid(), mockFile);
-
-        assertNotNull(response);
-
-        verify(clienteRepository).findByGuid(cliente.getGuid());
-        verify(storageImagesService, never()).delete(any());
-        verify(storageImagesService).store(mockFile);
-        verify(clienteRepository).save(cliente);
-    }
 
     @Test
     void derechoAlOlvido() {
@@ -529,5 +615,66 @@ class ClienteServiceImplTest {
 
         assertEquals("Cliente con email 'test@example.com' ya existente", exception.getMessage());
         verify(clienteRepository).findByEmail(cliente.getEmail());
+    }
+
+    @Test
+    void GetCatalogo() {
+
+        List<TipoCuenta> tiposCuentas = List.of(
+                TipoCuenta.builder()
+                        .id(1L)
+                        .nombre("Cuenta Corriente")
+                        .interes(BigDecimal.valueOf(1.5))
+                        .build(),
+                TipoCuenta.builder()
+                        .id(2L)
+                        .nombre("Cuenta de Ahorros")
+                        .interes(BigDecimal.valueOf(2.0))
+                        .build()
+        );
+
+        List<TipoCuentaResponseCatalogo> tiposCuentasResponse = List.of(
+                TipoCuentaResponseCatalogo.builder()
+                        .nombre("Cuenta Corriente")
+                        .interes("1.5")
+                        .build(),
+                TipoCuentaResponseCatalogo.builder()
+                        .nombre("Cuenta de Ahorros")
+                        .interes("2.0")
+                        .build()
+        );
+
+        when(tipoCuentaRepository.findAll()).thenReturn(tiposCuentas);
+        when(tipoCuentaMapper.toTipoCuentaResponseCatalogo(tiposCuentas.get(0))).thenReturn(tiposCuentasResponse.get(0));
+        when(tipoCuentaMapper.toTipoCuentaResponseCatalogo(tiposCuentas.get(1))).thenReturn(tiposCuentasResponse.get(1));
+
+        List<TipoTarjeta> tiposTarjetas = Arrays.asList(TipoTarjeta.values());
+
+        ClienteProducto result = clienteService.getCatalogue();
+
+        assertNotNull(result);
+        assertEquals(tiposCuentasResponse, result.getTiposCuentas());
+        assertEquals(tiposTarjetas, result.getTiposTarjetas());
+
+        verify(tipoCuentaRepository).findAll();
+        verify(tipoCuentaMapper).toTipoCuentaResponseCatalogo(tiposCuentas.get(0));
+        verify(tipoCuentaMapper).toTipoCuentaResponseCatalogo(tiposCuentas.get(1));
+    }
+
+    @Test
+    void GetCatalogoEmpty() {
+
+        when(tipoCuentaRepository.findAll()).thenReturn(Collections.emptyList());
+
+        List<TipoTarjeta> tiposTarjetas = Arrays.asList(TipoTarjeta.values());
+
+        ClienteProducto result = clienteService.getCatalogue();
+        
+        assertNotNull(result);
+        assertTrue(result.getTiposCuentas().isEmpty());
+        assertEquals(tiposTarjetas, result.getTiposTarjetas());
+
+        verify(tipoCuentaRepository).findAll();
+        verifyNoInteractions(tipoCuentaMapper);
     }
 }
