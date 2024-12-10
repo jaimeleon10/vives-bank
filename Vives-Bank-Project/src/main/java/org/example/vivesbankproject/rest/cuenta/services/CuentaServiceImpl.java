@@ -415,7 +415,7 @@ public class CuentaServiceImpl implements CuentaService{
             @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
             @ApiResponse(responseCode = "500", description = "Error en el servidor al procesar la notificación")
     })
-    void onChange(Notification.Tipo tipo, CuentaResponse data, Cuenta cuenta) {
+    public void onChange(Notification.Tipo tipo, CuentaResponse data, Cuenta cuenta) {
         log.info("Servicio de Cuentas onChange con tipo: " + tipo + " y datos: " + data);
 
         if (webSocketService == null) {
