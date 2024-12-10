@@ -14,12 +14,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
@@ -316,5 +321,72 @@ class CuentaControllerTest {
         assertAll(
                 () -> assertTrue(responseContent.contains("\"saldo\":\"El saldo no puede ser negativo\""))
         );
+    }
+
+    @Test
+    void getAll_sinParametrosDevuelvePaginaVacia() throws Exception {
+        CuentaResponse cuentaResponse = CuentaResponse.builder()
+                .guid("default-guid")
+                .iban("ES0000000000000000000000")
+                .saldo("1000.00")
+                .build();
+
+        PageImpl<CuentaResponse> page = new PageImpl<>(Collections.singletonList(cuentaResponse));
+
+        when(cuentaService.getAll(
+                eq(Optional.empty()),
+                eq(Optional.empty()),
+                eq(Optional.empty()),
+                eq(Optional.empty()),
+                any(PageRequest.class)
+        )).thenReturn(page);
+
+        when(paginationLinksUtils.createLinkHeader(eq(page), any())).thenReturn("");
+
+        mockMvc.perform(get("/v1/cuentas"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].guid").value("default-guid"))
+                .andExpect(jsonPath("$.content[0].iban").value("ES0000000000000000000000"));
+    }
+
+    @Test
+    void getAllCuentasByClienteGuid() throws Exception {
+        CuentaResponse cuentaResponse = CuentaResponse.builder()
+                .guid("client-account")
+                .iban("ES1111111111111111111111")
+                .clienteId("existing-client")
+                .build();
+
+        when(cuentaService.getAllCuentasByClienteGuid("existing-client"))
+                .thenReturn(new ArrayList<>(Collections.singletonList(cuentaResponse)));
+
+        mockMvc.perform(get("/v1/cuentas/cliente/existing-client"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].guid").value("client-account"))
+                .andExpect(jsonPath("$[0].clienteId").value("existing-client"));
+    }
+
+    @Test
+    void getByIban() throws Exception {
+        CuentaResponse cuentaResponse = CuentaResponse.builder()
+                .guid("iban-account")
+                .iban("ES2222222222222222222222")
+                .build();
+
+        when(cuentaService.getByIban("ES2222222222222222222222"))
+                .thenReturn(cuentaResponse);
+
+        mockMvc.perform(get("/v1/cuentas/iban/ES2222222222222222222222"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.guid").value("iban-account"))
+                .andExpect(jsonPath("$.iban").value("ES2222222222222222222222"));
+    }
+
+    @Test
+    void delete_cuentaNoExistente() throws Exception {
+        doNothing().when(cuentaService).deleteById("non-existent-guid");
+
+        mockMvc.perform(patch("/v1/cuentas/non-existent-guid"))
+                .andExpect(status().isNoContent());
     }
 }
