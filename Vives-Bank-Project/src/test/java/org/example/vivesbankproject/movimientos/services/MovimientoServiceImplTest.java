@@ -17,10 +17,7 @@ import org.example.vivesbankproject.rest.movimientos.dto.MovimientoRequest;
 import org.example.vivesbankproject.rest.movimientos.dto.MovimientoResponse;
 import org.example.vivesbankproject.rest.movimientos.exceptions.domiciliacion.DuplicatedDomiciliacionException;
 import org.example.vivesbankproject.rest.movimientos.exceptions.domiciliacion.SaldoInsuficienteException;
-import org.example.vivesbankproject.rest.movimientos.exceptions.movimientos.ClienteHasNoMovements;
-import org.example.vivesbankproject.rest.movimientos.exceptions.movimientos.MovimientoNotFound;
-import org.example.vivesbankproject.rest.movimientos.exceptions.movimientos.NegativeAmount;
-import org.example.vivesbankproject.rest.movimientos.exceptions.movimientos.UnknownIban;
+import org.example.vivesbankproject.rest.movimientos.exceptions.movimientos.*;
 import org.example.vivesbankproject.rest.movimientos.mappers.MovimientoMapper;
 import org.example.vivesbankproject.rest.movimientos.models.*;
 import org.example.vivesbankproject.rest.movimientos.repositories.DomiciliacionRepository;
@@ -774,6 +771,425 @@ class MovimientoServiceImplTest {
         // Assert
         assertEquals(SaldoInsuficienteException.class, response.getClass());
 
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testSaveTransferencia_Success() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        Transferencia transferencia = Transferencia.builder()
+                .iban_Origen("ES60123412347246753334")
+                .iban_Destino("ES60123412347246753334")
+                .cantidad(new BigDecimal("100.00"))
+                .nombreBeneficiario("Beneficiario")
+                .build();
+
+        Movimiento movimiento = Movimiento.builder()
+                .clienteGuid("client-guid")
+                .transferencia(transferencia)
+                .build();
+
+        MovimientoResponse expectedResponse = MovimientoResponse.builder()
+                .clienteGuid("client-guid")
+                .transferencia(transferencia)
+                .build();
+
+
+        cuenta.setClienteId(clienteResponse.getGuid());
+
+        when(clienteService.getUserAuthenticatedByGuid(user.getGuid())).thenReturn(clienteResponse);
+        when(cuentaService.getByIban(transferencia.getIban_Origen())).thenReturn(cuenta);
+        when(cuentaService.getByIban(transferencia.getIban_Destino())).thenReturn(cuenta);
+        when(movimientosRepository.save(any(Movimiento.class))).thenReturn(movimiento);
+        when(movimientosMapper.toMovimientoResponse(movimiento)).thenReturn(expectedResponse);
+        when(cuentaMapper.toCuentaRequestUpdate(any())).thenReturn(new CuentaRequestUpdate());
+        when(userService.getById(clienteResponse.getUserId())).thenReturn(userResponse);
+        when(clienteService.getById(anyString())).thenReturn(clienteResponse);
+
+
+
+        // Act
+        MovimientoResponse actualResponse = movimientosService.saveTransferencia(user, transferencia);
+
+        // Assert
+        assertAll(
+                () -> assertEquals(expectedResponse.getClienteGuid(), actualResponse.getClienteGuid()),
+                () -> assertEquals(expectedResponse.getTransferencia(), actualResponse.getTransferencia()),
+                () -> assertNotEquals(null, actualResponse.getTransferencia())
+        );
+
+        verify(movimientosRepository, times(2)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testSaveTransferencia_ClienteNotFound() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        Transferencia transferencia = Transferencia.builder()
+                .iban_Origen("ES60123412347246753334")
+                .iban_Destino("ES60123412347246753334")
+                .cantidad(new BigDecimal("100.00"))
+                .nombreBeneficiario("Beneficiario")
+                .build();
+
+        cuenta.setClienteId(clienteResponse.getGuid());
+
+        when(clienteService.getUserAuthenticatedByGuid(user.getGuid())).thenReturn(null);
+
+
+
+        // Act
+        var actualResponse = assertThrows(ClienteNotFoundByUser.class, () -> movimientosService.saveTransferencia(user, transferencia));
+
+        // Assert
+        assertEquals(ClienteNotFoundByUser.class, actualResponse.getClass());
+
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testSaveTransferencia_CuentaNotFound() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        Transferencia transferencia = Transferencia.builder()
+                .iban_Origen("ES60123412347246753334")
+                .iban_Destino("ES60123412347246753334")
+                .cantidad(new BigDecimal("100.00"))
+                .nombreBeneficiario("Beneficiario")
+                .build();
+
+        cuenta.setClienteId(clienteResponse.getGuid());
+
+        when(clienteService.getUserAuthenticatedByGuid(user.getGuid())).thenReturn(clienteResponse);
+        when(cuentaService.getByIban(transferencia.getIban_Origen())).thenReturn(null);
+
+
+
+        // Act
+        var actualResponse = assertThrows(CuentaNotFound.class, () -> movimientosService.saveTransferencia(user, transferencia));
+
+        // Assert
+        assertEquals(CuentaNotFound.class, actualResponse.getClass());
+
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testSaveTransferencia_UnknownIban() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        Transferencia transferencia = Transferencia.builder()
+                .iban_Origen("ES60123412347246753334")
+                .iban_Destino("ES60123412347246753334")
+                .cantidad(new BigDecimal("100.00"))
+                .nombreBeneficiario("Beneficiario")
+                .build();
+
+        cuenta.setClienteId("diferente-guid");
+
+        when(clienteService.getUserAuthenticatedByGuid(user.getGuid())).thenReturn(clienteResponse);
+        when(cuentaService.getByIban(transferencia.getIban_Origen())).thenReturn(cuenta);
+
+        // Act
+        var actualResponse = assertThrows(UnknownIban.class, () -> movimientosService.saveTransferencia(user, transferencia));
+
+        // Assert
+        assertEquals(UnknownIban.class, actualResponse.getClass());
+
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testSaveTransferencia_CuentaDestinoNotFound() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        Transferencia transferencia = Transferencia.builder()
+                .iban_Origen("ES60123412347246753334")
+                .iban_Destino("ES60123412347246753335")
+                .cantidad(new BigDecimal("100.00"))
+                .nombreBeneficiario("Beneficiario")
+                .build();
+
+        when(clienteService.getUserAuthenticatedByGuid(user.getGuid())).thenReturn(clienteResponse);
+        when(cuentaService.getByIban(transferencia.getIban_Origen())).thenReturn(cuenta);
+
+        // Act
+        var actualResponse = assertThrows(CuentaNotFound.class, () -> movimientosService.saveTransferencia(user, transferencia));
+
+        // Assert
+        assertEquals(CuentaNotFound.class, actualResponse.getClass());
+
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testSaveTransferencia_NegativeAmount() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        Transferencia transferencia = Transferencia.builder()
+                .iban_Origen("ES60123412347246753334")
+                .iban_Destino("ES60123412347246753334")
+                .cantidad(new BigDecimal("-100.00"))
+                .nombreBeneficiario("Beneficiario")
+                .build();
+
+        when(clienteService.getUserAuthenticatedByGuid(user.getGuid())).thenReturn(clienteResponse);
+        when(cuentaService.getByIban(transferencia.getIban_Origen())).thenReturn(cuenta);
+
+        // Act
+        var actualResponse = assertThrows(NegativeAmount.class, () -> movimientosService.saveTransferencia(user, transferencia));
+
+        // Assert
+        assertEquals(NegativeAmount.class, actualResponse.getClass());
+
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testSaveTransferencia_SaldoInsuficiente() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        Transferencia transferencia = Transferencia.builder()
+                .iban_Origen("ES60123412347246753334")
+                .iban_Destino("ES60123412347246753334")
+                .cantidad(new BigDecimal("100.00"))
+                .nombreBeneficiario("Beneficiario")
+                .build();
+
+        cuenta.setSaldo("0.0");
+        when(clienteService.getUserAuthenticatedByGuid(user.getGuid())).thenReturn(clienteResponse);
+        when(cuentaService.getByIban(transferencia.getIban_Origen())).thenReturn(cuenta);
+
+        // Act
+        var actualResponse = assertThrows(SaldoInsuficienteException.class, () -> movimientosService.saveTransferencia(user, transferencia));
+
+        // Assert
+        assertEquals(SaldoInsuficienteException.class, actualResponse.getClass());
+
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testRevocarTransferencia_Success() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        Transferencia transferencia = Transferencia.builder()
+                .iban_Origen("ES60123412347246753334")
+                .iban_Destino("ES60123412347246753335")
+                .cantidad(new BigDecimal("100.00"))
+                .nombreBeneficiario("Beneficiario")
+                .build();
+
+        Movimiento movimiento = Movimiento.builder()
+                .id(new ObjectId())
+                .clienteGuid(clienteResponse.getGuid())
+                .transferencia(transferencia)
+                .build();
+
+        MovimientoResponse expectedResponse = MovimientoResponse.builder()
+                .clienteGuid("client-guid")
+                .transferencia(transferencia)
+                .build();
+
+
+        cuenta.setClienteId(clienteResponse.getGuid());
+
+        when(movimientosRepository.findByGuid(movimiento.getGuid())).thenReturn(Optional.of(movimiento));
+        when(clienteService.getUserAuthenticatedByGuid(user.getGuid())).thenReturn(clienteResponse);
+        when(cuentaService.getByIban(transferencia.getIban_Origen())).thenReturn(cuenta);
+        when(cuentaService.getByIban(transferencia.getIban_Destino())).thenReturn(cuenta);
+        when(movimientosRepository.findByGuid(movimiento.getTransferencia().getMovimientoDestino())).thenReturn(Optional.of(movimiento));
+        when(movimientosMapper.toMovimientoResponse(movimiento)).thenReturn(expectedResponse);
+        when(clienteService.getById(anyString())).thenReturn(clienteResponse);
+        when(userService.getById(clienteResponse.getUserId())).thenReturn(userResponse);
+
+        // Act
+        MovimientoResponse response = movimientosService.revocarTransferencia(user, movimiento.getGuid());
+
+        // Assert
+        assertNotNull(response);
+        verify(movimientosRepository, times(2)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testRevocarTransferencia_MovimientoNotFound() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        Transferencia transferencia = Transferencia.builder()
+                .iban_Origen("ES60123412347246753334")
+                .iban_Destino("ES60123412347246753335")
+                .cantidad(new BigDecimal("100.00"))
+                .nombreBeneficiario("Beneficiario")
+                .build();
+
+        Movimiento movimiento = Movimiento.builder()
+                .id(new ObjectId())
+                .clienteGuid(clienteResponse.getGuid())
+                .transferencia(transferencia)
+                .build();
+
+        MovimientoResponse expectedResponse = MovimientoResponse.builder()
+                .clienteGuid("client-guid")
+                .transferencia(transferencia)
+                .build();
+
+
+        cuenta.setClienteId(clienteResponse.getGuid());
+
+        when(movimientosRepository.findByGuid(movimiento.getGuid())).thenReturn(Optional.empty());
+
+
+        // Act
+        var response = assertThrows(MovimientoNotFound.class, () -> movimientosService.revocarTransferencia(user, movimiento.getGuid()));
+
+        // Assert
+        assertEquals(MovimientoNotFound.class, response.getClass());
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testRevocarTransferencia_NoRevocable() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        Transferencia transferencia = Transferencia.builder()
+                .iban_Origen("ES60123412347246753334")
+                .iban_Destino("ES60123412347246753335")
+                .cantidad(new BigDecimal("100.00"))
+                .nombreBeneficiario("Beneficiario")
+                .build();
+
+        Movimiento movimiento = Movimiento.builder()
+                .id(new ObjectId())
+                .clienteGuid(clienteResponse.getGuid())
+                .transferencia(transferencia)
+                .createdAt(LocalDateTime.now().minusDays(2))
+                .build();
+
+        MovimientoResponse expectedResponse = MovimientoResponse.builder()
+                .clienteGuid("client-guid")
+                .transferencia(transferencia)
+                .build();
+
+
+
+        cuenta.setClienteId(clienteResponse.getGuid());
+
+        when(movimientosRepository.findByGuid(movimiento.getGuid())).thenReturn(Optional.of(movimiento));
+
+        // Act
+        var response = assertThrows(TransferenciaNoRevocableException.class, () -> movimientosService.revocarTransferencia(user, movimiento.getGuid()));
+
+        // Assert
+        assertEquals(TransferenciaNoRevocableException.class, response.getClass());
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testRevocarTransferencia_NoEsTransferencia() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        Transferencia transferencia = Transferencia.builder()
+                .iban_Origen("ES60123412347246753334")
+                .iban_Destino("ES60123412347246753335")
+                .cantidad(new BigDecimal("100.00"))
+                .nombreBeneficiario("Beneficiario")
+                .build();
+
+        Movimiento movimiento = Movimiento.builder()
+                .id(new ObjectId())
+                .clienteGuid(clienteResponse.getGuid())
+                .build();
+
+        MovimientoResponse expectedResponse = MovimientoResponse.builder()
+                .clienteGuid("client-guid")
+                .transferencia(transferencia)
+                .build();
+
+
+
+        cuenta.setClienteId(clienteResponse.getGuid());
+
+        when(movimientosRepository.findByGuid(movimiento.getGuid())).thenReturn(Optional.of(movimiento));
+
+        // Act
+        var response = assertThrows(MovimientoIsNotTransferenciaException.class, () -> movimientosService.revocarTransferencia(user, movimiento.getGuid()));
+
+        // Assert
+        assertEquals(MovimientoIsNotTransferenciaException.class, response.getClass());
+        verify(movimientosRepository, times(0)).save(any(Movimiento.class));
+    }
+
+    @Test
+    void testRevocarTransferencia_UnknownIban() {
+        // Arrange
+        User user = User.builder()
+                .guid("user-guid")
+                .build();
+
+        Transferencia transferencia = Transferencia.builder()
+                .iban_Origen("ES60123412347246753334")
+                .iban_Destino("ES60123412347246753335")
+                .cantidad(new BigDecimal("100.00"))
+                .nombreBeneficiario("Beneficiario")
+                .build();
+
+        Movimiento movimiento = Movimiento.builder()
+                .id(new ObjectId())
+                .clienteGuid("error")
+                .transferencia(transferencia)
+                .build();
+
+        MovimientoResponse expectedResponse = MovimientoResponse.builder()
+                .clienteGuid("errer")
+                .transferencia(transferencia)
+                .build();
+
+
+
+        cuenta.setClienteId("diferente_dasd");
+
+        when(movimientosRepository.findByGuid(movimiento.getGuid())).thenReturn(Optional.of(movimiento));
+        when(clienteService.getUserAuthenticatedByGuid(user.getGuid())).thenReturn(clienteResponse);
+
+        // Act
+        var response = assertThrows(UnknownIban.class, () -> movimientosService.revocarTransferencia(user, movimiento.getGuid()));
+
+        // Assert
+        assertEquals(UnknownIban.class, response.getClass());
         verify(movimientosRepository, times(0)).save(any(Movimiento.class));
     }
 }

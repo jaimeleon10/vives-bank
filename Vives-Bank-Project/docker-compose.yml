@@ -10,6 +10,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DATABASE}
     networks:
       - banco-network
+    ports:
+      - ${POSTGRES_PORT}:5432
 
 
   mongo-db:
@@ -26,6 +28,8 @@ services:
       - ./mongo-prod/initMongo.js:/docker-entrypoint-initdb.d/initMongo.js
     networks:
       - banco-network
+    ports:
+      - ${MONGO_PORT}:27017
 
   redis:
     container_name: banco-redis
@@ -37,6 +41,8 @@ services:
       - redis-data:/data
     networks:
       - banco-network
+    ports:
+      - ${REDIS_PORT}:6379
 
   vives-bank:
     container_name: vives-bank
