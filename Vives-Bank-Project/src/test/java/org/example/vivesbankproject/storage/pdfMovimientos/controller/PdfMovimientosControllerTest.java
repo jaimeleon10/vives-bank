@@ -177,7 +177,7 @@ class PdfMovimientosControllerTest {
 
     @Test
     void serveFileContenidoNull() throws Exception {
-        String testFilename = "test.zip";
+        String testFilename = "test.pdf";
         when(storageService.loadAsResource(testFilename)).thenReturn(mockResource);
 
         when(mockResource.getFile()).thenReturn(new File("dummy-path"));
