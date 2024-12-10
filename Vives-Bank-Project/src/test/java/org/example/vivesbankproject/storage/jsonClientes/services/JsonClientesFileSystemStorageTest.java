@@ -10,8 +10,10 @@ import org.example.vivesbankproject.rest.cliente.models.Direccion;
 import org.example.vivesbankproject.rest.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.rest.cuenta.models.Cuenta;
 import org.example.vivesbankproject.rest.cuenta.models.TipoCuenta;
+import org.example.vivesbankproject.rest.storage.exceptions.StorageInternal;
 import org.example.vivesbankproject.rest.storage.exceptions.StorageNotFound;
 import org.example.vivesbankproject.rest.storage.jsonClientes.services.JsonClientesFileSystemStorage;
+import org.example.vivesbankproject.rest.storage.jsonClientes.services.JsonClientesStorageService;
 import org.example.vivesbankproject.rest.tarjeta.models.Tarjeta;
 import org.example.vivesbankproject.rest.cuenta.mappers.CuentaMapper;
 import org.example.vivesbankproject.rest.tarjeta.mappers.TarjetaMapper;
@@ -21,12 +23,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.MalformedURLException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
@@ -240,6 +245,8 @@ class JsonClientesFileSystemStorageTest {
     @Test
     void loadAsResourceMalformedUrl() {
         String filename = "../../etc/passwd";
+
+        UrlResource mockResource = mock(UrlResource.class);
 
         StorageNotFound exception = assertThrows(StorageNotFound.class, () -> {
             storageService.loadAsResource(filename);
