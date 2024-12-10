@@ -9,7 +9,10 @@ import org.example.vivesbankproject.rest.cliente.models.Cliente;
 import org.example.vivesbankproject.rest.cliente.models.Direccion;
 import org.example.vivesbankproject.rest.cliente.repositories.ClienteRepository;
 import org.example.vivesbankproject.rest.cliente.service.ClienteServiceImpl;
+import org.example.vivesbankproject.rest.cuenta.repositories.CuentaRepository;
 import org.example.vivesbankproject.rest.storage.images.services.StorageImagesService;
+import org.example.vivesbankproject.rest.tarjeta.repositories.TarjetaRepository;
+import org.example.vivesbankproject.rest.users.exceptions.UserNotFoundById;
 import org.example.vivesbankproject.rest.users.models.User;
 import org.example.vivesbankproject.rest.users.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,11 +26,13 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,11 +44,16 @@ class ClienteServiceImplTest {
     @Mock private ClienteRepository clienteRepository;
     @Mock private StorageImagesService storageImagesService;
     @Mock private ClienteMapper clienteMapper;
-    @InjectMocks private ClienteServiceImpl clienteService;
+    @Mock private TarjetaRepository tarjetaRepository;
     @Mock private UserRepository userRepository;
+    @Mock private CuentaRepository cuentaRepository;
+    @Mock private RedisTemplate<String, String> redisTemplate;
+    @InjectMocks private ClienteServiceImpl clienteService;
 
     private Cliente cliente;
     private User user;
+    private Cliente cliente2;
+    private User user2;
     private MultipartFile mockFile;
     private ClienteResponse expectedResponse;
 
@@ -57,19 +67,25 @@ class ClienteServiceImplTest {
         cliente.setGuid("cliente-guid");
         cliente.setDni("12345678A");
         cliente.setEmail("test@example.com");
+        cliente.setTelefono("987654321");
         cliente.setUser(user);
+        cliente.setFotoDni("foto_dni_1.jpg");
+        cliente.setFotoPerfil("foto_perfil_1.jpg");
 
         expectedResponse = new ClienteResponse();
         expectedResponse.setGuid(cliente.getGuid());
 
-        user = new User();
-        user.setGuid("Guid-User");
+        user2 = new User();
+        user2.setGuid("user-guid2");
 
-        cliente = new Cliente();
-        cliente.setGuid("Guid-cliente");
-        cliente.setUser(user);
-        cliente.setFotoDni("foto_dni_1.jpg");
-        cliente.setFotoPerfil("foto_perfil_1.jpg");
+        cliente2 = new Cliente();
+        cliente2.setGuid("cliente-guid2");
+        cliente2.setDni("12345678B");
+        cliente2.setEmail("test2@example.com");
+        cliente2.setTelefono("123456789");
+        cliente2.setUser(user2);
+        cliente2.setFotoDni("foto_dni_2.jpg");
+        cliente2.setFotoPerfil("foto_perfil_2.jpg");
 
         mockFile = new MockMultipartFile(
                 "file",
@@ -79,84 +95,7 @@ class ClienteServiceImplTest {
         );
 
         expectedResponse = new ClienteResponse();
-        expectedResponse.setGuid(cliente.getGuid());
-    }
-
-    @Test
-    void updateDniFoto() {
-        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.of(cliente));
-        when(storageImagesService.store(any(MultipartFile.class))).thenReturn("foto_dni_2.jpg");
-        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
-        when(clienteMapper.toClienteResponse(any(Cliente.class), any(String.class))).thenReturn(expectedResponse);
-
-        ClienteResponse response = clienteService.updateDniFoto(cliente.getGuid(), mockFile);
-
-        assertNotNull(response);
-
-        verify(clienteRepository).findByGuid(cliente.getGuid());
-        verify(storageImagesService).delete("foto_dni_1.jpg");
-        verify(storageImagesService).store(mockFile);
-        verify(clienteRepository).save(cliente);
-        verify(clienteMapper).toClienteResponse(cliente, user.getGuid());
-    }
-
-    @Test
-    void updateDniFotoClienteNotFound() {
-        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.empty());
-
-        assertThrows(ClienteNotFound.class, () -> clienteService.updateDniFoto(cliente.getGuid(), mockFile));
-
-        verify(storageImagesService, never()).delete(any());
-        verify(storageImagesService, never()).store(any());
-        verify(clienteRepository, never()).save(any());
-    }
-
-    @Test
-    void updateProfileFoto() {
-        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.of(cliente));
-        when(storageImagesService.store(any(MultipartFile.class))).thenReturn("foto_perfil_2.jpg");
-        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
-        when(clienteMapper.toClienteResponse(any(Cliente.class), any(String.class))).thenReturn(expectedResponse);
-
-        ClienteResponse response = clienteService.updateProfileFoto(cliente.getGuid(), mockFile);
-
-        assertNotNull(response);
-
-        verify(clienteRepository).findByGuid(cliente.getGuid());
-        verify(storageImagesService).delete("foto_perfil_1.jpg");
-        verify(storageImagesService).store(mockFile);
-        verify(clienteRepository).save(cliente);
-        verify(clienteMapper).toClienteResponse(cliente, user.getGuid());
-    }
-
-    @Test
-    void updateProfileFotoClientNotFound() {
-        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.empty());
-
-        assertThrows(ClienteNotFound.class, () -> clienteService.updateProfileFoto(cliente.getGuid(), mockFile));
-
-        verify(storageImagesService, never()).delete(any());
-        verify(storageImagesService, never()).store(any());
-        verify(clienteRepository, never()).save(any());
-    }
-
-    @Test
-    void updateDniFotoFotoNoExistente() {
-        cliente.setFotoDni(null);
-
-        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.of(cliente));
-        when(storageImagesService.store(any(MultipartFile.class))).thenReturn("foto_dni_2.jpg");
-        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
-        when(clienteMapper.toClienteResponse(any(Cliente.class), any(String.class))).thenReturn(expectedResponse);
-
-        ClienteResponse response = clienteService.updateDniFoto(cliente.getGuid(), mockFile);
-
-        assertNotNull(response);
-
-        verify(clienteRepository).findByGuid(cliente.getGuid());
-        verify(storageImagesService, never()).delete(any());
-        verify(storageImagesService).store(mockFile);
-        verify(clienteRepository).save(cliente);
+        expectedResponse.setGuid(cliente2.getGuid());
     }
 
     @Test
@@ -238,6 +177,13 @@ class ClienteServiceImplTest {
     }
 
     @Test
+    void getUserByGuidNotFound() {
+        when(clienteRepository.findByUserGuid(user.getGuid())).thenReturn(Optional.empty());
+
+        assertThrows(ClienteNotFoundByUser.class, () -> clienteService.getUserAuthenticatedByGuid(user.getGuid()));
+    }
+
+    @Test
     void testSaveSuccess() {
         ClienteRequestSave requestSave = new ClienteRequestSave();
         requestSave.setUserId(user.getGuid());
@@ -289,13 +235,6 @@ class ClienteServiceImplTest {
         assertEquals(expectedResponse, result);
 
         verify(clienteRepository).findByUserGuid(user.getGuid());
-    }
-
-    @Test
-    void getUserByGuidNotFound() {
-        when(clienteRepository.findByUserGuid(user.getGuid())).thenReturn(Optional.empty());
-
-        assertThrows(ClienteNotFoundByUser.class, () -> clienteService.getUserAuthenticatedByGuid(user.getGuid()));
     }
 
     @Test
@@ -390,5 +329,205 @@ class ClienteServiceImplTest {
 
         verify(clienteRepository, times(1)).findByUserGuid(guid);
         verify(clienteRepository, times(1)).findByEmail(request.getEmail());
+    }
+
+    @Test
+    void updateDniFoto() {
+        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.of(cliente));
+        when(storageImagesService.store(any(MultipartFile.class))).thenReturn("foto_dni_2.jpg");
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+        when(clienteMapper.toClienteResponse(any(Cliente.class), any(String.class))).thenReturn(expectedResponse);
+
+        ClienteResponse response = clienteService.updateDniFoto(cliente.getGuid(), mockFile);
+
+        assertNotNull(response);
+
+        verify(clienteRepository).findByGuid(cliente.getGuid());
+        verify(storageImagesService).delete("foto_dni_1.jpg");
+        verify(storageImagesService).store(mockFile);
+        verify(clienteRepository).save(cliente);
+        verify(clienteMapper).toClienteResponse(cliente, user.getGuid());
+    }
+
+    @Test
+    void updateDniFotoClienteNotFound() {
+        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.empty());
+
+        assertThrows(ClienteNotFound.class, () -> clienteService.updateDniFoto(cliente.getGuid(), mockFile));
+
+        verify(storageImagesService, never()).delete(any());
+        verify(storageImagesService, never()).store(any());
+        verify(clienteRepository, never()).save(any());
+    }
+
+    @Test
+    void updateProfileFoto() {
+        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.of(cliente));
+        when(storageImagesService.store(any(MultipartFile.class))).thenReturn("foto_perfil_2.jpg");
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+        when(clienteMapper.toClienteResponse(any(Cliente.class), any(String.class))).thenReturn(expectedResponse);
+
+        ClienteResponse response = clienteService.updateProfileFoto(cliente.getGuid(), mockFile);
+
+        assertNotNull(response);
+
+        verify(clienteRepository).findByGuid(cliente.getGuid());
+        verify(storageImagesService).delete("foto_perfil_1.jpg");
+        verify(storageImagesService).store(mockFile);
+        verify(clienteRepository).save(cliente);
+        verify(clienteMapper).toClienteResponse(cliente, user.getGuid());
+    }
+
+    @Test
+    void updateProfileFotoClientNotFound() {
+        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.empty());
+
+        assertThrows(ClienteNotFound.class, () -> clienteService.updateProfileFoto(cliente.getGuid(), mockFile));
+
+        verify(storageImagesService, never()).delete(any());
+        verify(storageImagesService, never()).store(any());
+        verify(clienteRepository, never()).save(any());
+    }
+
+    @Test
+    void updateDniFotoFotoNoExistente() {
+        cliente.setFotoDni(null);
+
+        when(clienteRepository.findByGuid(cliente.getGuid())).thenReturn(Optional.of(cliente));
+        when(storageImagesService.store(any(MultipartFile.class))).thenReturn("foto_dni_2.jpg");
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+        when(clienteMapper.toClienteResponse(any(Cliente.class), any(String.class))).thenReturn(expectedResponse);
+
+        ClienteResponse response = clienteService.updateDniFoto(cliente.getGuid(), mockFile);
+
+        assertNotNull(response);
+
+        verify(clienteRepository).findByGuid(cliente.getGuid());
+        verify(storageImagesService, never()).delete(any());
+        verify(storageImagesService).store(mockFile);
+        verify(clienteRepository).save(cliente);
+    }
+
+    @Test
+    void derechoAlOlvido() {
+        String userGuid = "user-guid";
+        Set<String> mockKeys = Set.of("clientes:1", "clientes:2");
+
+        when(userRepository.findByGuid(userGuid)).thenReturn(Optional.of(user));
+        when(clienteRepository.findByUserGuid(userGuid)).thenReturn(Optional.of(cliente));
+        when(redisTemplate.keys("clientes::*")).thenReturn(mockKeys);
+
+        String result = clienteService.derechoAlOlvido(userGuid);
+
+        assertNotNull(result);
+        assertEquals("El cliente con guid 'cliente-guid' ejerció su derecho al olvido borrando todos sus datos personales", result);
+
+        verify(clienteRepository).delete(cliente);
+        verify(userRepository).delete(user);
+        verify(redisTemplate).keys("clientes::*");
+        verify(redisTemplate).delete(mockKeys);
+    }
+
+    @Test
+    void DerechoAlOlvidoUserNotFound() {
+        String userGuid = "user-guid-not-found";
+
+        when(userRepository.findByGuid(userGuid)).thenReturn(Optional.empty());
+
+        UserNotFoundById exception = assertThrows(UserNotFoundById.class, () -> clienteService.derechoAlOlvido(userGuid));
+        assertEquals("Usuario con id 'user-guid-not-found' no encontrado", exception.getMessage());
+
+        verify(userRepository).findByGuid(userGuid);
+    }
+
+    @Test
+    void DerechoAlOlvidoClienteNotFound() {
+        String userGuid = "user-guid";
+
+        when(userRepository.findByGuid(userGuid)).thenReturn(Optional.of(user));
+        when(clienteRepository.findByUserGuid(userGuid)).thenReturn(Optional.empty());
+
+        ClienteNotFoundByUser exception = assertThrows(ClienteNotFoundByUser.class, () -> clienteService.derechoAlOlvido(userGuid));
+        assertEquals("No existe ningún cliente asignado al usuario con id: user-guid", exception.getMessage());
+
+        verify(userRepository).findByGuid(userGuid);
+        verify(clienteRepository).findByUserGuid(userGuid);
+    }
+
+    @Test
+    void DerechoAlOlvidoDeleteException() {
+        String userGuid = "user-guid";
+
+        when(userRepository.findByGuid(userGuid)).thenReturn(Optional.of(user));
+        when(clienteRepository.findByUserGuid(userGuid)).thenReturn(Optional.of(cliente));
+        doThrow(new RuntimeException()).when(clienteRepository).delete(cliente);
+
+        ClienteNotDeleted exception = assertThrows(ClienteNotDeleted.class, () -> clienteService.derechoAlOlvido(userGuid));
+        assertEquals("Cliente con guid 'cliente-guid' no se pudo borrar", exception.getMessage());
+
+        verify(clienteRepository).delete(cliente);
+    }
+
+    @Test
+    void validarClienteExistente() {
+        // Simula que no existen clientes con el mismo DNI, teléfono o email
+        when(clienteRepository.findByDni(cliente.getDni())).thenReturn(Optional.empty());
+        when(clienteRepository.findByTelefono(cliente.getTelefono())).thenReturn(Optional.empty());
+        when(clienteRepository.findByEmail(cliente.getEmail())).thenReturn(Optional.empty());
+
+        // Ejecuta el método y verifica que no lanza ninguna excepción
+        assertDoesNotThrow(() -> clienteService.validarClienteExistente(cliente));
+
+        verify(clienteRepository).findByDni(cliente.getDni());
+        verify(clienteRepository).findByTelefono(cliente.getTelefono());
+        verify(clienteRepository).findByEmail(cliente.getEmail());
+    }
+
+    @Test
+    void validarClienteExistenteDniExists() {
+        // Simula que ya existe un cliente con el mismo DNI
+        when(clienteRepository.findByDni(cliente.getDni())).thenReturn(Optional.of(cliente));
+
+        // Verifica que se lanza la excepción correcta
+        ClienteExistsByDni exception = assertThrows(
+                ClienteExistsByDni.class,
+                () -> clienteService.validarClienteExistente(cliente)
+        );
+
+        assertEquals("Cliente con dni '12345678A' ya existente", exception.getMessage());
+        verify(clienteRepository).findByDni(cliente.getDni());
+    }
+
+    @Test
+    void validarClienteExistenteTelefonoExists() {
+        // Simula que ya existe un cliente con el mismo teléfono
+        when(clienteRepository.findByDni(cliente.getDni())).thenReturn(Optional.empty());
+        when(clienteRepository.findByTelefono(cliente.getTelefono())).thenReturn(Optional.of(cliente));
+
+        // Verifica que se lanza la excepción correcta
+        ClienteExistsByTelefono exception = assertThrows(
+                ClienteExistsByTelefono.class,
+                () -> clienteService.validarClienteExistente(cliente)
+        );
+
+        assertEquals("Cliente con telefono '987654321' ya existente", exception.getMessage());
+        verify(clienteRepository).findByTelefono(cliente.getTelefono());
+    }
+
+    @Test
+    void validarClienteExistenteEmailExists() {
+        // Simula que ya existe un cliente con el mismo email
+        when(clienteRepository.findByDni(cliente.getDni())).thenReturn(Optional.empty());
+        when(clienteRepository.findByTelefono(cliente.getTelefono())).thenReturn(Optional.empty());
+        when(clienteRepository.findByEmail(cliente.getEmail())).thenReturn(Optional.of(cliente));
+
+        // Verifica que se lanza la excepción correcta
+        ClienteExistsByEmail exception = assertThrows(
+                ClienteExistsByEmail.class,
+                () -> clienteService.validarClienteExistente(cliente)
+        );
+
+        assertEquals("Cliente con email 'test@example.com' ya existente", exception.getMessage());
+        verify(clienteRepository).findByEmail(cliente.getEmail());
     }
 }
