@@ -1,16 +1,23 @@
 package org.example.vivesbankproject.cliente.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.vivesbankproject.rest.cliente.dto.ClienteProducto;
 import org.example.vivesbankproject.rest.cliente.dto.ClienteRequestSave;
 import org.example.vivesbankproject.rest.cliente.dto.ClienteRequestUpdate;
 import org.example.vivesbankproject.rest.cliente.dto.ClienteResponse;
+import org.example.vivesbankproject.rest.cliente.exceptions.ClienteNotFoundByDni;
 import org.example.vivesbankproject.rest.cliente.service.ClienteService;
+import org.example.vivesbankproject.rest.cuenta.dto.tipoCuenta.TipoCuentaResponseCatalogo;
+import org.example.vivesbankproject.rest.tarjeta.models.TipoTarjeta;
+import org.example.vivesbankproject.rest.users.models.User;
 import org.example.vivesbankproject.utils.pagination.PaginationLinksUtils;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import java.util.*;
@@ -22,12 +29,20 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import org.springframework.web.multipart.MultipartFile;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -148,6 +163,42 @@ class ClienteRestControllerTest {
                 .andExpect(jsonPath("$.createdAt").value("2024-11-26T15:23:45.123"))
                 .andExpect(jsonPath("$.updatedAt").value("2024-11-27T15:23:45.123"))
                 .andExpect(jsonPath("$.isDeleted").value(false));
+    }
+
+    @Test
+    void GetByDni() throws Exception {
+        String dni = "12345678A";
+        ClienteResponse clienteResponse = ClienteResponse.builder()
+                .nombre("Juan Pérez")
+                .dni(dni)
+                .email("juan.perez@email.com")
+                .telefono("123456789")
+                .build();
+
+        when(clienteService.getByDni(dni)).thenReturn(clienteResponse);
+
+        mockMvc.perform(get("/v1/clientes/dni/{dni}", dni)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.dni").value(dni))
+                .andExpect(jsonPath("$.nombre").value("Juan Pérez"))
+                .andExpect(jsonPath("$.email").value("juan.perez@email.com"))
+                .andExpect(jsonPath("$.telefono").value("123456789"));
+
+        verify(clienteService).getByDni(dni);
+    }
+
+    @Test
+    void GetByDniNotFound() throws Exception {
+        String dni = "99999999X";
+
+        when(clienteService.getByDni(dni)).thenThrow(new ClienteNotFoundByDni(dni));
+
+        mockMvc.perform(get("/v1/clientes/dni/{dni}", dni)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        verify(clienteService).getByDni(dni);
     }
 
 
@@ -960,36 +1011,6 @@ class ClienteRestControllerTest {
     }
 
     @Test
-    void emptyUserIdUpdate() throws Exception {
-        ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
-                .nombre("Juan")
-                .apellidos("Perez")
-                .calle("Calle Falsa")
-                .numero("123")
-                .codigoPostal("28080")
-                .piso("3")
-                .letra("A")
-                .email("juan.perez@example.com")
-                .telefono("123456789")
-                .fotoPerfil("fotoprfil.jpg")
-                .fotoDni("fotodni.jpg")
-                .build();
-
-        MvcResult result = mockMvc.perform(
-                        put("/v1/clientes/{id}", "123")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(clienteRequestUpdate)))
-                .andExpect(status().isBadRequest())
-                .andReturn();
-
-        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
-
-        Map<String, String> errorResponse = objectMapper.readValue(result.getResponse().getContentAsString(), Map.class);
-
-        assertEquals("El id de usuario no puede estar vacio", errorResponse.get("userId"));
-    }
-
-    @Test
     void emptyCalleUpdate() throws Exception {
         ClienteRequestUpdate clienteRequestUpdate = ClienteRequestUpdate.builder()
                 .calle("")
@@ -1208,6 +1229,8 @@ class ClienteRestControllerTest {
                 .andDo(print());
     }*/
 
+
+    
     @Test
     void handleValidationExceptionUpdateError() throws Exception {
         var result = mockMvc.perform(put("/v1/clientes/1")
@@ -1227,5 +1250,62 @@ class ClienteRestControllerTest {
                 () -> assertTrue(responseContent.contains("\"telefono\":\"El telefono no puede estar vacio\"")
                         || responseContent.contains("\"telefono\":\"El telefono debe tener 9 numeros\""))
         );
+    }
+
+    @Test
+    void GetCatalogo() throws Exception {
+
+        List<TipoCuentaResponseCatalogo> tiposCuentasResponse = List.of(
+                TipoCuentaResponseCatalogo.builder()
+                        .nombre("Cuenta Corriente")
+                        .interes("1.5")
+                        .build(),
+                TipoCuentaResponseCatalogo.builder()
+                        .nombre("Cuenta de Ahorros")
+                        .interes("2.0")
+                        .build()
+        );
+
+        List<TipoTarjeta> tiposTarjetas = List.of(TipoTarjeta.DEBITO, TipoTarjeta.CREDITO);
+
+        ClienteProducto clienteProducto = ClienteProducto.builder()
+                .tiposCuentas(tiposCuentasResponse)
+                .tiposTarjetas(tiposTarjetas)
+                .build();
+
+        when(clienteService.getCatalogue()).thenReturn(clienteProducto);
+
+        mockMvc.perform(get("/v1/clientes/catalogo")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tiposCuentas").isArray())
+                .andExpect(jsonPath("$.tiposCuentas[0].nombre").value("Cuenta Corriente"))
+                .andExpect(jsonPath("$.tiposCuentas[0].interes").value("1.5"))
+                .andExpect(jsonPath("$.tiposCuentas[1].nombre").value("Cuenta de Ahorros"))
+                .andExpect(jsonPath("$.tiposCuentas[1].interes").value("2.0"))
+                .andExpect(jsonPath("$.tiposTarjetas").isArray())
+                .andExpect(jsonPath("$.tiposTarjetas[0]").value("DEBITO"))
+                .andExpect(jsonPath("$.tiposTarjetas[1]").value("CREDITO"));
+
+        verify(clienteService).getCatalogue();
+    }
+
+    @Test
+    void GetCatalogoEmpty() throws Exception {
+
+        ClienteProducto clienteProducto = ClienteProducto.builder()
+                .tiposCuentas(Collections.emptyList())
+                .tiposTarjetas(Collections.emptyList())
+                .build();
+
+        when(clienteService.getCatalogue()).thenReturn(clienteProducto);
+
+        mockMvc.perform(get("/v1/clientes/catalogo")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tiposCuentas").isEmpty())
+                .andExpect(jsonPath("$.tiposTarjetas").isEmpty());
+
+        verify(clienteService).getCatalogue();
     }
 }

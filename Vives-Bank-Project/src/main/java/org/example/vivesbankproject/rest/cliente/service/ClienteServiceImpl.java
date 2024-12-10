@@ -235,7 +235,7 @@ public class ClienteServiceImpl implements ClienteService {
             }
         }
         if (!Objects.equals(clienteRequestUpdate.getEmail(), clienteExistente.getEmail())) {
-            if (clienteRepository.findByEmail(clienteRequestUpdate.getNombre()).isPresent()) {
+            if (clienteRepository.findByEmail(clienteRequestUpdate.getEmail()).isPresent()) {
                 throw new ClienteExistsByEmail(clienteRequestUpdate.getEmail());
             }
         }
@@ -351,7 +351,7 @@ public class ClienteServiceImpl implements ClienteService {
             }
         }
         if (!Objects.equals(clienteRequestUpdate.getEmail(), clienteAutenticado.getEmail())) {
-            if (clienteRepository.findByEmail(clienteRequestUpdate.getNombre()).isPresent()) {
+            if (clienteRepository.findByEmail(clienteRequestUpdate.getEmail()).isPresent()) {
                 throw new ClienteExistsByEmail(clienteRequestUpdate.getEmail());
             }
         }
@@ -429,7 +429,7 @@ public class ClienteServiceImpl implements ClienteService {
             @ApiResponse(responseCode = "400", description = "Client already exists with the same phone number"),
             @ApiResponse(responseCode = "400", description = "Client already exists with the same email")
     })
-    private void validarClienteExistente( @Parameter(description = "Client object to validate", required = true) Cliente cliente) {
+    public void validarClienteExistente(@Parameter(description = "Client object to validate", required = true) Cliente cliente) {
         if (clienteRepository.findByDni(cliente.getDni()).isPresent()) {
             throw new ClienteExistsByDni(cliente.getDni());
         }

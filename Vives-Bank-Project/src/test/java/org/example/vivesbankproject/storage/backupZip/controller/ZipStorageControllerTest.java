@@ -1,15 +1,21 @@
 package org.example.vivesbankproject.storage.backupZip.controller;
 
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
 import org.example.vivesbankproject.rest.storage.backupZip.controller.ZipStorageController;
 import org.example.vivesbankproject.rest.storage.backupZip.services.ZipFileSystemStorage;
+import org.example.vivesbankproject.rest.storage.backupZip.services.ZipStorageService;
 import org.example.vivesbankproject.rest.storage.exceptions.StorageInternal;
 import org.example.vivesbankproject.rest.storage.exceptions.StorageNotFound;
 import org.junit.jupiter.api.*;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -20,6 +26,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static org.bson.assertions.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -30,6 +38,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ZipStorageControllerTest {
 
     private static final Path TEST_DIRECTORY = Paths.get("data", "test");
+    @Mock
+    private Resource mockResource;
+    @Mock
+    private HttpServletRequest request;
 
     @Autowired
     private MockMvc mockMvc;
@@ -37,8 +49,16 @@ class ZipStorageControllerTest {
     @MockBean
     private ZipFileSystemStorage storageService;
 
+    @Autowired
+    private ZipStorageService zipStorageService;
+
     @InjectMocks
     private ZipStorageController zipStorageController;
+
+    @Autowired
+    private ZipStorageControllerTest(ZipStorageService zipStorageService){
+        this.zipStorageService = zipStorageService;
+    }
 
     @BeforeAll
     static void setUp() throws IOException {
@@ -98,7 +118,7 @@ class ZipStorageControllerTest {
 
         doNothing().when(storageService).loadFromZip(any(File.class));
 
-        mockMvc.perform(post("/storage/zip/import/" + filename))
+        mockMvc.perform(get("/storage/zip/import/" + filename))
                 .andExpect(status().isNoContent());
 
         verify(storageService, times(1)).loadFromZip(any(File.class));
@@ -110,7 +130,7 @@ class ZipStorageControllerTest {
 
         doThrow(new StorageNotFound("Archivo no encontrado")).when(storageService).loadFromZip(any(File.class));
 
-        mockMvc.perform(post("/storage/zip/import/" + filename))
+        mockMvc.perform(get("/storage/zip/import/" + filename))
                 .andExpect(status().isNotFound());
 
         verify(storageService, times(1)).loadFromZip(any(File.class));
@@ -122,7 +142,7 @@ class ZipStorageControllerTest {
 
         doThrow(new RuntimeException("Error desconocido")).when(storageService).loadFromZip(any(File.class));
 
-        mockMvc.perform(post("/storage/zip/import/" + filename))
+        mockMvc.perform(get("/storage/zip/import/" + filename))
                 .andExpect(status().isInternalServerError());
 
         verify(storageService, times(1)).loadFromZip(any(File.class));
@@ -160,6 +180,24 @@ class ZipStorageControllerTest {
                 .andExpect(status().isNotFound());
 
         verify(storageService, times(1)).loadAsResource(filename);
+    }
+
+    @Test
+    void serveFileContenidoNull() throws Exception {
+        String testFilename = "test.zip";
+        when(zipStorageService.loadAsResource(testFilename)).thenReturn(mockResource);
+
+        when(mockResource.getFile()).thenReturn(new File("dummy-path"));
+
+        when(request.getServletContext()).thenReturn(mock(ServletContext.class));
+        when(request.getServletContext().getMimeType(anyString())).thenReturn(null);
+
+        ResponseEntity<Resource> response = zipStorageController.serveFile(testFilename, request);
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("application/octet-stream", response.getHeaders().getContentType().toString());
+        assertEquals(mockResource, response.getBody());
     }
 
     @Test

@@ -1,10 +1,14 @@
 package org.example.vivesbankproject.storage.pdfMovimientos.controller;
 
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import org.example.vivesbankproject.rest.storage.backupZip.services.ZipStorageService;
 import org.example.vivesbankproject.rest.storage.exceptions.StorageInternal;
 import org.example.vivesbankproject.rest.storage.pdfMovimientos.controller.PdfMovimientosController;
 import org.example.vivesbankproject.rest.storage.pdfMovimientos.services.PdfMovimientosStorageService;
 import org.junit.jupiter.api.*;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,6 +16,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -23,8 +28,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
 
+import static org.bson.assertions.Assertions.assertNotNull;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -38,6 +45,11 @@ class PdfMovimientosControllerTest {
 
     private static final Path TEST_DIRECTORY = Paths.get("data", "test");
 
+    @Mock
+    private Resource mockResource;
+    @Mock
+    private HttpServletRequest request;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -46,6 +58,11 @@ class PdfMovimientosControllerTest {
 
     @InjectMocks
     private PdfMovimientosController pdfMovimientosController;
+
+    @Autowired
+    private PdfMovimientosControllerTest(PdfMovimientosStorageService storageService){
+        this.storageService = storageService;
+    }
 
     @BeforeAll
     static void setUp() throws IOException {
@@ -137,6 +154,43 @@ class PdfMovimientosControllerTest {
         if (testFile.exists()) {
             testFile.delete();
         }
+    }
+
+    @Test
+    void serveFile_HandleIOException() throws Exception {
+        String testFilename = "test.pdf";
+        Resource mockResource = mock(Resource.class);
+        when(storageService.loadAsResource(testFilename)).thenReturn(mockResource);
+
+        when(mockResource.getFile()).thenThrow(new IOException("Test IOException"));
+
+        ServletContext servletContext = mock(ServletContext.class);
+        when(request.getServletContext()).thenReturn(servletContext);
+
+        ResponseEntity<Resource> response = pdfMovimientosController.serveFile(testFilename, request);
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("application/pdf", response.getHeaders().getContentType().toString());
+        assertEquals(mockResource, response.getBody());
+    }
+
+    @Test
+    void serveFileContenidoNull() throws Exception {
+        String testFilename = "test.pdf";
+        when(storageService.loadAsResource(testFilename)).thenReturn(mockResource);
+
+        when(mockResource.getFile()).thenReturn(new File("dummy-path"));
+
+        when(request.getServletContext()).thenReturn(mock(ServletContext.class));
+        when(request.getServletContext().getMimeType(anyString())).thenReturn(null);
+
+        ResponseEntity<Resource> response = pdfMovimientosController.serveFile(testFilename, request);
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("application/pdf", response.getHeaders().getContentType().toString());
+        assertEquals(mockResource, response.getBody());
     }
 
     @Test

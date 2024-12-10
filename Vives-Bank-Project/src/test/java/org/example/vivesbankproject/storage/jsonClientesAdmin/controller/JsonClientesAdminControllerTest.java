@@ -3,13 +3,11 @@ package org.example.vivesbankproject.storage.jsonClientesAdmin.controller;
 import org.example.vivesbankproject.rest.storage.exceptions.StorageInternal;
 import org.example.vivesbankproject.rest.storage.exceptions.StorageNotFound;
 import org.example.vivesbankproject.rest.storage.jsonClientesAdmin.controller.JsonClientesAdminController;
-import org.example.vivesbankproject.rest.storage.jsonClientesAdmin.services.JsonClientesAdminStorageService;
+import org.example.vivesbankproject.rest.storage.jsonClientesAdmin.services.JsonClientesAdminFileSystemStorage;
 import org.junit.jupiter.api.*;
 import org.mockito.InjectMocks;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.Resource;
@@ -44,7 +42,7 @@ class JsonClientesAdminControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private JsonClientesAdminStorageService jsonClientesAdminStorageService;
+    private JsonClientesAdminFileSystemStorage jsonClientesAdminFileSystemStorage;
 
     @InjectMocks
     private JsonClientesAdminController jsonClientesAdminController;
@@ -83,24 +81,24 @@ class JsonClientesAdminControllerTest {
         String expectedFilename = "clientes_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".json";
         Path expectedFilePath = TEST_DIRECTORY.resolve(expectedFilename);
 
-        when(jsonClientesAdminStorageService.storeAll()).thenReturn(expectedFilename);
+        when(jsonClientesAdminFileSystemStorage.storeAll()).thenReturn(expectedFilename);
 
         mockMvc.perform(post("/storage/jsonClientesAdmin/generate"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Archivo JSON de clientes generado con éxito: " + expectedFilename));
 
-        verify(jsonClientesAdminStorageService, times(1)).storeAll();
+        verify(jsonClientesAdminFileSystemStorage, times(1)).storeAll();
     }
 
     @Test
     void generateClienteJsonStorageInternalError() throws Exception {
-        when(jsonClientesAdminStorageService.storeAll()).thenThrow(new StorageInternal("Error interno al guardar el archivo"));
+        when(jsonClientesAdminFileSystemStorage.storeAll()).thenThrow(new StorageInternal("Error interno al guardar el archivo"));
 
         mockMvc.perform(post("/storage/jsonClientesAdmin/generate"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("Error al generar el archivo JSON de clientes."));
 
-        verify(jsonClientesAdminStorageService, times(1)).storeAll();
+        verify(jsonClientesAdminFileSystemStorage, times(1)).storeAll();
     }
 
     @Test
@@ -110,7 +108,7 @@ class JsonClientesAdminControllerTest {
         byte[] fileContent = "Contenido de prueba".getBytes();
         Resource mockResource = new org.springframework.core.io.ByteArrayResource(fileContent);
 
-        when(jsonClientesAdminStorageService.loadAsResource(filename)).thenReturn(mockResource);
+        when(jsonClientesAdminFileSystemStorage.loadAsResource(filename)).thenReturn(mockResource);
 
         String contentType = "application/octet-stream";
 
@@ -123,7 +121,7 @@ class JsonClientesAdminControllerTest {
     @Test
     void serveFileFileNotFound() throws Exception {
         String filename = "ficheroinexistente.json";
-        when(jsonClientesAdminStorageService.loadAsResource(filename)).thenThrow(new StorageNotFound("File not found"));
+        when(jsonClientesAdminFileSystemStorage.loadAsResource(filename)).thenThrow(new StorageNotFound("File not found"));
 
         mockMvc.perform(get("/storage/jsonClientesAdmin/{filename}", filename))
                 .andExpect(status().isNotFound());
@@ -138,7 +136,7 @@ class JsonClientesAdminControllerTest {
 
         Resource fileMock = mock(Resource.class);
         when(fileMock.getFile()).thenReturn(path.toFile());
-        when(jsonClientesAdminStorageService.loadAsResource(filename)).thenReturn(fileMock);
+        when(jsonClientesAdminFileSystemStorage.loadAsResource(filename)).thenReturn(fileMock);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setAttribute("javax.servlet.context.tempdir", "/");
@@ -156,7 +154,7 @@ class JsonClientesAdminControllerTest {
         mockFiles.add(TEST_DIRECTORY.resolve("clientes_test_2024-12-01.json"));
         mockFiles.add(TEST_DIRECTORY.resolve("clientes_test_2024-12-02.json"));
 
-        when(jsonClientesAdminStorageService.loadAll()).thenReturn(mockFiles.stream());
+        when(jsonClientesAdminFileSystemStorage.loadAll()).thenReturn(mockFiles.stream());
 
         mockMvc.perform(get("/storage/jsonClientesAdmin/list"))
                 .andExpect(status().isOk())
@@ -167,12 +165,12 @@ class JsonClientesAdminControllerTest {
 
     @Test
     void listAllFilesStorageInternalError() throws Exception {
-        when(jsonClientesAdminStorageService.loadAll()).thenThrow(new StorageInternal("Error interno al cargar los archivos"));
+        when(jsonClientesAdminFileSystemStorage.loadAll()).thenThrow(new StorageInternal("Error interno al cargar los archivos"));
 
         mockMvc.perform(get("/storage/jsonClientesAdmin/list"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().json("[]"));
 
-        verify(jsonClientesAdminStorageService, times(1)).loadAll();
+        verify(jsonClientesAdminFileSystemStorage, times(1)).loadAll();
     }
 }
